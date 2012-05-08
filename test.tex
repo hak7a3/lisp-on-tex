@@ -1,0 +1,13 @@
+%%
+%% This is file `test.tex'.
+%%
+%%  License: Modified BSD - see LICENSE file
+%%
+\documentclass{jarticle}
+\usepackage{lisp}
+\begin{document}
+\lispread\fuga{(\cdr.((\cons.(hoge.(fuga.()))).()))}%
+\lispprint\fuga $\to$
+\lispeval\fuga\piyo
+\lispprint\piyo
+\end{document}

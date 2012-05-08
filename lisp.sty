@@ -1,0 +1,216 @@
+%%
+%% This is file `lisp.sty'.
+%%
+%%  License: Modified BSD - see LICENSE file
+%%
+%% input buffer and read function
+\def\@read@buffer{}
+\def\@currentread{}
+\def\@eof{\@@eof}
+\def\@dummy{\@@dummy}
+\def\setinputbuffer#1{\gdef\@read@buffer{#1}}
+\def\readchar{%
+\expandafter\ifx\expandafter\@dummy\@read@buffer\@dummy
+\gdef\@currentread{\@@eof}%
+\else
+\expandafter\@car@buffer\@read@buffer\relax\fi}
+\def\@car@buffer#1#2\relax{%
+\gdef\@currentread{#1}\gdef\@read@buffer{#2}}
+\def\unreadchar{\ifx\@eof\@currentread
+\else\expandafter\expandafter\expandafter\gdef\expandafter\expandafter\expandafter\@read@buffer\expandafter\expandafter\expandafter{\expandafter\@currentread\@read@buffer}\gdef\@currentread{}\fi}
+
+%% assoc \cs -> value
+% constructor
+\def\makeassoc#1{\def#1{}}
+% add member
+\def\addassoc#1#2#3{%#1(assoc),#2(\cs),#3(value)
+\def\@temp@add{#3}%
+\expandafter\expandafter\expandafter\gdef\expandafter\expandafter
+\expandafter#1\expandafter\expandafter\expandafter{%
+\expandafter\expandafter\expandafter#2\expandafter\expandafter\expandafter{\expandafter\@temp@add\expandafter}#1}}
+% remove member. It cause error if there is no member
+\def\rmassoc#1#2{% #1(assoc), #2(\cs)
+\def\@rmassoc##1#2##2##3\relax{##1##3}%
+\expandafter\expandafter\expandafter\gdef\expandafter\expandafter\expandafter#1\expandafter\expandafter\expandafter{\expandafter\@rmassoc#1\relax}}
+% exist?
+\def\ifmemassoc#1#2{%
+\expandafter\@ifmemassoc\expandafter#2#1\relax}
+\def\@ifmemassoc#1#2\relax{\ifx\@dummy#2\@dummy\let\@next\@iffalse\else\def\@next{\@@ifmemassoc#1#2\relax}\fi\@next}
+\def\@@ifmemassoc#1#2#3#4\relax{%
+\begingroup\def#1{\@@target}%
+\ifx#1#2\endgroup\let\@next\@iftrue\else\endgroup\def\@next{\@ifmemassoc#1#4\relax}\fi\@next}
+\def\@iffalse{\iffalse}
+\def\@iftrue{\iftrue}
+% get It cause error if there is no member
+\def\getassoc#1#2#3{%
+\def\@getassoc##1#2##2##3\relax{\def#3{##2}\relax}\expandafter\@getassoc#1\relax}
+% show
+\def\showassoc#1{\expandafter\@showassoc#1\relax}
+\def\@showassoc#1\relax{\ifx\@dummy#1\@dummy
+\let\@next\relax\else\def\@next{\@@showassoc#1\relax}\fi\@next}
+\def\@@showassoc#1#2#3\relax{\string#1:#2,\ifx\@dummy#3\@dummy\else
+\@showassoc#3\relax\fi}
+
+%% test code now
+\def\commaread#1{\def\@read@buffer{#1}%
+\@commaread}
+
+\def\@commaread{%
+\readchar\ifx\@eof\@currentread
+  \let\@next\relax
+\else
+  \let\@next\@commaread
+  \@currentread,\fi\@next}
+
+%% test code 2 -- LISP parser
+%% symbol is a \cs --> \Symbol{\cs}
+%% a value is a string --> \Value{string}
+%% escap char is \@escapechar
+%% cons cell is (a.b), both a and b are S-exp. --> \Cons{a}{b}
+%% nil is () --> \Nil
+%% if parse fail is happen, the result is \Error
+\newcount\@nestcount
+% reader
+\def\lispread#1#2{%#1 target reg, #2 input
+\@nestcount=0
+\gdef\@read@buffer{#2}\@lispread#1}
+\def\@lispread#1{%
+\advance\@nestcount1
+\readchar\if(\expandafter\noexpand\@currentread
+  \readchar\if\expandafter\noexpand\@currentread)\gdef#1{\Nil}\else
+    % cons cell
+    \unreadchar
+    \@lispread\@temp@i\readchar
+    \if.\expandafter\noexpand\@currentread
+      \expandafter\let\csname @nest\the\@nestcount\endcsname\@temp@i
+      \@lispread\@temp@ii\readchar
+      \expandafter\let\expandafter\@temp@i\csname @nest\the\@nestcount\endcsname
+      \if)\expandafter\noexpand\@currentread
+        \expandafter\expandafter\expandafter\gdef\expandafter\expandafter\expandafter#1\expandafter\expandafter\expandafter{\expandafter\expandafter\expandafter\Cons
+        \expandafter\expandafter\expandafter{\expandafter\@temp@i\expandafter}\expandafter{\@temp@ii}}%
+      \else% right paren. error
+      \fi
+    \else% dot  pair error
+    \fi
+  \fi
+\else\ifcat\relax\expandafter\noexpand\@currentread% symbol
+  \expandafter\gdef\expandafter#1\expandafter{%
+  \expandafter\Symbol\expandafter{\@currentread}}%
+\else%value
+  \unreadchar
+  \def\@temp@i{}%
+  \@string@read\@temp@i
+  \expandafter\gdef\expandafter#1\expandafter{\expandafter\Value\expandafter{\@temp@i}}%
+\fi\fi\advance\@nestcount-1}
+\def\@string@read#1{\readchar
+\ifx\@currentread\@eof
+  \let\@next\relax
+\else\if\@escapechar\expandafter\noexpand\@currentread
+  \def\@next{\readchar\expandafter\expandafter\expandafter\def\expandafter\expandafter\expandafter#1\expandafter\expandafter\expandafter{\expandafter#1\@currentread}\@string@read#1}%
+\else\if.\expandafter\noexpand\@currentread
+  \let\@next\unreadchar
+\else\if)\expandafter\noexpand\@currentread
+  \let\@next\unreadchar
+\else
+  \def\@next{\expandafter\expandafter\expandafter\def\expandafter\expandafter\expandafter#1\expandafter\expandafter\expandafter{\expandafter#1\@currentread}\@string@read#1}%
+\fi\fi\fi\fi\@next}
+\def\@escapechar{|}
+% printer
+\def\@write@buffer{}
+\def\lispprint#1{{\ttfamily
+  \def\@write@buffer{}\expandafter\@lispprint#1\relax\@write@buffer}}
+\def\@lispprint#1\relax{%
+\begingroup
+\def\Cons##1##2{(##1.##2)}%
+\def\Symbol##1{\string##1}%
+\def\Value##1{##1}%
+\def\Func##1{$\lambda$(impl):\string##1}%
+\def\Funci##1{$\lambda$(impl):\string##1}%
+\def\Nil{()}\xdef\@write@buffer{#1}%
+\endgroup}
+
+% eval
+\def\cons#1#2{\Cons{#1}{#2}}
+\def\car#1{\lisp@car#1}
+\def\lisp@car\Cons#1#2{#1}
+\def\cdr#1{\lisp@cdr#1}
+\def\lisp@cdr\Cons#1#2{#2}
+\newcount\@eval@nestcount
+\def\lispeval#1#2{% #1 : \cs -> S-exp, #2 : target register
+  \makeassoc\@grobalenv % test code
+   \addassoc\@grobalenv\cs{\Cons{\Value{fuga}}{\Nil}}%
+   \addassoc\@grobalenv\cons{\Func{\cons}}%
+   \addassoc\@grobalenv\car{\Funci{\car}}%
+   \addassoc\@grobalenv\cdr{\Funci{\cdr}}%
+  \makeassoc\@nullenv
+  \let\@Cons\Cons
+  \let\@Symbol\Symbol
+  \let\@Value\Value
+  \let\@Nil\Nil
+  \let\@Func\Func
+  \let\@Funci\Funci
+  \def\Cons{\@Cons}%
+  \def\Symbol{\@Symbol}%
+  \def\Value{\@Value}%
+  \def\Nil{\@Nil}%
+  \def\Func{\@Func}%
+  \def\Funci{\@Funci}%
+  \expandafter\@eval\expandafter#2\expandafter\@nullenv#1\relax\relax\relax
+  \let\Cons\@Cons
+  \let\Symbol\@Symbol
+  \let\Value\@Value
+  \let\Nil\@Nil
+  \let\Func\@Func
+  \let\Funci\@Funci}
+\def\@apply#1#2#3#4#5\relax{% #1 target, #2 \Func , #3 boby, #4 gobble % #5 args
+   \ifx\Func#2\def\@next{\expandafter\gdef\expandafter#1\expandafter{#3#5}}\else
+   \ifx\Funci#2\def\@next{\expandafter\expandafter\expandafter\gdef\expandafter\expandafter\expandafter#1\expandafter\expandafter\expandafter{#3#5}}\fi\fi\@next}
+\def\@eval#1#2#3#4#5\relax{\advance\@eval@nestcount1
+  \ifx\Cons#3%
+    \def\@next{%
+      \def\@curr@cnt{\the\@eval@nestcount}%
+      \expandafter\@eval\csname @temp@\@curr@cnt i\endcsname#2#4\relax\relax\relax 
+      \expandafter\@eval@arg\csname @temp@\@curr@cnt ii\endcsname#2#5\relax\relax\relax %\expandafter\expandafter\expandafter\gdef\expandafter\expandafter\expandafter#1\expandafter\expandafter\expandafter{\csname%@temp@\@curr@cnt i\endcsname}%
+      \expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\@apply\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter#1\expandafter\expandafter\expandafter\csname\expandafter\expandafter\expandafter
+    @\expandafter\expandafter\expandafter t\expandafter\expandafter\expandafter e\expandafter\expandafter\expandafter m\expandafter\expandafter\expandafter
+    p\expandafter\expandafter\expandafter @\expandafter\expandafter\expandafter\@curr@cnt\expandafter\expandafter\expandafter i\expandafter\expandafter\expandafter\endcsname\csname @temp@\@curr@cnt ii\endcsname\relax
+    }%
+  \else\ifx\Symbol#3%
+    \def\@next{%
+      \expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter
+         \def
+      \expandafter\expandafter\expandafter
+         \csname
+      \expandafter\expandafter\expandafter
+         e%
+      \expandafter\expandafter\expandafter
+         n%
+      \expandafter\expandafter\expandafter 
+         v%
+      \expandafter\expandafter\expandafter 
+         @%
+      \expandafter\expandafter\expandafter
+         \the
+      \expandafter\expandafter\expandafter
+         \@eval@nestcount
+      \expandafter\expandafter\expandafter
+         \endcsname
+      \expandafter\expandafter\expandafter
+         {%
+      \expandafter#2\@grobalenv}%\expandafter\show\csname env@\the\@eval@nestcount\endcsname
+      \expandafter\getassoc\csname env@\the\@eval@nestcount\endcsname#4#1}%
+  \else\ifx\Value#3%
+    \def\@next{\gdef#1{#3{#4}}}%
+  \else
+    \def\@next{\gdef#1{#3}}%
+  \fi\fi\fi\@next\advance\@eval@nestcount-1}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% argmentcreate
+\def\@eval@arg#1#2#3#4#5\relax{\advance\@eval@nestcount1
+  \ifx\Cons#3%
+    \def\@next{%
+      \def\@curr@cnt{\the\@eval@nestcount}%
+      \expandafter\@eval\csname @temp@\@curr@cnt i\endcsname#2#4\relax\relax\relax %\expandafter\show\csname @temp@\@curr@cnt i\endcsname
+      \expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\gdef\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter#1\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter{\expandafter\expandafter\expandafter#1\expandafter\expandafter\expandafter{\csname @temp@\@curr@cnt i\endcsname}}%
+      \@eval@arg#1#2#5\relax\relax\relax}%
+  \else
+    \let\@next\relax\fi\@next\advance\@eval@nestcount-1}
