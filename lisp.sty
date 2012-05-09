@@ -68,12 +68,15 @@
 %% escap char is \@escapechar
 %% cons cell is (a.b), both a and b are S-exp. --> \Cons{a}{b}
 %% nil is () --> \Nil
-%% if parse fail is happen, the result is \Error
+%% \quote -> \Quote
+%% -- if parse fail is happen, the result is \Error
 \newcount\@nestcount
 % reader
 \def\lispread#1#2{%#1 target reg, #2 input
 \@nestcount=0
-\gdef\@read@buffer{#2}\@lispread#1}
+\let\@save@quote\quote
+\def\quote{\@quote}
+\gdef\@read@buffer{#2}\@lispread#1\let\quote\@save@quote}
 \def\@lispread#1{%
 \advance\@nestcount1
 \readchar\if(\expandafter\noexpand\@currentread
@@ -93,9 +96,13 @@
     \else% dot  pair error
     \fi
   \fi
-\else\ifcat\relax\expandafter\noexpand\@currentread% symbol
-  \expandafter\gdef\expandafter#1\expandafter{%
-  \expandafter\Symbol\expandafter{\@currentread}}%
+\else\ifcat\relax\expandafter\noexpand\@currentread% symbol or quote
+  \expandafter\ifx\expandafter\quote\@currentread
+    \gdef#1{\Quote}%
+  \else
+    \expandafter\gdef\expandafter#1\expandafter{%
+    \expandafter\Symbol\expandafter{\@currentread}}%
+  \fi
 \else%value
   \unreadchar
   \def\@temp@i{}%
@@ -126,10 +133,11 @@
 \def\Value##1{##1}%
 \def\Func##1{$\lambda$(impl):\string##1}%
 \def\Funci##1{$\lambda$(impl):\string##1}%
-\def\Nil{()}\xdef\@write@buffer{#1}%
+\def\Nil{()}\def\Quote{impl. quote}\xdef\@write@buffer{#1}%
 \endgroup}
 
 % eval
+\def\@remove@const#1#2#3{#1}
 \def\cons#1#2{\Cons{#1}{#2}}
 \def\car#1{\lisp@car#1}
 \def\lisp@car\Cons#1#2{#1}
@@ -169,11 +177,18 @@
   \ifx\Cons#3%
     \def\@next{%
       \def\@curr@cnt{\the\@eval@nestcount}%
-      \expandafter\@eval\csname @temp@\@curr@cnt i\endcsname#2#4\relax\relax\relax 
+      \expandafter\@eval\csname @temp@\@curr@cnt i\endcsname#2#4\relax\relax\relax
+      \expandafter\expandafter\expandafter\def\expandafter\expandafter\expandafter\@temp@i\expandafter\expandafter\expandafter{\expandafter\expandafter\expandafter\@remove@const\csname
+      @temp@\@curr@cnt i\endcsname\relax\relax}%
+      \show\@temp@i
+      \expandafter\expandafter\expandafter\def\expandafter\expandafter\expandafter\@temp@i\expandafter\expandafter\expandafter{\@temp@i}%
+      \expandafter\ifx\expandafter\Quote\@temp@i
+      \gdef#1{#5}%
+      \else
       \expandafter\@eval@arg\csname @temp@\@curr@cnt ii\endcsname#2#5\relax\relax\relax %\expandafter\expandafter\expandafter\gdef\expandafter\expandafter\expandafter#1\expandafter\expandafter\expandafter{\csname%@temp@\@curr@cnt i\endcsname}%
       \expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\@apply\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter#1\expandafter\expandafter\expandafter\csname\expandafter\expandafter\expandafter
     @\expandafter\expandafter\expandafter t\expandafter\expandafter\expandafter e\expandafter\expandafter\expandafter m\expandafter\expandafter\expandafter
-    p\expandafter\expandafter\expandafter @\expandafter\expandafter\expandafter\@curr@cnt\expandafter\expandafter\expandafter i\expandafter\expandafter\expandafter\endcsname\csname @temp@\@curr@cnt ii\endcsname\relax
+    p\expandafter\expandafter\expandafter @\expandafter\expandafter\expandafter\@curr@cnt\expandafter\expandafter\expandafter i\expandafter\expandafter\expandafter\endcsname\csname @temp@\@curr@cnt ii\endcsname\relax\relax\relax\fi
     }%
   \else\ifx\Symbol#3%
     \def\@next{%

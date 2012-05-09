@@ -6,8 +6,10 @@
 \documentclass{jarticle}
 \usepackage{lisp}
 \begin{document}
-\lispread\fuga{(\cdr.((\cons.(hoge.(fuga.()))).()))}%
+\lispread\fuga{(\car.((\cons.(hoge.(fuga.()))).()))}%
+\show\fuga
 \lispprint\fuga $\to$
 \lispeval\fuga\piyo
+\show\piyo
 \lispprint\piyo
 \end{document}
