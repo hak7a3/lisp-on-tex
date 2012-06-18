@@ -145,6 +145,7 @@
 \endgroup}
 
 % eval
+\def\@setquote#1\Cons#2#3{\gdef#1{#2}}
 \def\@remove@const#1#2#3#4{#1}
 \def\cons#1#2{\Cons{#1}{#2}}
 \def\car#1{\lisp@car#1}
@@ -208,7 +209,7 @@
       \show\@temp@i
       \expandafter\expandafter\expandafter\def\expandafter\expandafter\expandafter\@temp@i\expandafter\expandafter\expandafter{\@temp@i}%
       \expandafter\ifx\expandafter\Quote\@temp@i
-      \gdef#1{#5}%
+      \@setquote#1#5%
       \else\expandafter\ifx\expandafter\Lambda\@temp@i
         \@get@symbol@and@body\@@tempi\@@tempii#5\relax
         \show\@@tempi
