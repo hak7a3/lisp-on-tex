@@ -6,11 +6,12 @@
 \documentclass{jarticle}
 \usepackage{lisp}
 \begin{document}
-%\lispread\fuga{((\lambda.(\x.((\lambda.(\y.((\cons.(\x.(\y.()))).()))).()))).(hoge.()))}%
-\lispread\fuga{(((\lambda.(\x.((\lambda.(\y.((\cons.(\x.(\y.()))).()))).()))).(hoge.())).(fuga.()))}%
+\lispread\fuga{((\lambda.(\x.((\cons.(\x.(aaa.()))).()))).(xxx.()))}%
 \show\fuga
 \lispprint\fuga $\to$
+\tracingmacros=1
 \lispeval\fuga\piyo
+\tracingmacros=0
 \show\piyo
 \lispprint\piyo
 \end{document}

@@ -62,7 +62,6 @@
   \let\@next\@commaread
   \@currentread,\fi\@next}
 
-
 %% test code 2 -- LISP parser
 %% symbol is a \cs --> \Symbol{\cs}
 %% a value is a string --> \Value{string}
@@ -186,7 +185,7 @@
   \let\FLambda\@FLambda}
 \def\@get@symbol@env@body#1#2#3\FLambda#4#5#6\relax{%
   \def#1{#4}%
-  \def#2{#5}%
+  \expandafter\def\expandafter#2\expandafter{#5}%
   \def#3{#6}}
 \def\@get@symbol@and@body#1#2\Cons#3#4\relax{%
   \@get@symbol#1#3\relax
@@ -195,49 +194,51 @@
  \def#1{#2}}
 \def\@get@body#1\Cons#2#3\relax{%
  \def#1{#2}}
-\def\@apply#1#2#3#4\relax{% #1 target, #2 \Func , #3 boby, #4 args
-   \ifx\Func#2\def\@next{\expandafter\gdef\expandafter#1\expandafter{#3#4}}\else
-   \ifx\Funci#2\def\@next{\expandafter\expandafter\expandafter\gdef\expandafter\expandafter\expandafter#1\expandafter\expandafter\expandafter{#3#4}}\fi\fi\@next}
-\def\@eval#1#2#3#4#5\relax{\advance\@eval@nestcount1
+\def\@apply#1#2#3#4#5\relax{% #1 target, #2 \Func , #3 boby, #4 gobble % #5 args
+   \ifx\Func#2\def\@next{\expandafter\gdef\expandafter#1\expandafter{#3#5}}\else
+   \ifx\Funci#2\def\@next{\expandafter\expandafter\expandafter\gdef\expandafter\expandafter\expandafter#1\expandafter\expandafter\expandafter{#3#5}}\fi\fi\@next}
+\def\@eval#1#2#3#4#5#6\relax{\advance\@eval@nestcount1
   \ifx\Cons#3%
     \def\@next{%
-      \def\@curr@cnt{\the\@eval@nestcount}%
-      \expandafter\@eval\csname @temp@\@curr@cnt i\endcsname#2#4\relax\relax\relax
+      \let\@save@cnt\@curr@cnt
+      \expandafter\def\expandafter\@curr@cnt\expandafter{\the\@eval@nestcount}%
+      \expandafter\@eval\csname @temp@\@curr@cnt i\endcsname#2#4\relax\relax\relax\relax
       \expandafter\expandafter\expandafter\def\expandafter\expandafter\expandafter\@temp@i\expandafter\expandafter\expandafter{\expandafter\expandafter\expandafter\@remove@const\csname
-      @temp@\@curr@cnt i\endcsname\relax\relax\relax}%
-      \show\@temp@i
+      @temp@\@curr@cnt i\endcsname\relax\relax}%
       \expandafter\expandafter\expandafter\def\expandafter\expandafter\expandafter\@temp@i\expandafter\expandafter\expandafter{\@temp@i}%
+      \show\@temp@i
       \expandafter\ifx\expandafter\Quote\@temp@i
       \gdef#1{#5}%
       \else\expandafter\ifx\expandafter\Lambda\@temp@i
-        \@get@symbol@and@body\@@tempi\@@tempii#5\relax
-        \show\@@tempi
-        \show\@@tempii
-        \expandafter\gdef\expandafter#1\expandafter{\expandafter\FLambda\expandafter{\@@tempi}}%
-        \expandafter\expandafter\expandafter\gdef\expandafter\expandafter\expandafter#1\expandafter\expandafter\expandafter{\expandafter#1\expandafter{#2}}%
-\expandafter\expandafter\expandafter\gdef\expandafter\expandafter\expandafter#1\expandafter\expandafter\expandafter{\expandafter#1\expandafter{\@@tempii}}%
+       \@get@symbol@and@body\@@tempi\@@tempii#5\relax
+       \show\@@tempi
+       \show\@@tempii
+       \expandafter\let\csname @assoc\@curr@cnt\endcsname#2
+       \expandafter\def\expandafter\@@tempiii\expandafter{\csname @assoc\@curr@cnt\endcsname}
+       \expandafter\gdef\expandafter#1\expandafter{\expandafter\FLambda\expandafter{\@@tempi}}%
+       \expandafter\expandafter\expandafter\gdef\expandafter\expandafter\expandafter#1\expandafter\expandafter\expandafter{\expandafter#1\expandafter{\@@tempiii}}%
+       \expandafter\expandafter\expandafter\gdef\expandafter\expandafter\expandafter#1\expandafter\expandafter\expandafter{\expandafter#1\expandafter{\@@tempii}}%
       \else\expandafter\ifx\expandafter\FLambda\@temp@i
-        \expandafter\def\csname @temp@\@curr@cnt ii\endcsname{}%
-        \expandafter\@eval@arg\csname @temp@\@curr@cnt ii\endcsname#2#5\relax\relax\relax
-        \expandafter\expandafter\expandafter\@get@symbol@env@body\expandafter\expandafter\expandafter\@@temp@i\expandafter\expandafter\expandafter\@@temp@ii\expandafter\expandafter\expandafter\@@temp@iii\csname @temp@\@curr@cnt i\endcsname\relax
-        \show\@@temp@i
-        \show\@@temp@ii
-        \show\@@temp@iii
-        \expandafter\def\expandafter\@@@next\expandafter{\expandafter\addassoc\expandafter\@@temp@ii\@@temp@i}%
-        \expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\def\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\@@@next\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter{\expandafter\expandafter\expandafter\@@@next\csname @temp@\@curr@cnt ii\endcsname}%
-        \@@@next
-        \expandafter\global\expandafter\let\csname env@\@curr@cnt\endcsname\@@temp@ii
-        \expandafter\def\expandafter\@@@next\expandafter{\expandafter\@eval\expandafter#1\csname env@\@curr@cnt\endcsname}%
-        \expandafter\expandafter\expandafter\def\expandafter\expandafter\expandafter\@@@next\expandafter\expandafter\expandafter{\expandafter\@@@next\@@temp@iii\relax}%
-        \show\@@@next
-        \@@@next
+       \expandafter\expandafter\expandafter\@get@symbol@env@body\expandafter\expandafter\expandafter\@@var\expandafter\expandafter\expandafter\@@env\expandafter\expandafter\expandafter\@@body\csname @temp@\@curr@cnt i\endcsname\relax
+       \show\@@var
+       \show\@@env
+       \show\@@body
+       \expandafter\let\csname @@env\@curr@cnt\endcsname\@@env
+       \expandafter\def\csname @temp@\@curr@cnt ii\endcsname{}
+       \expandafter\@eval@arg\csname @temp@\@curr@cnt ii\endcsname#2#5\relax\relax\relax
+       \expandafter\show\csname @temp@\@curr@cnt ii\endcsname
+       \expandafter\def\expandafter\@@next\expandafter{\expandafter\addassoc\csname @@env\@curr@cnt\endcsname}%
+       \expandafter\expandafter\expandafter\def\expandafter\expandafter\expandafter\@@next\expandafter\expandafter\expandafter{\expandafter\@@next\@@var}%
+       \expandafter\expandafter\expandafter\def\expandafter\expandafter\expandafter\@@@next\expandafter\expandafter\expandafter{\csname @temp@\@curr@cnt ii\endcsname}
+       \expandafter\expandafter\expandafter\def\expandafter\expandafter\expandafter\@@next\expandafter\expandafter\expandafter{\expandafter\@@next\expandafter{\@@@next}}%
+       \show\@@@next
+       \@@next
       \else
-      \expandafter\def\csname @temp@\@curr@cnt ii\endcsname{}%
       \expandafter\@eval@arg\csname @temp@\@curr@cnt ii\endcsname#2#5\relax\relax\relax %\expandafter\expandafter\expandafter\gdef\expandafter\expandafter\expandafter#1\expandafter\expandafter\expandafter{\csname%@temp@\@curr@cnt i\endcsname}%
       \expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\@apply\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter#1\expandafter\expandafter\expandafter\csname\expandafter\expandafter\expandafter
     @\expandafter\expandafter\expandafter t\expandafter\expandafter\expandafter e\expandafter\expandafter\expandafter m\expandafter\expandafter\expandafter
     p\expandafter\expandafter\expandafter @\expandafter\expandafter\expandafter\@curr@cnt\expandafter\expandafter\expandafter i\expandafter\expandafter\expandafter\endcsname\csname @temp@\@curr@cnt ii\endcsname\relax\relax\relax\fi\fi\fi
-    }%
+    \let\@curr@cnt\@save@cnt}%
   \else\ifx\Symbol#3%
     \def\@next{%
       \expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter
@@ -265,15 +266,15 @@
   \else\ifx\Value#3%
     \def\@next{\gdef#1{#3{#4}}}%
   \else
-    \def\@next{\gdef#1{#3}}%
-  \fi\fi\fi\@next\advance\@eval@nestcount-1}
+    \def\@next{\gdef#1{#3#4}}%
+  \fi\fi\fi\@next}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% argmentcreate
 \def\@eval@arg#1#2#3#4#5\relax{\advance\@eval@nestcount1
   \ifx\Cons#3%
-    \def\@next{%
-      \def\@curr@cnt{\the\@eval@nestcount}%
-      \expandafter\@eval\csname @temp@\@curr@cnt i\endcsname#2#4\relax\relax\relax %\expandafter\show\csname @temp@\@curr@cnt i\endcsname
+    \def\@next{\let\@curr@cnt\@save@cnt%
+      \expandafter\def\expandafter\@curr@cnt\expandafter{\the\@eval@nestcount}%
+      \expandafter\@eval\csname @temp@\@curr@cnt i\endcsname#2#4\relax\relax\relax\relax %\expandafter\show\csname @temp@\@curr@cnt i\endcsname
       \expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\gdef\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter#1\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter{\expandafter\expandafter\expandafter#1\expandafter\expandafter\expandafter{\csname @temp@\@curr@cnt i\endcsname}}%
-      \@eval@arg#1#2#5\relax\relax\relax}%
+      \@eval@arg#1#2#5\relax\relax\relax\let\@curr@cnt\@save@cnt}%
   \else
-    \let\@next\relax\fi\@next\advance\@eval@nestcount-1}
+    \let\@next\relax\fi\@next}
