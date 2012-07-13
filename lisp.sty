@@ -74,60 +74,139 @@
 %% -- if parse fail is happen, the result is \Error
 \newcount\@nestcount
 % reader
-\def\lispread#1#2{%#1 target reg, #2 input
-\@nestcount=0
+\def\lispread#1#2{%
 \let\@save@quote\quote
 \def\quote{\@quote}%
 \let\@save@lambda\lambda
 \def\lambda{\@lambda}
-\gdef\@read@buffer{#2}\@lispread#1\let\quote\@save@quote\let\lambda\@save@lambda}
+\gdef\@read@buffer{#2}%
+\@lispread#1\let\quote\@save@quote\let\lambda\@save@lambda}
+
 \def\@lispread#1{%
-\advance\@nestcount1
-\readchar\if(\expandafter\noexpand\@currentread
-  \readchar\if\expandafter\noexpand\@currentread)\gdef#1{\Nil}\else
-    % cons cell
-    \unreadchar
-    \@lispread\@temp@i\readchar
-    \if.\expandafter\noexpand\@currentread
-      \expandafter\let\csname @nest\the\@nestcount\endcsname\@temp@i
-      \@lispread\@temp@ii\readchar
-      \expandafter\let\expandafter\@temp@i\csname @nest\the\@nestcount\endcsname
-      \if)\expandafter\noexpand\@currentread
-        \expandafter\expandafter\expandafter\gdef\expandafter\expandafter\expandafter#1\expandafter\expandafter\expandafter{\expandafter\expandafter\expandafter\Cons
-        \expandafter\expandafter\expandafter{\expandafter\@temp@i\expandafter}\expandafter{\@temp@ii}}%
-      \else% right paren. error
-      \fi
-    \else% dot  pair error
-    \fi
-  \fi
-\else\ifcat\relax\expandafter\noexpand\@currentread% symbol or quote
-  \expandafter\ifx\expandafter\quote\@currentread
-    \gdef#1{\Quote}%
-  \else\expandafter\ifx\expandafter\lambda\@currentread
-    \gdef#1{\Lambda}%
-  \else
-    \expandafter\gdef\expandafter#1\expandafter{%
-    \expandafter\Symbol\expandafter{\@currentread}}%
-  \fi\fi
-\else%value
-  \unreadchar
-  \def\@temp@i{}%
-  \@string@read\@temp@i
-  \expandafter\gdef\expandafter#1\expandafter{\expandafter\Value\expandafter{\@temp@i}}%
-\fi\fi\advance\@nestcount-1}
-\def\@string@read#1{\readchar
-\ifx\@currentread\@eof
-  \let\@next\relax
-\else\if\@escapechar\expandafter\noexpand\@currentread
-  \def\@next{\readchar\expandafter\expandafter\expandafter\def\expandafter\expandafter\expandafter#1\expandafter\expandafter\expandafter{\expandafter#1\@currentread}\@string@read#1}%
-\else\if.\expandafter\noexpand\@currentread
-  \let\@next\unreadchar
-\else\if)\expandafter\noexpand\@currentread
-  \let\@next\unreadchar
-\else
-  \def\@next{\expandafter\expandafter\expandafter\def\expandafter\expandafter\expandafter#1\expandafter\expandafter\expandafter{\expandafter#1\@currentread}\@string@read#1}%
-\fi\fi\fi\fi\@next}
-\def\@escapechar{|}
+\begingroup
+  \readchar
+  \if(\expandafter\noexpand\@currentread
+   \readchar
+   \if\expandafter\noexpand\@currentread)
+     \gdef#1{\Nil}%
+   \else
+     \unreadchar
+     \@lispread\@temp@i
+     \readchar
+     \if.\expandafter\noexpand\@currentread
+       \let\@save@temp\@temp@i
+       \@lispread\@temp@ii
+       \let\@temp@i\@save@temp
+       \readchar
+       \if)\expandafter\noexpand\@currentread
+         \expandafter\expandafter\expandafter\gdef%
+         \expandafter\expandafter\expandafter#1%
+         \expandafter\expandafter\expandafter{%
+         \expandafter\expandafter\expandafter\Cons%
+         \expandafter\expandafter\expandafter{%
+         \expandafter\@temp@i%
+         \expandafter}%
+         \expandafter{\@temp@ii}}%
+       \else
+         \gdef#1{\Error}%
+       \fi
+     \else\if)\expandafter\noexpand\@currentread
+       \expandafter\gdef%
+       \expandafter#1%
+       \expandafter{%
+       \expandafter\Cons%
+       \expandafter{\@temp@i}{\Nil}}%
+     \else
+       \unreadchar
+       \expandafter\gdef
+       \expandafter\@read@buffer
+       \expandafter{%
+       \expandafter(\@read@buffer}%
+       \let\@save@temp\@temp@i
+       \@lispread\@temp@ii
+       \let\@temp@i\@save@temp
+       \expandafter\expandafter\expandafter\gdef%
+       \expandafter\expandafter\expandafter#1%
+       \expandafter\expandafter\expandafter{%
+       \expandafter\expandafter\expandafter\Cons%
+       \expandafter\expandafter\expandafter{%
+       \expandafter\@temp@i%
+       \expandafter}%
+       \expandafter{\@temp@ii}}%
+     \fi\fi
+   \fi
+  \else\ifcat\relax\expandafter\noexpand\@currentread
+    \expandafter\ifx\expandafter\quote\@currentread
+      \gdef#1{\Quote}%
+    \else\expandafter\ifx\expandafter\lambda\@currentread
+      \gdef#1{\Lambda}%
+    \else
+      \expandafter\gdef\expandafter#1\expandafter{%
+      \expandafter\Symbol\expandafter{\@currentread}}%
+    \fi\fi
+  \else\if'\expandafter\noexpand\@currentread
+   \expandafter\@read@string\expandafter#1\@read@buffer\@@end
+  \fi\fi\fi
+\endgroup}
+\def\@read@string#1#2'#3\@@end{%
+  \gdef#1{\Value{#2}}%
+  \gdef\@read@buffer{#3}}
+
+
+% \def\lispread#1#2{%#1 target reg, #2 input
+% \@nestcount=0
+% \let\@save@quote\quote
+% \def\quote{\@quote}%
+% \let\@save@lambda\lambda
+% \def\lambda{\@lambda}
+% \gdef\@read@buffer{#2}\@lispread#1\let\quote\@save@quote\let\lambda\@save@lambda}
+% \def\@lispread#1{%
+% \advance\@nestcount1
+% \readchar\if(\expandafter\noexpand\@currentread
+%   \readchar\if\expandafter\noexpand\@currentread)\gdef#1{\Nil}\else
+%     % cons cell
+%     \unreadchar
+%     \@lispread\@temp@i\readchar
+%     \if.\expandafter\noexpand\@currentread
+%       \expandafter\let\csname @nest\the\@nestcount\endcsname\@temp@i
+%       \@lispread\@temp@ii\readchar
+%       \expandafter\let\expandafter\@temp@i\csname @nest\the\@nestcount\endcsname
+%       \if)\expandafter\noexpand\@currentread
+%         \expandafter\expandafter\expandafter\gdef\expandafter\expandafter\expandafter#1\expandafter\expandafter\expandafter{\expandafter\expandafter\expandafter\Cons
+%         \expandafter\expandafter\expandafter{\expandafter\@temp@i\expandafter}\expandafter{\@temp@ii}}%
+%       \else% right paren. error
+%       \fi
+%     \else% dot  pair error
+%     \fi
+%   \fi
+% \else\ifcat\relax\expandafter\noexpand\@currentread% symbol or quote
+%   \expandafter\ifx\expandafter\quote\@currentread
+%     \gdef#1{\Quote}%
+%   \else\expandafter\ifx\expandafter\lambda\@currentread
+%     \gdef#1{\Lambda}%
+%   \else
+%     \expandafter\gdef\expandafter#1\expandafter{%
+%     \expandafter\Symbol\expandafter{\@currentread}}%
+%   \fi\fi
+% \else%value
+%   \unreadchar
+%   \def\@temp@i{}%
+%   \@string@read\@temp@i
+%   \expandafter\gdef\expandafter#1\expandafter{\expandafter\Value\expandafter{\@temp@i}}%
+% \fi\fi\advance\@nestcount-1}
+% \def\@string@read#1{\readchar
+% \ifx\@currentread\@eof
+%   \let\@next\relax
+% \else\if\@escapechar\expandafter\noexpand\@currentread
+%   \def\@next{\readchar\expandafter\expandafter\expandafter\def\expandafter\expandafter\expandafter#1\expandafter\expandafter\expandafter{\expandafter#1\@currentread}\@string@read#1}%
+% \else\if.\expandafter\noexpand\@currentread
+%   \let\@next\unreadchar
+% \else\if)\expandafter\noexpand\@currentread
+%   \let\@next\unreadchar
+% \else
+%   \def\@next{\expandafter\expandafter\expandafter\def\expandafter\expandafter\expandafter#1\expandafter\expandafter\expandafter{\expandafter#1\@currentread}\@string@read#1}%
+% \fi\fi\fi\fi\@next}
+% \def\@escapechar{|}
 % printer
 \def\@write@buffer{}
 \def\lispprint#1{{\ttfamily

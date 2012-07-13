@@ -6,13 +6,8 @@
 \documentclass{jarticle}
 \usepackage{lisp}
 \begin{document}
-%\lispread\fuga{((\lambda.(\x.((\lambda.(\y.((\cons.(\x.(\y.()))).()))).()))).(hoge.()))}%
-%\lispread\fuga{(((\lambda.(\x.((\lambda.(\y.((\cons.(\x.(\y.()))).()))).()))).(hoge.())).(fuga.()))}%
-%\lispread\fuga{(\quote.(\a.()))}
-%\lispread\fuga{((\lambda.(\x.((\x.(a.(a.()))).()))).(\cons.()))}%
-\lispread\fuga{((\lambda.(\x.((\x.(a.(a.()))).()))).(\cons.()))}
+\lispread\fuga{((\lambda \x (\x 'a' 'b')) \cons)}
 \show\fuga
-\lispprint\fuga $\to$
 \lispeval\fuga\piyo
 \show\piyo
 \lispprint\piyo
