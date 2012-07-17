@@ -249,7 +249,7 @@
                   \expandafter\expandafter\expandafter\@args
                   \expandafter\expandafter\expandafter{%
                   \expandafter\@args\expandafter{\@temp@iii}}}%
-             \fi\@@@@next\@@@next
+             \fi\@@@@next\@@@next\let\@@@next\relax\let\@@@@next\relax
            }\@@@next%
            \let\@temp@i\@save
            \expandafter\expandafter\expandafter\@apply@func
@@ -265,7 +265,7 @@
            \let\@temp@i\@save
            \expandafter\expandafter\expandafter\@apply@closure
            \expandafter\@temp@i\@temp@ii->#4}%
-      \fi\@@next}%
+      \fi\@@next\let\@@next\relax}%
   \else\ifx#1\Symbol
     \def\@next{%
       % concat currentenv ++ globalenv
@@ -282,7 +282,7 @@
     \gdef#4{#1{#2}}\let\@next\relax
   \else
     \gdef#4{#1#2}\let\@next\relax
-  \fi\fi\fi\@next\endgroup}
+  \fi\fi\fi\@next\let\@next\relax\endgroup}
 \def\@gobblerelax#1\relax{}
 \def\@set@symbol@body#1#2\Cons#3{%
   \expandafter\expandafter\expandafter\@set@symbol
