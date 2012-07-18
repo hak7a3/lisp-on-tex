@@ -119,12 +119,21 @@
      \expandafter\gdef\expandafter#1\expandafter{%
      \expandafter\Symbol\expandafter{\@currentread}}%
   \else\if'\expandafter\noexpand\@currentread
-   \expandafter\@read@string\expandafter#1\@read@buffer\@@end
+     \expandafter\@read@string\expandafter#1\@read@buffer\@@end
   \else
-    \def\@temp@num{}\@read@num#1
+    \unreadchar
+    \expandafter\@read@num\expandafter#1\@read@buffer\@@end
   \fi\fi\fi
 \endgroup}
-\def\@read@num#1{}
+\def\@read@num#1#2~#3\@@end{%
+  \@@read@num#1#2.\@@end
+  \gdef\@read@buffer{#3}}
+\def\@@read@num#1#2.#3\@@end{%
+  \ifx\@dummy#3\@dummy
+   \gdef#1{\Int{#2}}%
+  \else
+   \gdef#1{\Float{#2.#3}}%
+  \fi}
 \def\@read@string#1#2'#3\@@end{%
   \gdef#1{\Value{#2}}%
   \gdef\@read@buffer{#3}}
@@ -139,6 +148,8 @@
   \def\Func##1{Implemented function}%
   \def\Closure##1##2##3{LAMBDA}%
   \def\Nil{()}%
+  \def\Int##1{int}%
+  \def\Float##1{float}%
   #1
   \endgroup
   }}
@@ -195,6 +206,7 @@
   %% special forms
   \let\@Lambda\Lambda   \def\Lambda{\@Lambda}% \lambda
   \let\@Quote\Quote   \def\Quote{\@Quote}% \lambda
+  \let\@Define\Define   \def\Define{\@Define}% \lambda
   % evaluation
   \expandafter\@eval#1|->#2
   % restore LaTeX world
@@ -205,6 +217,7 @@
   \let\Func\@Func
   \let\Closure\@Closure
   \let\Lambda\@Lambda
+  \let\Define\@Define
   \let\Quote\@Quote%
   }
 
@@ -213,106 +226,18 @@
 % arg4 : return register
   \begingroup
   \ifx#1\Cons
-    \def\@next{
-      \expandafter\expandafter\expandafter
-        \@eval\csname car#2\endcsname|#3->\@temp@i
-      \def\@@next{\gdef#4{\Error}}%
-      \expandafter\futurelet
-      \expandafter\@test@label
-      \expandafter\@gobblerelax\@temp@i\relax
-      \ifx\@test@label\Lambda
-       \def\@@next{%
-         \expandafter\expandafter\expandafter\@set@symbol@body
-         \expandafter\expandafter\expandafter\@cs
-         \expandafter\expandafter\expandafter\@body
-         \csname cdr#2\endcsname
-         \expandafter\expandafter\expandafter\gdef
-         \expandafter\expandafter\expandafter#4%
-         \expandafter\expandafter\expandafter{%
-         \expandafter\expandafter\expandafter\Closure
-         \expandafter\expandafter\expandafter{%
-         \expandafter\@cs
-         \expandafter}%
-         \expandafter{\@body}{#3}}}%
-      \fi
-      \ifx\@test@label\Quote
-        \def\@@next{%
-          \expandafter\expandafter\expandafter\@syntax@quote
-          \expandafter\expandafter\expandafter#4%
-            \csname cdr#2\endcsname}% 
-      \fi
-      \ifx\@test@label\Define
-        \def\@@next{%
-          \expandafter\expandafter\expandafter\@set@symbol@body
-          \expandafter\expandafter\expandafter\@cs
-          \expandafter\expandafter\expandafter\@body
-          \csname cdr#2\endcsname
-          \expandafter\@eval\@body|#3->\@temp@ii
-          \expandafter\expandafter\expandafter\addassoc
-          \expandafter\expandafter\expandafter\@globalenv
-          \expandafter\@cs
-          \expandafter{\@temp@ii}%
-          \gdef#4{\Nil}}%
-      \fi
-      \ifx\@test@label\Func
-        \def\@@next{%
-           \expandafter\let\expandafter\@temp@ii\csname cdr#2\endcsname
-           \def\@args{}%
-           \let\@save\@temp@i
-           \def\@@@next{%
-             \expandafter\futurelet
-             \expandafter\@test@label
-             \expandafter\@gobblerelax\@temp@ii\relax
-             \ifx\Nil\@test@label
-                \let\@@@next\relax
-                \let\@@@@next\relax
-             \else
-                \def\@@@@next{%
-                  \expandafter\@get@car\expandafter\@temp@iii\@temp@ii
-                  \expandafter\@get@cdr\expandafter\@temp@ii\@temp@ii
-                  \let\@save@ii\@temp@ii
-                  \expandafter\@eval\@temp@iii|#3->\@temp@iii
-                  \let\@temp@ii\@save@ii
-                  \expandafter\expandafter\expandafter\def
-                  \expandafter\expandafter\expandafter\@args
-                  \expandafter\expandafter\expandafter{%
-                  \expandafter\@args\expandafter{\@temp@iii}}}%
-             \fi\@@@@next\@@@next\let\@@@next\relax\let\@@@@next\relax
-           }\@@@next%
-           \let\@temp@i\@save
-           \expandafter\expandafter\expandafter\@apply@func
-           \expandafter\@temp@i\@args->#4
-        }%
-      \fi
-      \ifx\@test@label\Closure
-        \def\@@next{%
-           \expandafter\let\expandafter\@temp@ii\csname cdr#2\endcsname
-           \expandafter\@get@car\expandafter\@temp@ii\@temp@ii
-           \let\@save\@temp@i
-           \expandafter\@eval\@temp@ii|#3->\@temp@ii
-           \let\@temp@i\@save
-           \expandafter\expandafter\expandafter\@apply@closure
-           \expandafter\@temp@i\@temp@ii->#4}%
-      \fi\@@next\let\@@next\relax}%
+    \def\@next{\@next@apply{#2}{#3}{#4}}%
   \else\ifx#1\Symbol
-    \def\@next{%
-      % concat currentenv ++ globalenv
-      \def\@temp@env{#3}%
-      \expandafter\expandafter\expandafter\def
-      \expandafter\expandafter\expandafter\@temp@env
-      \expandafter\expandafter\expandafter{%
-      \expandafter\@temp@env\@globalenv}%
-      %\show\@temp@env
-      \getassoc\@temp@env#2#4
-      %\show#4
-      }%
+    \def\@next{\@next@symbol{#2}{#3}{#4}}%
   \else\ifx#1\Value
     \gdef#4{#1{#2}}\let\@next\relax
   \else\ifx#1\Int
     \gdef#4{#1{#2}}\let\@next\relax
+  \else\ifx#1\Float
+    \gdef#4{#1{#2}}\let\@next\relax
   \else
     \gdef#4{#1#2}\let\@next\relax
-  \fi\fi\fi\fi\@next\let\@next\relax\endgroup}
+  \fi\fi\fi\fi\fi\@next\let\@next\relax\endgroup}
 \def\@gobblerelax#1\relax{}
 \def\@set@symbol@body#1#2\Cons#3{%
   \expandafter\expandafter\expandafter\@set@symbol
@@ -328,3 +253,94 @@
 \def\@apply@closure\Closure#1#2#3#4->#5{%
    \@eval#2|#1{#4}#3->#5}
 \def\@apply@func\Func#1#2->#3{#1#3#2}
+\def\@next@symbol#1#2#3{%
+      % concat currentenv ++ globalenv
+      \def\@temp@env{#2}%
+      \expandafter\expandafter\expandafter\def
+      \expandafter\expandafter\expandafter\@temp@env
+      \expandafter\expandafter\expandafter{%
+      \expandafter\@temp@env\@globalenv}%
+      %\show\@temp@env
+      \getassoc\@temp@env#1#3}
+\def\@next@apply#1#2#3{
+      \expandafter\expandafter\expandafter
+        \@eval\csname car#1\endcsname|#2->\@temp@i
+      \def\@@next{\gdef#3{\Error}}%
+      \expandafter\futurelet
+      \expandafter\@test@label
+      \expandafter\@gobblerelax\@temp@i\relax
+      \ifx\@test@label\Lambda
+       \let\@@next\@@next@lambda%
+      \else\ifx\@test@label\Quote
+        \let\@@next\@@next@quote%
+      \else\ifx\@test@label\Define
+        \let\@@next\@@next@define%
+      \else\ifx\@test@label\Func
+        \let\@@next\@@next@func%
+      \else\ifx\@test@label\Closure
+        \let\@@next\@@next@closure%%
+      \fi\fi\fi\fi\fi\@@next{#1}{#2}{#3}\let\@@next\relax}
+
+\def\@@next@lambda#1#2#3{%
+         \expandafter\expandafter\expandafter\@set@symbol@body
+         \expandafter\expandafter\expandafter\@cs
+         \expandafter\expandafter\expandafter\@body
+         \csname cdr#1\endcsname
+         \expandafter\expandafter\expandafter\gdef
+         \expandafter\expandafter\expandafter#3%
+         \expandafter\expandafter\expandafter{%
+         \expandafter\expandafter\expandafter\Closure
+         \expandafter\expandafter\expandafter{%
+         \expandafter\@cs
+         \expandafter}%
+         \expandafter{\@body}{#2}}}
+\def\@@next@quote#1#2#3{%
+          \expandafter\expandafter\expandafter\@syntax@quote
+          \expandafter\expandafter\expandafter#3%
+            \csname cdr#1\endcsname}
+\def\@@next@define#1#2#3{%
+          \expandafter\expandafter\expandafter\@set@symbol@body
+          \expandafter\expandafter\expandafter\@cs
+          \expandafter\expandafter\expandafter\@body
+          \csname cdr#1\endcsname
+          \expandafter\@eval\@body|#2->\@temp@ii
+          \expandafter\expandafter\expandafter\addassoc
+          \expandafter\expandafter\expandafter\@globalenv
+          \expandafter\@cs
+          \expandafter{\@temp@ii}%
+          \gdef#3{\Nil}}
+\def\@@next@func#1#2#3{%
+           \expandafter\let\expandafter\@temp@ii\csname cdr#1\endcsname
+           \def\@args{}%
+           \let\@save\@temp@i
+           \def\@@@next{%
+             \expandafter\futurelet
+             \expandafter\@test@label
+             \expandafter\@gobblerelax\@temp@ii\relax
+             \ifx\Nil\@test@label
+                \let\@@@next\relax
+                \let\@@@@next\relax
+             \else
+                \def\@@@@next{%
+                  \expandafter\@get@car\expandafter\@temp@iii\@temp@ii
+                  \expandafter\@get@cdr\expandafter\@temp@ii\@temp@ii
+                  \let\@save@ii\@temp@ii
+                  \expandafter\@eval\@temp@iii|#2->\@temp@iii
+                  \let\@temp@ii\@save@ii
+                  \expandafter\expandafter\expandafter\def
+                  \expandafter\expandafter\expandafter\@args
+                  \expandafter\expandafter\expandafter{%
+                  \expandafter\@args\expandafter{\@temp@iii}}}%
+             \fi\@@@@next\@@@next\let\@@@next\relax\let\@@@@next\relax
+           }\@@@next%
+           \let\@temp@i\@save
+           \expandafter\expandafter\expandafter\@apply@func
+           \expandafter\@temp@i\@args->#3}
+\def\@@next@closure#1#2#3{%
+           \expandafter\let\expandafter\@temp@ii\csname cdr#1\endcsname
+           \expandafter\@get@car\expandafter\@temp@ii\@temp@ii
+           \let\@save\@temp@i
+           \expandafter\@eval\@temp@ii|#2->\@temp@ii
+           \let\@temp@i\@save
+           \expandafter\expandafter\expandafter\@apply@closure
+           \expandafter\@temp@i\@temp@ii->#3}
