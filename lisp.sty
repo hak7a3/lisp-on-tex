@@ -81,7 +81,7 @@
 
 % reader
 \newcount\@malloc
-\newcount\@code
+\newcount\@temp@read@cnt
 \def\lispread#1#2{\gdef\@read@buffer{#2\@@eof\@@eof}\@lispread#1}
 \def\@lispread#1{%
 \begingroup
@@ -139,25 +139,16 @@
      \expandafter\@read@string\expandafter#1\@read@buffer\@@end
   \else\if/\expandafter\noexpand\@currentread
      \readchar
-     \if t\expandafter\noexpand\@currentread
-       \gdef#1{\Bool{true}}%
-     \else\if f\expandafter\noexpand\@currentread
-       \gdef#1{\Bool{false}}%
-     \fi\fi
-  \else
-    \unreadchar
+     \xdef#1{\noexpand\Bool{\@currentread}}%
+  \else\if:\expandafter\noexpand\@currentread
     \expandafter\@read@num\expandafter#1\@read@buffer\@@end
-  \fi\fi\fi\fi
+  \fi\fi\fi\fi\fi
 \endgroup}
-\def\@read@num#1#2~#3\@@end{%
-  \@@read@num#1#2.\@@end
-  \gdef\@read@buffer{#3}}
-\def\@@read@num#1#2.#3\@@end{%
-  \ifx\@dummy#3\@dummy
-   \gdef#1{\Int{#2}}%
-  \else
-   \gdef#1{\Float{#2.#3}}%
-  \fi}
+
+\def\@read@num#1#2\@@end{\afterassignment\@@read@num\@temp@read@cnt#2\@@end
+\expandafter\gdef\expandafter#1\expandafter{\expandafter\Int\expandafter{\the\@temp@read@cnt}}}
+\def\@@read@num#1\@@end{\gdef\@read@buffer{#1}}
+
 \def\@read@string#1#2'#3\@@end{%
   \gdef#1{\Value{#2}}%
   \gdef\@read@buffer{#3}}
@@ -171,10 +162,10 @@
 \addassoc\@globalenv\lambda{\Lambda{}}
 \addassoc\@globalenv\define{\Define{}}
 \addassoc\@globalenv\if{\If{}}
+\addassoc\@globalenv\let{\Let{}}
 
 % implemeted functions
 \newcount\@temp@count
-
 
 \def\@get@car#1#2#3{\ifx#1\Cons \@@get@car{#2}#3\else \gdef#3{\Error}\fi}
 \def\@get@cdr#1#2#3{\ifx#1\Cons \@@get@cdr{#2}#3\else \gdef#3{\Error}\fi}
@@ -190,6 +181,8 @@
 
 \addassoc\@globalenv\car{\Func{\@car@lisp}}
 \def\@car@lisp#1#2#3{\@get@car#2{#3}#1}
+\addassoc\@globalenv\cdr{\Func{\@cdr@lisp}}
+\def\@cdr@lisp#1#2#3{\@get@cdr#2{#3}#1}
 
 
 
@@ -220,38 +213,105 @@
   \expandafter\expandafter\expandafter#1\csname cdr#2\endcsname}
 
 %arithmetical functions
-\newskip\@temp@skipi
-\newskip\@temp@skipii
-\begingroup
-\lccode`\;=`\p
-\lccode`\:=`\t
-\lowercase{\endgroup\def\my@strip@pt#1;:{\Value{#1}}}
-\def\@dummy{\@@dummy}
-\addassoc\@globalenv\+{\Func{\@arith@plus}}
+\newcount\@temp@inti
+\newcount\@temp@intii
+\addassoc\@globalenv\+{\Func{\@temp@inti0\relax\@arith@plus}}
+\def\@arith@plus#1#2#3{%
+  \ifx#2\relax
+    \def\@next@plus{%
+       \expandafter\gdef
+       \expandafter#1%
+       \expandafter{\expandafter\Int\expandafter{\the\@temp@inti}}}%
+  \else\ifx#2\Int
+    \def\@next@plus{%
+       \advance\@temp@inti#3\relax
+       \@arith@plus#1}%
+  \fi\fi\@next@plus}
+
+\addassoc\@globalenv\-{\Func{\@temp@inti0\relax\@arith@minus}}
+\def\@arith@minus#1#2#3#4#5{%
+  \@temp@inti#3\relax
+  \ifx#4\relax
+    \multiply\@temp@inti-1\relax
+    \expandafter\gdef
+    \expandafter#1%
+    \expandafter{\expandafter\Int\expandafter{\the\@temp@inti}}%
+    \let\@next@minus\relax
+  \else\ifx#4\Int
+    \def\@next@minus{\@@arith@minus#1#4{#5}}%
+  \fi\fi\@next@minus}
+
+\def\@@arith@minus#1#2#3{%
+  \ifx#2\relax
+    \def\@next@minus{%
+       \expandafter\gdef
+       \expandafter#1%
+       \expandafter{\expandafter\Int\expandafter{\the\@temp@inti}}}%
+  \else\ifx#2\Int
+    \def\@next@minus{%
+       \@temp@intii#3\relax
+       \multiply\@temp@intii-1\relax
+       \advance\@temp@inti\@temp@intii\relax
+       \@@arith@minus#1}%
+  \fi\fi\@next@minus}
+
+%equality
+\addassoc\@globalenv\={\Func{\@lisp@equal}}
+\def\@lisp@equal#1#2#3#4#5{%
+  \gdef#1{\Bool{f}}%
+  \ifx#2#4
+    \def\@@temp@eqchecki{#3}%
+    \def\@@temp@eqcheckii{#5}%
+    \ifx\@@temp@eqchecki\@@temp@eqcheckii\gdef#1{\Bool{t}}\fi
+  \fi}
 
 % connection to TeX world
 \addassoc\@globalenv\print{\Func{\@tex@print}}
-\def\@tex@print#1#2{%
-  \gdef#1{\Nil}%
-  \let\@print@next\relax
-  \ifx#2\Value
-     \let\@print@next\@print@single
-  \else\ifx#2\Int
-     \let\@print@next\@print@single
-  \else\ifx#2\Float
-     \let\@print@next\@print@single
-  \else\ifx#2\True
-     \xdef\@temp@write@buffer{\@temp@write@buffer /t}%
-  \else\ifx#2\False
-     \xdef\@temp@write@buffer{\@temp@write@buffer /f}%
-  \fi\fi\fi\fi\fi\@print@next}
-\def\@print@single#1{\xdef\@temp@write@buffer{\@temp@write@buffer#1}}
+\def\@tex@print#1#2#3{%
+   \gdef#1{\Nil}\@@tex@print#2{#3}}
+\def\@@tex@print#1#2{%
+  \ifx#1\Closure
+    \@add@to@write@buffer\@temp@write@buffer{[LAMBDA]}%
+  \else\ifx#1\Func
+    \@add@to@write@buffer\@temp@write@buffer{[FUNCTION]}%
+  \else\ifx#1\Value
+    \@add@to@write@buffer\@temp@write@buffer{'#2'}%
+  \else\ifx#1\Int
+    \@add@to@write@buffer\@temp@write@buffer{:#2}%
+  \else\ifx#1\Nil
+    \@add@to@write@buffer\@temp@write@buffer{()}%
+  \else\ifx#1\Symbol
+    \@add@to@write@buffer\@temp@write@buffer{\string#2}%
+  \else\ifx#1\Bool
+    \@add@to@write@buffer\@temp@write@buffer{/#2}%
+  \else\ifx#1\Cons
+    \@add@to@write@buffer\@temp@write@buffer{(}%
+    \expandafter\expandafter\expandafter\@@tex@print\csname car#2\endcsname
+    \expandafter\expandafter\expandafter\@@tex@print@cons\csname cdr#2\endcsname
+  \fi\fi\fi\fi\fi\fi\fi\fi}
+
+\def\@@tex@print@cons#1#2{%
+  \ifx#1\Cons
+    \@add@to@write@buffer\@temp@write@buffer{ }%
+    \expandafter\expandafter\expandafter\@@tex@print\csname car#2\endcsname
+    \expandafter\expandafter\expandafter\@@tex@print@cons\csname cdr#2\endcsname
+  \else\ifx#1\Nil
+    \@add@to@write@buffer\@temp@write@buffer{)}%
+  \else
+    \@add@to@write@buffer\@temp@write@buffer{.}%
+    \@@tex@print@cons#1{#2}
+    \@add@to@write@buffer\@temp@write@buffer{)}%
+  \fi\fi}
+
+
+\def\@add@to@write@buffer#1#2{%
+ \expandafter\gdef\expandafter#1\expandafter{#1#2}}
 
 
 
 
 \def\@defined@datatype{Cons,Symbol,Value,Nil,Func,Closure,Int,Float,Bool}
-\def\@defined@specialform{Lambda,Quote,Define,If}
+\def\@defined@specialform{Lambda,Quote,Define,If,Let}
 
 \edef\@defined@lisp@on@tex{\@defined@datatype,\@defined@specialform}
 \def\@save@latex@world{%
@@ -278,13 +338,16 @@
   {\@restore@latex@world}%
   \@temp@write@buffer}
 
-\def\@gobble@iii#1#2#3{}
+\def\@gobble@iii#1#2#3#4{\gdef#4{#1{#2}}}
 \def\@eval#1#2#3#4{%
   \begingroup
-  \ifx#1\Cons         \let\@next\@next@apply%
-  \else\ifx#1\Symbol  \let\@next\@next@symbol%
-  \else               \gdef#4{#1{#2}}\let\@next\@gobble@iii
-  \fi\fi\@next{#2}{#3}{#4}\let\@next\relax\endgroup}
+  \ifx#1\Cons         \let\@next\@next@apply@%
+  \else\ifx#1\Symbol  \let\@next\@next@symbol@%
+  \else               \let\@next\@gobble@iii
+  \fi\fi\@next{#1}{#2}{#3}{#4}\let\@next\relax\endgroup}
+
+\def\@next@apply@#1#2#3#4{\@next@apply{#2}{#3}{#4}}
+\def\@next@symbol@#1#2#3#4{\@next@symbol{#2}{#3}{#4}}
 
 
 \def\@get@type#1#2#3{\let#3#1}
@@ -305,7 +368,9 @@
      \let\@@next\@@next@closure%%
   \else\ifx\@test@label\If
      \let\@@next\@@next@if
-  \fi\fi\fi\fi\fi\fi\@@next{#1}{#2}{#3}\let\@@next\relax}
+  \else\ifx\@test@label\Let
+     \let\@@next\@@next@let
+  \fi\fi\fi\fi\fi\fi\fi\@@next{#1}{#2}{#3}\let\@@next\relax}
 
 
 \def\@next@symbol#1#2#3{%
@@ -317,8 +382,6 @@
       \expandafter\@temp@env\@globalenv}%
       \getassoc\@temp@env#1#3}
 
-
-\def\@get@symbol#1#2{\ifx\#1\Symbol#2\else\fi}
 \def\@create@closure\Symbol#1#2#3#4#5{\gdef#5{\Closure{#1,#2{#3},#4}}}
 \def\@@next@lambda#1#2#3{%
    \@@get@cdr{#1}\@temp@i
@@ -333,6 +396,9 @@
     \expandafter\@get@car\@temp@i\@temp@i
     \expandafter\gdef\expandafter#3\expandafter{\@temp@i}}
 
+% cons cell, environment, target
+\def\@@next@let#1#2#3{%
+}
 
 \def\@modify@genv\Symbol#1#2#3{\addassoc\@globalenv#1{#2{#3}}}
 \def\@@next@define#1#2#3{%
@@ -345,13 +411,15 @@
    \expandafter\expandafter\expandafter\@modify@genv\expandafter\@save@ii\@temp@i
    \gdef#3{\Nil}}
 
-\def\@if@true{true}
-\def\@if@false{false}
+\def\@if@true{t}
+\def\@if@false{f}
 \def\@get@bool\Bool#1#2{\def#2{#1}}
 \def\@@next@if#1#2#3{%
    \@@get@cdr{#1}\@temp@i
    \expandafter\@get@car\@temp@i\@temp@ii % cadr -> \Bool{value}
-   \expandafter\@get@cdr\@temp@i\@temp@i
+   \let\@save@temp@i\@temp@i
+   \expandafter\@eval\@temp@ii{#2}\@temp@ii
+   \expandafter\@get@cdr\@save@temp@i\@temp@i
    \expandafter\@get@bool\@temp@ii\@temp@ii
    \ifx\@temp@ii\@if@false
       \expandafter\@get@cdr\@temp@i\@temp@i
@@ -378,7 +446,7 @@
      \fi\@@@next}\@@@next
    \expandafter\expandafter\expandafter\@apply@func\expandafter\@save\expandafter{\the\@args}#3} 
 
-\def\@apply@func\Func#1#2#3{#1#3#2}
+\def\@apply@func\Func#1#2#3{#1#3#2\relax\relax}
 
 
 \def\@@next@closure#1#2#3{%
@@ -387,6 +455,7 @@
     \let\@save\@temp@i
     \expandafter\@eval\@temp@ii{#2}\@temp@ii%
     \expandafter\expandafter\expandafter\@apply@closure\expandafter\@save\@temp@ii#3}
+
 
 \def\@apply@closure\Closure#1#2#3#4{\@@apply@closure#1,#2{#3}#4}
 \def\@@apply@closure#1,#2,#3,#4#5#6{%
