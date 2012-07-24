@@ -9,8 +9,7 @@
 % The origin of this sample code is written by ZR-TeXnobabbler.
 % See also http://d.hatena.ne.jp/zrbabbler/20120706/1341598778
 % Thanks to ZR (^^)
-$\left\lfloor\sqrt{2^{2+1}}\right\rfloor$=
-\tracingmacros=1
+$\left\lfloor\sqrt{3^{3+1}}\right\rfloor$=
 \lispinterpl{
 (\define \zero (\lambda \s (\lambda \z \z)))
 (\define \inc (\lambda \n (\lambda \s (\lambda \z (\s ((\n \s) \z))))))
@@ -35,14 +34,9 @@ $\left\lfloor\sqrt{2^{2+1}}\right\rfloor$=
         %<BODY \sk>
           (\inc \k))%</BODY>
     )))))
-(\print (\stars (\isqrt ((\inc \two) \two))))
-(\print (\+ :10 :100 :1 (\+ :100 :10 :1)))
-(\print (\car (\cons '*' :100)))
-(\print (\= :1 :0))
+(\print (\stars (\isqrt ((\inc (\inc \two)) (\inc \two)))))
+% (\print (\+ :10 :100 :1 (\+ :100 :10 :1)))
+% (\print (\car (\cons '*' :100)))
+% (\print (\= :1 :0))
 }
- \lispread\fuga{\if}
- \show\fuga
- \lispeval\fuga\piyo
- \show\piyo
-\tracingmacros=0
 \end{document}

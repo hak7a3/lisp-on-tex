@@ -425,7 +425,8 @@
       \expandafter\@get@cdr\@temp@i\@temp@i
    \fi
    \expandafter\@get@car\@temp@i\@temp@ii
-   \expandafter\@eval\@temp@ii{#2}#3}
+   \expandafter\gdef\expandafter\@@tco\expandafter{\expandafter\@eval\@temp@ii{#2}#3}%
+   \aftergroup\@@tco}
 
 \newtoks\@args
 \def\@@next@func#1#2#3{%
@@ -446,7 +447,7 @@
      \fi\@@@next}\@@@next
    \expandafter\expandafter\expandafter\@apply@func\expandafter\@save\expandafter{\the\@args}#3} 
 
-\def\@apply@func\Func#1#2#3{#1#3#2\relax\relax}
+\def\@apply@func\Func#1#2#3{\gdef\@@tco{#1#3#2\relax\relax}\aftergroup\@@tco}
 
 
 \def\@@next@closure#1#2#3{%
@@ -459,4 +460,4 @@
 
 \def\@apply@closure\Closure#1#2#3#4{\@@apply@closure#1,#2{#3}#4}
 \def\@@apply@closure#1,#2,#3,#4#5#6{%
-  \@eval#2{#1{#4{#5}}#3}#6}
+  \gdef\@@tco{\@eval#2{#1{#4{#5}}#3}#6}\aftergroup\@@tco}
