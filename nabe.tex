@@ -1,0 +1,27 @@
+%%
+%% This is file `nabe.tex'.
+%%
+%%  License: Modified BSD - see LICENSE file
+%%
+\documentclass{jarticle}
+\usepackage{lisp}
+\begin{document}
+\font\hoge=cmfi10
+\def\NabeAzz#1{\lispinterpl{
+(\define \nabe (\lambda \i (\lispif (\= (\- \i :1) :#1) '' (\concat
+  (\internabe \i) ' ' (\nabe (\+ \i :1))))))
+(\define \internabe (\lambda \m 
+   (\lispif (\= (\* (\/ \m :3) :3) \m) 
+        (\group (\concat '\hoge' (\strOfInt \m)))
+        ((\internabei \m) :1))))
+(\define \internabei  (\lambda \i (\lambda \base 
+   (\lispif (\< \i \base) (\strOfInt \i) 
+      (\lispif (\= :3 
+              (\/ (\- \i (\*(\/ \i (\* \base :10)) (\* \base :10))) 
+                  \base)) 
+        (\group (\concat '\hoge' (\strOfInt \i)))
+        ((\internabei \i) (\* \base :10)))))))
+(\print (\nabe :1))}}
+\tracingmacros=1
+\NabeAzz{40}
+\end{document}

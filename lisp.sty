@@ -161,7 +161,7 @@
 \addassoc\@globalenv\quote{\Quote{}}%
 \addassoc\@globalenv\lambda{\Lambda{}}
 \addassoc\@globalenv\define{\Define{}}
-\addassoc\@globalenv\if{\If{}}
+\addassoc\@globalenv\lispif{\If{}}
 \addassoc\@globalenv\let{\Let{}}
 
 % implemeted functions
@@ -228,7 +228,21 @@
        \@arith@plus#1}%
   \fi\fi\@next@plus}
 
-\addassoc\@globalenv\-{\Func{\@temp@inti0\relax\@arith@minus}}
+
+\addassoc\@globalenv\*{\Func{\@temp@inti1\relax\@arith@mult}}
+\def\@arith@mult#1#2#3{%
+  \ifx#2\relax
+    \def\@next@mult{%
+       \expandafter\gdef
+       \expandafter#1%
+       \expandafter{\expandafter\Int\expandafter{\the\@temp@inti}}}%
+  \else\ifx#2\Int
+    \def\@next@mult{%
+       \multiply\@temp@inti#3\relax
+       \@arith@mult#1}%
+  \fi\fi\@next@mult}
+
+\addassoc\@globalenv\-{\Func{\@arith@minus}}
 \def\@arith@minus#1#2#3#4#5{%
   \@temp@inti#3\relax
   \ifx#4\relax
@@ -255,6 +269,36 @@
        \@@arith@minus#1}%
   \fi\fi\@next@minus}
 
+
+\addassoc\@globalenv\/{\Func{\@arith@div}}
+\def\@arith@div#1#2#3#4#5{%
+  \@temp@inti#3\relax
+  \ifx#4\relax
+    \expandafter\gdef
+    \expandafter#1%
+    \expandafter{\expandafter\Int\expandafter{\the\@temp@inti}}%
+    \let\@next@div\relax
+  \else\ifx#4\Int
+    \def\@next@div{\@@arith@div#1#4{#5}}%
+  \fi\fi\@next@div}
+
+\def\@@arith@div#1#2#3{%
+  \ifx#2\relax
+    \def\@next@div{%
+       \expandafter\gdef
+       \expandafter#1%
+       \expandafter{\expandafter\Int\expandafter{\the\@temp@inti}}}%
+  \else\ifx#2\Int
+    \def\@next@div{%
+       \divide\@temp@inti#3\relax
+       \@@arith@div#1}%
+  \fi\fi\@next@div}
+
+
+\addassoc\@globalenv\<{\Func{\@arith@lt}}
+\def\@arith@lt#1\Int#2\Int#3{\ifnum#2<#3\gdef#1{\Bool{t}}\else\gdef#1{\Bool{f}}\fi}
+
+
 %equality
 \addassoc\@globalenv\={\Func{\@lisp@equal}}
 \def\@lisp@equal#1#2#3#4#5{%
@@ -265,7 +309,19 @@
     \ifx\@@temp@eqchecki\@@temp@eqcheckii\gdef#1{\Bool{t}}\fi
   \fi}
 
+%string manipulation
+\addassoc\@globalenv\concat{\Func{\def\@temp@str{}\@str@concat}}
+\def\@str@concat#1#2#3{\let\@@next@str\relax\ifx#2\Value
+    \expandafter\def\expandafter\@temp@str\expandafter{\@temp@str#3}\def\@@next@str{\@str@concat#1}%
+  \else\ifx#2\relax\expandafter\gdef\expandafter#1\expandafter{\expandafter\Value\expandafter{\@temp@str}}\else\gdef#1{\Error}\fi\fi\@@next@str}
+
+\addassoc\@globalenv\strOfInt{\Func{\@conv@strint}}
+\def\@conv@strint#1\Int#2{\gdef#1{\Value{#2}}}
+
 % connection to TeX world
+\addassoc\@globalenv\group{\Func{\@text@group}}
+\def\@text@group#1#2#3{\ifx#2\Value\gdef#1{\Value{{#3}}}\else\gdef#1{\Error}\fi}
+
 \addassoc\@globalenv\print{\Func{\@tex@print}}
 \def\@tex@print#1#2#3{%
    \gdef#1{\Nil}\@@tex@print#2{#3}}
