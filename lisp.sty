@@ -324,7 +324,7 @@
 
 \addassoc\@globalenv\print{\Func{\@tex@print}}
 \def\@tex@print#1#2#3{%
-   \gdef#1{\Nil}\@@tex@print#2{#3}}
+   \gdef#1{\Nil{}}\@@tex@print#2{#3}}
 \def\@@tex@print#1#2{%
   \ifx#1\Closure
     \@add@to@write@buffer\@temp@write@buffer{[LAMBDA]}%
@@ -357,6 +357,19 @@
     \@add@to@write@buffer\@temp@write@buffer{.}%
     \@@tex@print@cons#1{#2}
     \@add@to@write@buffer\@temp@write@buffer{)}%
+  \fi\fi}
+
+
+\addassoc\@globalenv\texprint{\Func{\@tex@texprint}}
+\def\@tex@texprint#1#2#3{%
+   \gdef#1{\Nil{}}\@@tex@texprint#2{#3}}
+\def\@@tex@texprint#1#2{%
+  \ifx#1\Value
+    \@add@to@write@buffer\@temp@write@buffer{#2}%
+  \else\ifx#1\Int
+    \@add@to@write@buffer\@temp@write@buffer{#2}%
+  \else
+    \@add@to@write@buffer\@temp@write@buffer{INNER TOKEN}%
   \fi\fi}
 
 
