@@ -80,6 +80,7 @@
   \@next}
 
 % reader
+\def\@lisp@empty{}%\@empty ...
 \newcount\@malloc
 \newcount\@temp@read@cnt
 \def\lispread#1#2{\gdef\@read@buffer{#2\@@eof\@@eof}\@lispread#1}
@@ -136,7 +137,7 @@
      \expandafter\gdef\expandafter#1\expandafter{%
      \expandafter\Symbol\expandafter{\@currentread}}%
   \else\if'\expandafter\noexpand\@currentread
-     \expandafter\@read@string\expandafter#1\@read@buffer\@@end
+     \expandafter\@read@string\expandafter#1\expandafter\@lisp@empty\@read@buffer\@@end
   \else\if/\expandafter\noexpand\@currentread
      \readchar
      \xdef#1{\noexpand\Bool{\@currentread}}%
@@ -150,8 +151,8 @@
 \def\@@read@num#1\@@end{\gdef\@read@buffer{#1}}
 
 \def\@read@string#1#2'#3\@@end{%
-  \gdef#1{\Value{#2}}%
-  \gdef\@read@buffer{#3}}
+  \expandafter\gdef\expandafter#1\expandafter{\expandafter\Value\expandafter{#2}}% expand \@lisp@empty
+  \gdef\@read@buffer{#3}} % I don't consider that #3 is single grouped tokens. In LISP on TeX, it never happen.
 
 % eval
 %% write buffer
@@ -321,6 +322,11 @@
 % connection to TeX world
 \addassoc\@globalenv\group{\Func{\@text@group}}
 \def\@text@group#1#2#3{\ifx#2\Value\gdef#1{\Value{{#3}}}\else\gdef#1{\Error}\fi}
+
+\addassoc\@globalenv\ungroup{\Func{\@text@ungroup}}
+\def\@text@ungroup#1#2#3{\ifx#2\Value\@@text@ungroup#1#3\@@end\else\gdef#1{\Error}\fi}
+\def\@@text@ungroup#1#2#3\@@end{\ifx\@dummy#3\@dummy\gdef#1{\Value{#2}}\else
+\gdef#1{\Error}\fi}
 
 \addassoc\@globalenv\print{\Func{\@tex@print}}
 \def\@tex@print#1#2#3{%
