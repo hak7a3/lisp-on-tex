@@ -9,6 +9,7 @@
 % The origin of this sample code is written by ZR-TeXnobabbler.
 % See also http://d.hatena.ne.jp/zrbabbler/20120706/1341598778
 % Thanks to ZR (^^)
+\section{hogehoges}
 $\left\lfloor\sqrt{3^{3+1}}\right\rfloor$=
 \tracingmacros=1
 \lispinterpl{
@@ -41,5 +42,8 @@ $\left\lfloor\sqrt{3^{3+1}}\right\rfloor$=
 % (\print (\= :1 :0))
 (\print (\ungroup '{\def\hoge{aaaa}\hoge}'))
 (\print '\hoge')
-}\tracingmacros=0
+(\print (\readLaTeXCounter 'section'))
+(\print @15pt plus 1em minus 1zw)
+}
+\tracingmacros=0
 \end{document}

@@ -142,13 +142,26 @@
      \readchar
      \xdef#1{\noexpand\Bool{\@currentread}}%
   \else\if:\expandafter\noexpand\@currentread
-    \expandafter\@read@num\expandafter#1\@read@buffer\@@end
-  \fi\fi\fi\fi\fi
+    \expandafter\@read@num\expandafter#1\@read@buffer
+  \else\if !\expandafter\noexpand\@currentread
+    \expandafter\@read@dimen\expandafter#1\@read@buffer
+  \else\if @\expandafter\noexpand\@currentread
+    \expandafter\@read@skip\expandafter#1\@read@buffer
+  \fi\fi\fi\fi\fi\fi\fi
 \endgroup}
 
-\def\@read@num#1#2\@@end{\afterassignment\@@read@num\@temp@read@cnt#2\@@end
+\def\@read@num#1#2\@@eof\@@eof{\afterassignment\@@read@num\@temp@read@cnt#2\@@end
 \expandafter\gdef\expandafter#1\expandafter{\expandafter\Int\expandafter{\the\@temp@read@cnt}}}
-\def\@@read@num#1\@@end{\gdef\@read@buffer{#1}}
+\def\@@read@num#1\@@end{\gdef\@read@buffer{#1\@@eof\@@eof}}
+
+\def\@read@dimen#1#2\@@eof\@@eof{\afterassignment\@@read@dimen\dimen@#2\@@end
+\expandafter\gdef\expandafter#1\expandafter{\expandafter\Dimen\expandafter{\the\dimen@}}}
+\let\@@read@dimen\@@read@num
+
+\def\@read@skip#1#2\@@eof\@@eof{\afterassignment\@@read@dimen\skip@#2\@@end
+\expandafter\gdef\expandafter#1\expandafter{\expandafter\Skip\expandafter{\the\skip@}}}
+\let\@@read@dimen\@@read@num
+
 
 \def\@read@string#1#2'#3\@@end{%
   \expandafter\gdef\expandafter#1\expandafter{\expandafter\Value\expandafter{#2}}% expand \@lisp@empty
@@ -328,6 +341,17 @@
 \def\@@text@ungroup#1#2#3\@@end{\ifx\@dummy#3\@dummy\gdef#1{\Value{#2}}\else
 \gdef#1{\Error}\fi}
 
+\addassoc\@globalenv\readLaTeXCounter{\Func{\@tex@read@latex@counter}}
+\def\@tex@read@latex@counter#1#2#3{%
+  \expandafter\expandafter\expandafter\gdef
+  \expandafter\expandafter\expandafter#1%
+  \expandafter\expandafter\expandafter{%
+  \expandafter\expandafter\expandafter\Int
+  \expandafter\expandafter\expandafter{%
+   \expandafter\the\csname c@#3\endcsname}}}
+
+
+
 \addassoc\@globalenv\print{\Func{\@tex@print}}
 \def\@tex@print#1#2#3{%
    \gdef#1{\Nil{}}\@@tex@print#2{#3}}
@@ -349,8 +373,13 @@
   \else\ifx#1\Cons
     \@add@to@write@buffer\@temp@write@buffer{(}%
     \expandafter\expandafter\expandafter\@@tex@print\csname car#2\endcsname
-    \expandafter\expandafter\expandafter\@@tex@print@cons\csname cdr#2\endcsname
-  \fi\fi\fi\fi\fi\fi\fi\fi}
+    \expandafter\expandafter\expandafter\@@tex@print@cons\csname
+    cdr#2\endcsname
+  \else\ifx#1\Dimen
+    \@add@to@write@buffer\@temp@write@buffer{!#2}%
+  \else\ifx#1\Skip
+    \@add@to@write@buffer\@temp@write@buffer{@#2}%
+  \fi\fi\fi\fi\fi\fi\fi\fi\fi\fi}
 
 \def\@@tex@print@cons#1#2{%
   \ifx#1\Cons
@@ -385,7 +414,7 @@
 
 
 
-\def\@defined@datatype{Cons,Symbol,Value,Nil,Func,Closure,Int,Float,Bool}
+\def\@defined@datatype{Cons,Symbol,Value,Nil,Func,Closure,Int,Bool,Dimen,Skip}
 \def\@defined@specialform{Lambda,Quote,Define,If,Let}
 
 \edef\@defined@lisp@on@tex{\@defined@datatype,\@defined@specialform}
