@@ -1,0 +1,16 @@
+%%
+%% This is file `test2.tex'.
+%%
+%%  License: Modified BSD - see LICENSE file
+%%
+\documentclass{jarticle}
+\usepackage{lisp}
+\begin{document}
+\section{hogehoges}
+\tracingmacros=1
+\lispinterpl{
+(\print ((\lambda (\x \y \z) \y) :1 :2 :3))
+}
+\end{document}
+
+

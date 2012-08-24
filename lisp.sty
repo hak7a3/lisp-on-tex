@@ -17,7 +17,11 @@
 \def\@car@buffer#1#2\relax{%
 \gdef\@currentread{#1}\gdef\@read@buffer{#2}}
 \def\unreadchar{\ifx\@eof\@currentread
-\else\expandafter\expandafter\expandafter\gdef\expandafter\expandafter\expandafter\@read@buffer\expandafter\expandafter\expandafter{\expandafter\@currentread\@read@buffer}\gdef\@currentread{}\fi}
+\else
+  \expandafter\expandafter\expandafter\gdef
+  \expandafter\expandafter\expandafter\@read@buffer
+  \expandafter\expandafter\expandafter{%
+  \expandafter\@currentread\@read@buffer}\gdef\@currentread{}\fi}
 
 %% assoc \cs -> value
 % constructor
@@ -89,7 +93,7 @@
   \readchar
   \if(\expandafter\noexpand\@currentread
    \readchar
-   \if\expandafter\noexpand\@currentread)
+   \if\expandafter\noexpand\@currentread)%
      \gdef#1{\Nil{}}%
    \else
      \unreadchar
@@ -108,7 +112,7 @@
          \xdef#1{\noexpand\Cons{\the\@malloc}}%
          \global\advance\@malloc1
        \else
-         \gdef#1{\Error{}}%
+         \gdef#1{\Error{read:cannot find ')'}}%
        \fi
      \else\if)\expandafter\noexpand\@currentread
        \expandafter\global\expandafter
@@ -143,29 +147,33 @@
      \xdef#1{\noexpand\Bool{\@currentread}}%
   \else\if:\expandafter\noexpand\@currentread
     \expandafter\@read@num\expandafter#1\@read@buffer
-  \else\if !\expandafter\noexpand\@currentread
+  \else\if!\expandafter\noexpand\@currentread
     \expandafter\@read@dimen\expandafter#1\@read@buffer
   \else\if @\expandafter\noexpand\@currentread
     \expandafter\@read@skip\expandafter#1\@read@buffer
   \fi\fi\fi\fi\fi\fi\fi
 \endgroup}
 
-\def\@read@num#1#2\@@eof\@@eof{\afterassignment\@@read@num\@temp@read@cnt#2\@@end
-\expandafter\gdef\expandafter#1\expandafter{\expandafter\Int\expandafter{\the\@temp@read@cnt}}}
+\def\@read@num#1#2\@@eof\@@eof{%
+  \afterassignment\@@read@num\@temp@read@cnt#2\@@end
+  \expandafter\gdef
+  \expandafter#1%
+  \expandafter{\expandafter\Int\expandafter{\the\@temp@read@cnt}}}
 \def\@@read@num#1\@@end{\gdef\@read@buffer{#1\@@eof\@@eof}}
 
 \def\@read@dimen#1#2\@@eof\@@eof{\afterassignment\@@read@dimen\dimen@#2\@@end
 \expandafter\gdef\expandafter#1\expandafter{\expandafter\Dimen\expandafter{\the\dimen@}}}
 \let\@@read@dimen\@@read@num
 
-\def\@read@skip#1#2\@@eof\@@eof{\afterassignment\@@read@dimen\skip@#2\@@end
+\def\@read@skip#1#2\@@eof\@@eof{\afterassignment\@@read@skip\skip@#2\@@end
 \expandafter\gdef\expandafter#1\expandafter{\expandafter\Skip\expandafter{\the\skip@}}}
-\let\@@read@dimen\@@read@num
+\let\@@read@skip\@@read@num
 
 
 \def\@read@string#1#2'#3\@@end{%
-  \expandafter\gdef\expandafter#1\expandafter{\expandafter\Value\expandafter{#2}}% expand \@lisp@empty
-  \gdef\@read@buffer{#3}} % I don't consider that #3 is single grouped tokens. In LISP on TeX, it never happen.
+  \expandafter\gdef\expandafter#1%
+  \expandafter{\expandafter\Value\expandafter{#2}}% expand \@lisp@empty
+  \gdef\@read@buffer{#3}}% I don't consider that #3 is single grouped tokens. In LISP on TeX, it never happen.
 
 % eval
 %% write buffer
@@ -181,8 +189,8 @@
 % implemeted functions
 \newcount\@temp@count
 
-\def\@get@car#1#2#3{\ifx#1\Cons \@@get@car{#2}#3\else \gdef#3{\Error}\fi}
-\def\@get@cdr#1#2#3{\ifx#1\Cons \@@get@cdr{#2}#3\else \gdef#3{\Error}\fi}
+\def\@get@car#1#2#3{\ifx#1\Cons\@@get@car{#2}#3\else\gdef#3{\Error{car:type error}}\fi}
+\def\@get@cdr#1#2#3{\ifx#1\Cons\@@get@cdr{#2}#3\else\gdef#3{\Error{cdr:type error}}\fi}
 
 \def\@@get@car#1#2{%
   \expandafter\expandafter\expandafter\gdef
@@ -310,14 +318,14 @@
 
 
 \addassoc\@globalenv\<{\Func{\@arith@lt}}
-\def\@arith@lt#1\Int#2\Int#3{\ifnum#2<#3\gdef#1{\Bool{t}}\else\gdef#1{\Bool{f}}\fi}
+\def\@arith@lt#1\Int#2\Int#3{\ifnum#2<#3 \gdef#1{\Bool{t}}\else\gdef#1{\Bool{f}}\fi}
 
 
 %equality
 \addassoc\@globalenv\={\Func{\@lisp@equal}}
 \def\@lisp@equal#1#2#3#4#5{%
   \gdef#1{\Bool{f}}%
-  \ifx#2#4
+  \ifx#2#4%
     \def\@@temp@eqchecki{#3}%
     \def\@@temp@eqcheckii{#5}%
     \ifx\@@temp@eqchecki\@@temp@eqcheckii\gdef#1{\Bool{t}}\fi
@@ -327,17 +335,18 @@
 \addassoc\@globalenv\concat{\Func{\def\@temp@str{}\@str@concat}}
 \def\@str@concat#1#2#3{\let\@@next@str\relax\ifx#2\Value
     \expandafter\def\expandafter\@temp@str\expandafter{\@temp@str#3}\def\@@next@str{\@str@concat#1}%
-  \else\ifx#2\relax\expandafter\gdef\expandafter#1\expandafter{\expandafter\Value\expandafter{\@temp@str}}\else\gdef#1{\Error}\fi\fi\@@next@str}
+  \else\ifx#2\relax\expandafter\gdef\expandafter#1\expandafter{\expandafter\Value\expandafter{\@temp@str}}\else\gdef#1{\Error{concat:type error}}\fi\fi\@@next@str}
 
 \addassoc\@globalenv\strOfInt{\Func{\@conv@strint}}
 \def\@conv@strint#1\Int#2{\gdef#1{\Value{#2}}}
 
 % connection to TeX world
 \addassoc\@globalenv\group{\Func{\@text@group}}
-\def\@text@group#1#2#3{\ifx#2\Value\gdef#1{\Value{{#3}}}\else\gdef#1{\Error}\fi}
+\def\@text@group#1#2#3{\ifx#2\Value
+   \gdef#1{\Value{{#3}}}\else\gdef#1{\Error{group:type error}}\fi}
 
 \addassoc\@globalenv\ungroup{\Func{\@text@ungroup}}
-\def\@text@ungroup#1#2#3{\ifx#2\Value\@@text@ungroup#1#3\@@end\else\gdef#1{\Error}\fi}
+\def\@text@ungroup#1#2#3{\ifx#2\Value\@@text@ungroup#1#3\@@end\else\gdef#1{\Error{ungroup:type error}}\fi}
 \def\@@text@ungroup#1#2#3\@@end{\ifx\@dummy#3\@dummy\gdef#1{\Value{#2}}\else
 \gdef#1{\Error}\fi}
 
@@ -390,7 +399,7 @@
     \@add@to@write@buffer\@temp@write@buffer{)}%
   \else
     \@add@to@write@buffer\@temp@write@buffer{.}%
-    \@@tex@print@cons#1{#2}
+    \@@tex@print#1{#2}%
     \@add@to@write@buffer\@temp@write@buffer{)}%
   \fi\fi}
 
@@ -414,7 +423,7 @@
 
 
 
-\def\@defined@datatype{Cons,Symbol,Value,Nil,Func,Closure,Int,Bool,Dimen,Skip}
+\def\@defined@datatype{Cons,Symbol,Value,Nil,Func,Closure,Int,Bool,Dimen,Skip,Error}
 \def\@defined@specialform{Lambda,Quote,Define,If,Let}
 
 \edef\@defined@lisp@on@tex{\@defined@datatype,\@defined@specialform}
@@ -458,7 +467,7 @@
 \def\@next@apply#1#2#3{%
   \@@get@car{#1}\@temp@i
   \expandafter\@eval\@temp@i{#2}\@temp@i
-  \def\@@next{\gdef#3{\Error}}%
+  \def\@@next{\gdef#3{\Error{Apply:CAR of cons cell is not function.}}}%
   \expandafter\@get@type\@temp@i\@test@label
   \ifx\@test@label\Lambda
      \let\@@next\@@next@lambda%
@@ -486,14 +495,42 @@
       \expandafter\@temp@env\@globalenv}%
       \getassoc\@temp@env#1#3}
 
-\def\@create@closure\Symbol#1#2#3#4#5{\gdef#5{\Closure{#1,#2{#3},#4}}}
-\def\@@next@lambda#1#2#3{%
-   \@@get@cdr{#1}\@temp@i
-   \expandafter\@get@car\@temp@i\@temp@ii % cadr -> \Symbol{\cs}
-   \expandafter\@get@cdr\@temp@i\@temp@i
-   \expandafter\@get@car\@temp@i\@temp@i  % caddr -> body
-   \expandafter\expandafter\expandafter\@create@closure\expandafter\@temp@ii\@temp@i{#2}#3}
+% \def\@create@closure\Symbol#1#2#3#4#5{\gdef#5{\Closure{#1,#2{#3},#4}}}
+% \def\@@next@lambda#1#2#3{%
+%    \@@get@cdr{#1}\@temp@i
+%    \expandafter\@get@car\@temp@i\@temp@ii % cadr -> \Symbol{\cs}
+%    \expandafter\@get@cdr\@temp@i\@temp@i
+%    \expandafter\@get@car\@temp@i\@temp@i  % caddr -> body
+%    \expandafter\expandafter\expandafter\@create@closure\expandafter\@temp@ii\@temp@i{#2}#3}
 
+% (\csi \csii ...) -> \csi\csii... .
+\def\@bind@get@symbol\Symbol#1#2{\@add@to@write@buffer#2{#1}}
+\def\@create@bind#1#2#3{\let\@bind@next\relax%
+  \ifx#1\Symbol
+    \@add@to@write@buffer#3{:#2}%
+  \else\ifx#1\Cons
+    \expandafter\expandafter\expandafter\@bind@get@symbol
+      \csname car#2\endcsname#3%
+    \def\@bind@next{\expandafter\expandafter\expandafter\@create@bind
+      \csname cdr#2\endcsname#3}%
+  \else\ifx#1\Nil
+    \@add@to@write@buffer#3{:\relax}%
+  \fi\fi\fi\@bind@next}
+
+
+\def\@@next@lambda#1#2#3{%
+  \@@get@cdr{#1}\@temp@i
+  \expandafter\@get@car\@temp@i\@temp@ii % cadr -> bind list
+  \def\@temp@iii{}% init convert
+  \expandafter\@create@bind\@temp@ii\@temp@iii % convert bind list to inner form
+  \expandafter\@get@cdr\@temp@i\@temp@i
+  \expandafter\@get@car\@temp@i\@temp@i% caddr -> body
+  \expandafter\expandafter\expandafter\gdef
+  \expandafter\expandafter\expandafter#3%
+  \expandafter\expandafter\expandafter{%
+  \expandafter\@temp@iii
+  \expandafter,\@temp@i,{#2}}%
+  \expandafter\gdef\expandafter#3\expandafter{\expandafter\Closure\expandafter{#3}}}
 
 \def\@@next@quote#1#2#3{%
     \@@get@cdr{#1}\@temp@i
@@ -501,8 +538,7 @@
     \expandafter\gdef\expandafter#3\expandafter{\@temp@i}}
 
 % cons cell, environment, target
-\def\@@next@let#1#2#3{%
-}
+\def\@@next@let#1#2#3{}
 
 \def\@modify@genv\Symbol#1#2#3{\addassoc\@globalenv#1{#2{#3}}}
 \def\@@next@define#1#2#3{%
@@ -512,7 +548,8 @@
    \expandafter\@get@car\@temp@i\@temp@i  % caddr -> body
    \let\@save@ii\@temp@ii
    \expandafter\@eval\@temp@i{#2}\@temp@i
-   \expandafter\expandafter\expandafter\@modify@genv\expandafter\@save@ii\@temp@i
+   \expandafter\expandafter\expandafter\@modify@genv
+   \expandafter\@save@ii\@temp@i
    \gdef#3{\Nil}}
 
 \def\@if@true{t}
@@ -549,19 +586,108 @@
        \let\@temp@ii\@save@ii
        \expandafter\expandafter\expandafter\@args\expandafter\expandafter\expandafter{\expandafter\the\expandafter\@args\@temp@iii}%
      \fi\@@@next}\@@@next
-   \expandafter\expandafter\expandafter\@apply@func\expandafter\@save\expandafter{\the\@args}#3} 
+   \expandafter\expandafter\expandafter\@apply@func\expandafter\@save\expandafter{\the\@args}#3}
 
 \def\@apply@func\Func#1#2#3{\gdef\@@tco{#1#3#2\relax\relax}\aftergroup\@@tco}
 
 
+
 \def\@@next@closure#1#2#3{%
-    \@@get@cdr{#1}\@temp@ii
-    \expandafter\@get@car\@temp@ii\@temp@ii
-    \let\@save\@temp@i
-    \expandafter\@eval\@temp@ii{#2}\@temp@ii%
-    \expandafter\expandafter\expandafter\@apply@closure\expandafter\@save\@temp@ii#3}
+   \@@get@cdr{#1}\@temp@ii
+   \@args{}%
+   \let\@save\@temp@i % \@temp@i=\Closure{vars,body,env}
+   \def\@@@next{% \@args <- argument list
+     \expandafter\@get@type\@temp@ii\@test@label % \@test@label = type
+     \ifx\Nil\@test@label
+       \let\@@@next\relax
+     \else
+       \expandafter\@get@car\@temp@ii\@temp@iii
+       \expandafter\@get@cdr\@temp@ii\@temp@ii
+       \let\@save@ii\@temp@ii
+       \expandafter\@eval\@temp@iii{#2}\@temp@iii
+       \let\@temp@ii\@save@ii
+       \expandafter\expandafter\expandafter\@args
+       \expandafter\expandafter\expandafter{%
+       \expandafter\the\expandafter\@args\@temp@iii}%
+     \fi\@@@next}\@@@next
+     \expandafter\expandafter\expandafter\@make@closure@env
+     \expandafter\@save\the\@args\relax\relax
+     \expandafter\expandafter\expandafter\@@apply@closure
+     \expandafter\@save\expandafter{\the\@args}#3}
 
 
-\def\@apply@closure\Closure#1#2#3#4{\@@apply@closure#1,#2{#3}#4}
-\def\@@apply@closure#1,#2,#3,#4#5#6{%
-  \gdef\@@tco{\@eval#2{#1{#4{#5}}#3}#6}\aftergroup\@@tco}
+\def\@@apply@closure\Closure#1{%
+   \@@@apply@closure#1}
+
+\def\@@@apply@closure#1,#2,#3#4#5{%
+  \gdef\@@tco{\@eval#2{#4#3}#5}\aftergroup\@@tco}
+
+ 
+\def\@make@closure@env\Closure#1{%
+  \@args{}\@@closure@env#1}
+\def\@@closure@env#1,#2,#3{\@@@closure@env#1}
+\def\@@@closure@env#1:#2{\let\@@next\relax%
+  \ifx\@dummy#1\@dummy
+    \def\@@next{%
+      \ifx\relax#2%
+        \let\@@next\relax%
+      \else
+        \def\@@next{\@@closure@make@list#2}%
+      \fi\@@next}%
+  \else
+      \def\@@next{\@@bind@arg#1:#2;}%
+  \fi\@@next}
+\def\@@bind@arg#1#2:#3;#4#5{\let\@@next\relax%
+  \ifx#4\relax
+    \@args{\Error{CLOSURE: too few args}}%
+  \else
+    \expandafter\@args\expandafter{\the\@args#1{#4{#5}}}%
+    \def\@@next{\@@@closure@env#2:#3}%
+  \fi\@@next}
+
+\def\@@closure@make@list#1{%
+  \expandafter\@args\expandafter{\the\@args#1}%
+  \@@@closure@make@list}
+\def\@@@closure@make@list#1#2{%
+  \let\@@next\relax
+  \ifx#1\relax
+    \expandafter\@args\expandafter{\the\@args{\Nil{}}}%
+  \else
+    \expandafter\expandafter\expandafter\@args
+    \expandafter\expandafter\expandafter{%
+    \expandafter\the
+    \expandafter\@args
+    \expandafter{%
+    \expandafter\Cons
+    \expandafter{\the\@malloc}}}%
+    \expandafter\gdef\csname car\the\@malloc\endcsname{#1{#2}}%
+    \let\@@next\@@@closure@make@list@cons
+  \fi\@@next}
+
+\newcount\@@closure@list@cnt
+\def\@@@closure@make@list@cons#1#2{%
+  \ifx#1\relax
+    \expandafter\gdef\csname cdr\the\@malloc\endcsname{\Nil{}}%
+    \let\@@next\relax
+  \else
+      \@@closure@list@cnt\@malloc\relax
+      \advance\@@closure@list@cnt1
+    \expandafter\xdef
+       \csname cdr\the\@malloc\endcsname{%
+            \noexpand\Cons{\the\@@closure@list@cnt}}%
+    \expandafter\gdef\csname car\the\@@closure@list@cnt\endcsname{#1{#2}}
+  \fi\global\advance\@malloc1 \@@next}
+
+
+
+% \def\@@next@closure#1#2#3{%
+%     \@@get@cdr{#1}\@temp@ii
+%     \expandafter\@get@car\@temp@ii\@temp@ii
+%     \let\@save\@temp@i
+%     \expandafter\@eval\@temp@ii{#2}\@temp@ii%
+%     \expandafter\expandafter\expandafter\@apply@closure\expandafter\@save\@temp@ii#3}
+
+
+% \def\@apply@closure\Closure#1#2#3#4{\@@apply@closure#1,#2{#3}#4}
+% \def\@@apply@closure#1,#2,#3,#4#5#6{%
+%   \gdef\@@tco{\@eval#2{#1{#4{#5}}#3}#6}\aftergroup\@@tco}
