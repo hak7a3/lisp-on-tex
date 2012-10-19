@@ -11,40 +11,43 @@
 % Thanks to ZR (^^)
 \section{hogehoges}
 =()
-
+\tracingmacros=1
 =\lispinterpl{%
-(\define \zero (\lambda (\s) (\lambda (\z) \z)))
-(\define \inc (\lambda (\n) (\lambda (\s) (\lambda (\z) (\s ((\n \s) \z))))))
-(\define \two (\lambda (\s) (\lambda (\z) (\s (\s \z)))))
-(\define \stars (\lambda (\n) ((\n (\lambda (\x) (\cons '*' \x))) (\quote ()))))
-(\define \leq (\lambda (\m) (\lambda (\n)
-    ((\lambda (\ra) %<LET>
-      (((\m \ra) (\lambda (\h) (\lambda (\t) (\lambda (\f) \t))))
-      ((\n \ra) (\lambda (\h) (\lambda (\t) (\lambda (\f) \f))))))
-    %<BODY \ra>
-    (\lambda (\f) (\lambda (\g) (\g \f)))))))
-(\define \isqrt (\lambda (\n)
-    ((\lambda (\iter) %<LET>
-      ((\iter \iter) \zero))
-    %<BODY \iter>
-      (\lambda (\self) (\lambda (\k)
-        ((\lambda (\sk) %<LET>
-          (((((\leq (\two \sk)) \n)
-               (\lambda (\z) ((\self \self) \sk)))
-               (\lambda (\z) \k))
-               \zero))
-        %<BODY \sk>
-          (\inc \k))%</BODY>
-    )))))
-(\print (\stars (\isqrt ((\inc (\inc \two)) (\inc \two)))))
-(\print (\< (\+ :10 :100 :1) :11))
-(\print (\concat '*' '/'))
-(\print (\ungroup '{\def\hoge{aaaa}\hoge}'))
-(\print '\hoge')
-(\lambda (\x) \x)
-(\print (\readLaTeXCounter 'section'))
-((\lambda (\x \y) \x) :1 :3)
-(\print (\quote (:1 :2 :3)))
-(\print @15pt)
+% (\define \zero (\lambda (\s) (\lambda (\z) \z)))
+% (\define \inc (\lambda (\n) (\lambda (\s) (\lambda (\z) (\s ((\n \s) \z))))))
+% (\define \two (\lambda (\s) (\lambda (\z) (\s (\s \z)))))
+% (\define \stars (\lambda (\n) ((\n (\lambda (\x) (\cons '*' \x))) (\quote ()))))
+% (\define \leq (\lambda (\m) (\lambda (\n)
+%     ((\lambda (\ra) %<LET>
+%       (((\m \ra) (\lambda (\h) (\lambda (\t) (\lambda (\f) \t))))
+%       ((\n \ra) (\lambda (\h) (\lambda (\t) (\lambda (\f) \f))))))
+%     %<BODY \ra>
+%     (\lambda (\f) (\lambda (\g) (\g \f)))))))
+% (\define \isqrt (\lambda (\n)
+%     ((\lambda (\iter) %<LET>
+%       ((\iter \iter) \zero))
+%     %<BODY \iter>
+%       (\lambda (\self) (\lambda (\k)
+%         ((\lambda (\sk) %<LET>
+%           (((((\leq (\two \sk)) \n)
+%                (\lambda (\z) ((\self \self) \sk)))
+%                (\lambda (\z) \k))
+%                \zero))
+%         %<BODY \sk>
+%           (\inc \k))%</BODY>
+%     )))))
+% (\print (\stars (\isqrt ((\inc (\inc \two)) (\inc \two)))))
+% (\print (\< (\+ :10 :100 :1) :11))
+% (\print (\concat '*' '/'))
+% (\print (\ungroup '{\def\hoge{aaaa}\hoge}'))
+% (\print '\hoge')
+% (\lambda (\x) \x)
+% (\print (\readLaTeXCounter 'section'))
+% ((\lambda (\x \y) \x) :1 :3)
+% (\print (\quote (:1 :2 :3)))
+% (\print @15pt)
+(\define \id (\lambda (\x) \x))
+(\defmacro \hogehoge (\lambda (\x) (\cons \x (\cons \x ()))))
+(\print (\hogehoge \id))
 }
 \end{document}
