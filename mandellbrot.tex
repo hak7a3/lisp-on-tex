@@ -1,0 +1,51 @@
+\documentclass[a3paper,landscape,papersize]{jsarticle}
+\usepackage[dvipdfmx]{graphicx}
+\usepackage{tikz}
+\usepackage{lisp}
+\lispinterpl{%
+(\define \limitr :40000)
+(\define \maxloop :100)
+(\define \scale :500)
+(\define \sq (\lambda (\x) (\/ (\* \x \x) \scale)))
+(\define \isMandell 
+   (\lambda (\a \b \k \x \y)
+     (\lispif (\< \maxloop \k)
+        /t
+        (\lispif (\< \limitr (\+ (\sq \x) (\sq \y)))
+           /f
+           (\isMandell \a \b (\+ \k :1)
+                      (\+ \a (\sq \x) (\- (\sq \y))) 
+                      (\+ \b (\/ (\* :2 \x \y) \scale)))))))
+(\define \drawMandell 
+  (\lambda (\a \b) 
+    (\lispif (\isMandell \a \b :0 :0 :0)
+      (\begin
+         (\immediatewrite)
+         (\texprint '\draw[fill](')
+         (\texprint \a)
+         (\texprint ', ')
+         (\texprint \b)
+         (\texprint ') circle[radius=0.5];')) 
+      (\begin
+         (\immediatewrite)
+         (\texprint '\draw[red,fill](')
+         (\texprint \a)
+         (\texprint ', ')
+         (\texprint \b)
+         (\texprint ') circle[radius=0.1];')))))
+(\define \modulo (\lambda (\n \m) (\- \n (\* \m (\/ \n \m)))))
+(\define \loopMandell
+  (\lambda (\n)
+    (\lispif (\= \n (\* :4000)) % test (\* :4 \scale \scale)
+      ()
+      (\begin
+         (\drawMandell 
+            (\- (\/ \n (\* :2 \scale)) \scale) 
+            (\- (\modulo \n (\* :2 \scale)) \scale))
+         (\loopMandell (\+ \n :1))))))
+}
+\begin{document}
+\begin{tikzpicture}[scale=0.02]
+ \lispinterpl{(\loopMandell :0)} 
+\end{tikzpicture}
+\end{document}
