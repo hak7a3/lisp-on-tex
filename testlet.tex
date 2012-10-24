@@ -5,23 +5,10 @@
 %%
 \documentclass{jarticle}
 \usepackage{lisp}
+\input{lisputil.tex}
 \begin{document}
 \tracingmacros=1
-=\lispinterpl{%
-(\define \map 
-    (\lambda (\f \l)
-      (\lispif (\= () \l) () (\cons (\f (\car \l)) (\map \f (\cdr \l))))))
-%(\print (\map (\lambda (\x) (\+ :1 \x)) (\quote (:1 :2 :3 :4))))
-(\defmacro \let 
-  (\lambda (\binds \body)
-    (\cons
-        (\cons \lambda
-           (\cons (\map \car \binds)
-               (\cons \body ())))  
-        (\map (\lambda (\x) (\car (\cdr \x))) \binds)))) 
-(\define \foo (\let ((\x :10)) (\lambda (\y) (\+ \x \y))))
-(\print (\foo :20))
-(\define \x :100)
-(\print (\foo :20))
+\lispinterpl{%
+
 }
 \end{document}

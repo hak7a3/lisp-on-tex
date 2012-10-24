@@ -4,24 +4,43 @@
 %%  License: Modified BSD - see LICENSE file
 %%
 %% input buffer and read function
-\def\@read@buffer{}
-\def\@currentread{}
-\def\@eof{\@@eof}
+
 \def\@dummy{\@@dummy}
+
+%%===========================================
+%%  Macros for Input Programs
+%%===========================================
+
+%%===========================================
+%% Public Field
+%%===========================================
+%% \setinputbuffer : Set the input
 \def\setinputbuffer#1{\gdef\@read@buffer{#1}}
+%% \readchar : Read a letter from the input
 \def\readchar{%
-\ifx\@eof\@read@buffer
-  \gdef\@currentread{\@@eof}%
-\else
-\expandafter\@car@buffer\@read@buffer\relax\fi}
-\def\@car@buffer#1#2\relax{%
-\gdef\@currentread{#1}\gdef\@read@buffer{#2}}
-\def\unreadchar{\ifx\@eof\@currentread
-\else
-  \expandafter\expandafter\expandafter\gdef
-  \expandafter\expandafter\expandafter\@read@buffer
-  \expandafter\expandafter\expandafter{%
-  \expandafter\@currentread\@read@buffer}\gdef\@currentread{}\fi}
+  \ifx\@eof\@read@buffer
+    \gdef\@currentread{\@@eof}%
+  \else
+    \expandafter\@car@buffer\@read@buffer\relax
+  \fi}
+%% \unreadchar : Unread a letter from the input
+\def\unreadchar{%
+  \ifx\@eof\@currentread\else
+       \expandafter\@unreadchar\@currentread
+       \gdef\@currentread{}\fi}
+
+%%===========================================
+%% Private Field
+%%===========================================
+\def\@read@buffer{} % The input
+\def\@currentread{} % The front letter
+\def\@eof{\@@eof}   % EOF
+
+\def\@car@buffer#1#2\relax{\gdef\@currentread{#1}\gdef\@read@buffer{#2}}
+\def\@unreadchar#1{%
+   \expandafter\gdef
+   \expandafter\@read@buffer
+   \expandafter{\expandafter#1\@read@buffer}}
 
 %% assoc \cs -> value
 % constructor
@@ -188,7 +207,7 @@
 \addassoc\@globalenv\define{\Define{}}
 \addassoc\@globalenv\lispif{\If{}}
 \addassoc\@globalenv\defmacro{\DefMacro{}}
-
+\addassoc\@globalenv\begin{\Begin{}}
 % implemeted functions
 \newcount\@temp@count
 
@@ -344,6 +363,10 @@
 \def\@conv@strint#1\Int#2{\gdef#1{\Value{#2}}}
 
 % connection to TeX world
+\addassoc\@globalenv\immediatewrite{\Func{\@immediate@write}}
+\def\@immediate@write#1{\gdef#1{\Nil{}}\@temp@write@buffer\gdef\@temp@write@buffer{}}
+
+
 \addassoc\@globalenv\group{\Func{\@text@group}}
 \def\@text@group#1#2#3{\ifx#2\Value
    \gdef#1{\Value{{#3}}}\else\gdef#1{\Error{group:type error}}\fi}
@@ -429,7 +452,7 @@
 
 
 \def\@defined@datatype{Cons,Symbol,Value,Nil,Func,Closure,Int,Bool,Dimen,Skip,Macro,Error}
-\def\@defined@specialform{Lambda,Quote,Define,If,DefMacro}
+\def\@defined@specialform{Lambda,Quote,Define,If,DefMacro,Begin}
 
 \edef\@defined@lisp@on@tex{\@defined@datatype,\@defined@specialform}
 \def\@save@latex@world{%
@@ -492,7 +515,9 @@
      \let\@@next\@@next@macro
   \else\ifx\@test@label\DefMacro
      \let\@@next\@@next@defmacro 
-  \fi\fi\fi\fi\fi\fi\fi\fi\fi\@@next{#1}{#2}{#3}\let\@@next\relax}
+  \else\ifx\@test@label\Begin
+     \let\@@next\@@next@begin 
+  \fi\fi\fi\fi\fi\fi\fi\fi\fi\fi\@@next{#1}{#2}{#3}\let\@@next\relax}
 
 
 \def\@next@symbol#1#2#3{%
@@ -726,3 +751,22 @@
 
 \def\@@@apply@macro#1,#2,#3#4#5#6{%
   \gdef\@@tco{\@eval#2{#4#3}#6\expandafter\@eval#6{#5}#6}\aftergroup\@@tco}
+
+
+\def\@@next@begin#1#2#3{%
+   \@@get@cdr{#1}\@temp@ii
+   \@args{\Nil{}}%
+   \def\@@@next{%
+     \expandafter\@get@type\@temp@ii\@test@label % \@test@label = type
+     \ifx\Nil\@test@label
+       \let\@@@next\relax
+     \else
+       \expandafter\@get@car\@temp@ii\@temp@iii
+       \expandafter\@get@cdr\@temp@ii\@temp@ii
+       \let\@save\@temp@iii
+       \let\@@save\@temp@ii
+       \expandafter\@eval\the\@args{#2}#3%
+       \let\@temp@ii\@@save
+       \@args\expandafter{\@save}%
+     \fi\@@@next}\@@@next
+   \expandafter\gdef\expandafter\@@tco\expandafter{\expandafter\@eval\the\@args{#2}#3}\aftergroup\@@tco}
