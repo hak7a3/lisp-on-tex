@@ -1,10 +1,12 @@
-\documentclass[a3paper,landscape]{jsarticle}
-\usepackage[dvipdfm,margin=1pt]{geometry}
+\documentclass{article}
+\usepackage[dvipdfm,a4paper,margin=1pt]{geometry}
+\def\w{\kern1pt}
+\def\b{\vrule width 1pt height 1pt depth 0pt}
 \usepackage{lisp}
 \lispinterpl{%
 (\define \maxloop :100)
 (\define \scale :100)
-(\define \limitr (\* :2 \scale \scale))
+(\define \limitr (\* :4 \scale \scale))
 (\define \sq (\lambda (\x) (\/ (\* \x \x) \scale)))
 (\define \isMandell 
    (\lambda (\a \b \k \x \y)
@@ -19,27 +21,28 @@
   (\lambda (\a \b) 
     (\lispif (\isMandell \a \b :0 :0 :0)
       (\begin
-        (\texprint '*')
+        (\texprint '\b')
         (\immediatewrite)
       ) 
       (\begin
-        (\texprint '-')
+        (\texprint '\w')
         (\immediatewrite)
       ))))
 (\define \modulo (\lambda (\n \m) (\- \n (\* \m (\/ \n \m)))))
 (\define \loopMandell
   (\lambda (\n)
-    (\lispif (\= \n (\* :4 \scale \scale)) % test (\* :4 \scale \scale)
+    (\lispif (\= \n (\* :6 \scale \scale)) 
       ()
       (\begin
          (\drawMandell 
-            (\- (\modulo \n (\* :2 \scale)) \scale) 
-            (\- (\/ \n (\* :2 \scale)) \scale))
-         (\lispif (\= (\modulo \n (\* :2 \scale)) (\- (\* :2 \scale):1))
+            (\- (\modulo \n (\* :3 \scale)) (\* :2 \scale)) 
+            (\- (\/ \n (\* :3 \scale)) \scale))
+         (\lispif (\= (\modulo \n (\* :3 \scale)) (\- (\* :3 \scale) :1))
              (\texprint '\\') ())
          (\loopMandell (\+ \n :1))))))
 }
 \begin{document}
-\fontsize{5pt}{0pt}\selectfont\ttfamily\noindent
- \lispinterpl{(\loopMandell :0)} 
+\noindent
+\leavevmode\baselineskip=1pt
+\lispinterpl{(\loopMandell :0)} 
 \end{document}
