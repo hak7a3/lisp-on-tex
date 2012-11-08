@@ -1,0 +1,39 @@
+\documentclass{jsarticle}
+\pagestyle{empty}
+\usepackage{lisp}
+\lispinterpl{%
+(\define \alphlist
+	(\quote ( 'ぜっと' 'えー' 'びー' 'しー' 'でぃー' 'いー' 'えふ' 'じー' 'えいち' 'あい'
+			 'じぇー' 'けー' 'える' 'えむ' 'えぬ' 'おー' 'ぴー' 'きゅー' 'あーる' 'えす' 
+			 'てぃー' 'ゆー' 'ぶい' 'だぶりゅー' 'えっくす' 'わい')))
+(\define \strofkananum (\lambda (\n) (\ith \n \alphlist)))
+(\define \ith (\lambda (\n \lst) 
+	(\lispif (\= \n :0)
+		(\car \lst) (\ith (\- \n :1) (\cdr \lst)))))
+(\define \erutaso (\lambda () (\erutasobody :1)))
+(\define \erutasobody (\lambda (\n)
+	(\lispif (\= \n :1001) ()
+		(\begin
+			(\texprint '\tanda')
+			(\texprint (\group (\strOfInt \n)))
+			(\texprint (\strofkananum (\modulo \n :26)))
+			(\lispif (\= \n :1000) () (\texprint '\\'))
+			(\immediatewrite)
+			(\erutasobody (\+ \n :1))
+		)
+)))
+(\define \modulo (\lambda (\n \m) (\- \n (\* \m (\/ \n \m)))))
+}
+\newcount\cnttanda
+\def\tanda#1{%
+	\cnttanda#1\relax \advance\cnttanda10000\relax
+	\expandafter\tandawrite\the\cnttanda}
+\def\tandawrite#1#2#3#4#5{%
+	\if0#2\else\if1#2\else\kansuji#2\fi 千\fi
+	\if0#3\else\if1#3\else\kansuji#3\fi 百\fi
+	\if0#4\else\if1#4\else\kansuji#4\fi 十\fi
+	\if0#5\else\kansuji#5\fi
+	反田}
+\begin{document}
+\noindent\lispinterpl{(\erutaso)}
+\end{document}
