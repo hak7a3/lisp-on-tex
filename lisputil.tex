@@ -1,18 +1,22 @@
 %%================================
 %% Definition of Utility Functions
 %%================================
-
+\makeatletter
 \lispinterpl{%
 %% map : ('a -> 'b) -> 'a list -> 'b list 
 (\define \map 
     (\lambda (\f \l)
       (\lispif (\= () \l) () (\cons (\f (\car \l)) (\map \f (\cdr \l))))))
+%% apply
+(\define \apply (\lambda (\f.\args) (\@internal@apply \f \args)))
 %% and : bool... -> bool
 (\define \and 
    (\lambda \l 
      (\lispif (\= () \l) 
               /t
               (\lispif (\car \l) (\apply \and (\cdr \l)) /f))))
+%% list
+(\define \list (\lambda \x \x))
 %% let bindings
 (\defmacro \let 
   (\lambda (\binds \body)
@@ -22,3 +26,4 @@
                (\cons \body ())))  
         (\map (\lambda (\x) (\car (\cdr \x))) \binds))))
 }
+\makeatother
