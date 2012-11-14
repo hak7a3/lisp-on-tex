@@ -7,8 +7,6 @@
 (\define \map 
     (\lambda (\f \l)
       (\lispif (\= () \l) () (\cons (\f (\car \l)) (\map \f (\cdr \l))))))
-%% apply
-(\define \apply (\lambda (\f.\args) (\@internal@apply \f \args)))
 %% and : bool... -> bool
 (\define \and 
    (\lambda \l 
