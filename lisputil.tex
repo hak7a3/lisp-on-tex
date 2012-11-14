@@ -3,10 +3,14 @@
 %%================================
 \makeatletter
 \lispinterpl{%
-%% map : ('a -> 'b) -> 'a list -> 'b list 
+%% map
 (\define \map 
+    (\lambda (\f.\l) (\@map@ \f \l ())))
+(\define \@map@ (\lambda (\f \l \acc) (\lispif (\= \l ()) \acc (\@map@ \f (\cdr \l) (\cons (\apply \f (\car \l)) \acc)))))
+%% @inner@map : ('a -> 'b) -> 'a list -> 'b list 
+(\define \@inner@map 
     (\lambda (\f \l)
-      (\lispif (\= () \l) () (\cons (\f (\car \l)) (\map \f (\cdr \l))))))
+      (\lispif (\= () \l) () (\cons (\f (\car \l)) (\@inner@map \f (\cdr \l))))))
 %% and : bool... -> bool
 (\define \and 
    (\lambda \l 
@@ -20,8 +24,8 @@
   (\lambda (\binds \body)
     (\cons
         (\cons \lambda
-           (\cons (\map \car \binds)
+           (\cons (\@inner@map \car \binds)
                (\cons \body ())))  
-        (\map (\lambda (\x) (\car (\cdr \x))) \binds))))
+        (\@inner@map (\lambda (\x) (\car (\cdr \x))) \binds))))
 }
 \makeatother
