@@ -10,5 +10,8 @@
 (\texprint (\apply \+ \applist))
 (\print (\and /t /t /t))
 (\print (\and /t /f /t))
+% Thanks to @keno_ss
+(\print (\map (\lambda (\n) (\* :2 \n)) (\list :1 :2 :3)))
+(\print (\map  \+ (\list :1 :2 :3) (\list :4 :5 :6)))
 }
 \end{document}

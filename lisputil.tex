@@ -3,10 +3,12 @@
 %%================================
 \makeatletter
 \lispinterpl{%
-%% map
-(\define \map 
-    (\lambda (\f.\l) (\@map@ \f \l ())))
-(\define \@map@ (\lambda (\f \l \acc) (\lispif (\= \l ()) \acc (\@map@ \f (\cdr \l) (\cons (\apply \f (\car \l)) \acc)))))
+(\define \map (\lambda (\f.\args) (\@map \f \args)))
+(\define \@map (\lambda (\f \args)
+  (\lispif (\= () (\car \args)) ()
+    (\let ((\cars (\@inner@map \car \args)) (\cdrs (\@inner@map \cdr \args)))
+      (\cons (\apply \f \cars)
+        (\@map \f \cdrs))))))
 %% @inner@map : ('a -> 'b) -> 'a list -> 'b list 
 (\define \@inner@map 
     (\lambda (\f \l)
