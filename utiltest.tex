@@ -13,5 +13,11 @@
 % Thanks to @keno_ss
 (\print (\map (\lambda (\n) (\* :2 \n)) (\list :1 :2 :3)))
 (\print (\map  \+ (\list :1 :2 :3) (\list :4 :5 :6)))
+(\define \typeswitch (\lambda (\x)
+	(\lispif (\intQ \x) 'integer'
+	(\lispif (\stringQ \x) 'string'
+	(\lispif (\pairQ \x) 'CONS cell'
+	'Others')))))
+(\print (\map \typeswitch (\list :2 :3 'hoge'  /t )))
 }
 \end{document}

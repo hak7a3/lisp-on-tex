@@ -454,6 +454,24 @@
  \expandafter\gdef\expandafter#1\expandafter{#1#2}}
 
 \def\@defined@datatype{Cons,Symbol,Value,Nil,Func,Closure,Int,Bool,Dimen,Skip,Macro,EnvFunc,Error}
+
+% Type predicates
+\def\@define@type@predicate#1{\expandafter\@@define@type@predicate\expandafter#1}
+\def\@@define@type@predicate#1#2{%
+  \expandafter\@@@define@type@predicate\expandafter#1\expandafter#2}
+\def\@@@define@type@predicate#1#2#3{
+  \addassoc\@globalenv#1{\Func{#2}}%
+  \def#2##1##2##3{\ifx##2#3\gdef##1{\Bool{t}}\else\gdef##1{\Bool{f}}\fi}}
+\def\@for@define@type@predicate#1{%
+  \lowercase{\expandafter\@define@type@predicate\csname#1}Q\endcsname}
+\@for\@type:=\@defined@datatype\do{%
+    \expandafter\@for@define@type@predicate\expandafter{\@type}%
+    \csname @type@\@type\endcsname
+    \csname\@type\endcsname}
+\addassoc\@globalenv\pairQ{\Func{\@type@Cons}}
+\addassoc\@globalenv\booleanQ{\Func{\@type@Bool}}
+\addassoc\@globalenv\stringQ{\Func{\@type@Value}}
+
 \def\@defined@specialform{Lambda,Quote,Define,If,DefMacro,Begin}
 
 \edef\@defined@lisp@on@tex{\@defined@datatype,\@defined@specialform}
