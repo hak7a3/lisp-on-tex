@@ -3,6 +3,11 @@
 %%================================
 \makeatletter
 \lispinterpl{%
+(\define \listQ (\lambda (\x) (\or (\pairQ \x) (\= () \x))))
+(\define \procedureQ (\lambda (\x) 
+  (\or (\funcQ \x) (\closureQ \x) (\envfuncQ \x) (\macroQ \x))))
+(\define \atomQ (\lambda (\x) 
+  (\and (\not (\pairQ \x)) (\not (\= () \x)) )))
 (\define \map (\lambda (\f.\args) (\@map \f \args)))
 (\define \@map (\lambda (\f \args)
   (\lispif (\= () (\car \args)) ()
@@ -13,12 +18,20 @@
 (\define \@inner@map 
     (\lambda (\f \l)
       (\lispif (\= () \l) () (\cons (\f (\car \l)) (\@inner@map \f (\cdr \l))))))
+%% not : bool -> bool
+(\define \not (\lambda (\b) (\lispif \b /f /t)))
 %% and : bool... -> bool
 (\define \and 
    (\lambda \l 
      (\lispif (\= () \l) 
               /t
               (\lispif (\car \l) (\apply \and (\cdr \l)) /f))))
+%% or bool... -> bool
+(\define \or
+   (\lambda \l 
+     (\lispif (\= () \l) 
+              /f
+              (\lispif (\car \l) /t (\apply \and (\cdr \l))))))
 %% list
 (\define \list (\lambda \x \x))
 %% let bindings

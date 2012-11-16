@@ -18,6 +18,6 @@
 	(\lispif (\stringQ \x) 'string'
 	(\lispif (\pairQ \x) 'CONS cell'
 	'Others')))))
-(\print (\map \typeswitch (\list :2 :3 'hoge'  /t )))
+(\print (\map \atomQ (\list :2 :3 'hoge'  /t ())))
 }
 \end{document}
