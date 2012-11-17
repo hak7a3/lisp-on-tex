@@ -3,6 +3,8 @@
 \input{lisputil}
 \begin{document}
 \tracingmacros=1
+\noindent
+aaaaaaaaa%
 \lispinterpl{%
 (\print (\list :1 :2 'hogehoge' :4 :5 (\quote \x)))
 (\define \applist (\list :1 :2 :3 :4 :5 :6 :7 :8 :9 :10))
@@ -18,6 +20,9 @@
 	(\lispif (\stringQ \x) 'string'
 	(\lispif (\pairQ \x) 'CONS cell'
 	'Others')))))
-(\print (\map \atomQ (\list :2 :3 'hoge'  /t ())))
+(\print (\map \typeswitch (\list :2 :3 'hoge'  /t () (\list :1 :2) )))
 }
+bbbbbbb\\
+cccc
+\tracingmacros=0
 \end{document}

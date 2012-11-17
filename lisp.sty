@@ -448,7 +448,39 @@
 \addassoc\@globalenv\eval{\EnvFunc{\@extern@eval}}
 \def\@extern@eval#1#2#3#4{\@eval#3{#4}{#2}#1}
 \addassoc\@globalenv\apply{\EnvFunc{\@extern@apply}}
-\def\@extern@apply#1#2#3#4#5#6{\@make@cons#1#3{#4}#5{#6}\expandafter\@eval#1{#2}#1}
+\def\@extern@apply#1#2#3#4#5#6{% reg, env, labelfun, contfun, labellist, contlist
+  {\gdef#1{}%
+  \@flatten@list#1#5{#6}%
+  \expandafter\@@extern@apply\expandafter{#1}#1{#2}#3{#4}}}
+\def\@@extern@apply#1#2#3#4#5{% fargs, reg, env, label, cont
+  \ifx#4\Func
+    \@apply@func#4{#5}{#1}{#3}#2%
+  \else\ifx#4\EnvFunc
+    \@apply@envfunc#4{#5}{#1}{#3}#2%
+  \else\ifx#4\Closure
+    \@apply@closure#4{#5}{#1}{#3}#2%
+  \else\ifx#4\Macro
+    \@apply@macro#4{#5}{#1}{#3}#2
+  \fi\fi\fi\fi}
+
+\def\@flatten@next{}
+\def\@flatten@nextobj{}
+\def\@flatten@list#1#2#3{%
+  \def\@flatten@nextobj{\Dummy{}}%
+  \def\@flatten@next##1##2##3{}%
+  \ifx#2\Nil\else
+    \expandafter\@@flatten@list\csname car#3\endcsname#1%
+    \expandafter\expandafter\expandafter\def
+    \expandafter\expandafter\expandafter\@flatten@nextobj
+    \expandafter\expandafter\expandafter{\csname cdr#3\endcsname}%
+    \let\@flatten@next\@flatten@list
+  \fi
+  \expandafter\@flatten@next\expandafter#1\@flatten@nextobj}
+\def\@@flatten@list#1#2{%
+   \expandafter\expandafter\expandafter\def
+   \expandafter\expandafter\expandafter#2%
+   \expandafter\expandafter\expandafter{\expandafter#2#1}}
+
 
 \def\@add@to@write@buffer#1#2{%
  \expandafter\gdef\expandafter#1\expandafter{#1#2}}
@@ -524,7 +556,7 @@
   \else\ifx\@test@label\Define
      \let\@@next\@@next@define%
   \else\ifx\@test@label\Func
-     \let\@@next\@@next@func
+     \let\@@next\@@next@func%
   \else\ifx\@test@label\EnvFunc
      \let\@@next\@@next@envfunc%
   \else\ifx\@test@label\Closure
@@ -653,9 +685,9 @@
        \let\@temp@ii\@save@ii
        \expandafter\expandafter\expandafter\@args\expandafter\expandafter\expandafter{\expandafter\the\expandafter\@args\@temp@iii}%
      \fi\@@@next}\@@@next
-   \expandafter\expandafter\expandafter\@apply@func\expandafter\@save\expandafter{\the\@args}#3}
+   \expandafter\expandafter\expandafter\@apply@func\expandafter\@save\expandafter{\the\@args}{#2}#3}
 
-\def\@apply@func\Func#1#2#3{\gdef\@@tco{#1#3#2\relax\relax}\aftergroup\@@tco}
+\def\@apply@func\Func#1#2#3#4{\gdef\@@tco{#1#4#2\relax\relax}\aftergroup\@@tco}
 
 
 \def\@@next@envfunc#1#2#3{%
@@ -674,9 +706,9 @@
        \let\@temp@ii\@save@ii
        \expandafter\expandafter\expandafter\@args\expandafter\expandafter\expandafter{\expandafter\the\expandafter\@args\@temp@iii}%
      \fi\@@@next}\@@@next
-   \expandafter\expandafter\expandafter\@apply@envfunc\expandafter\@save\expandafter{\the\@args}#3{#2}}
+   \expandafter\expandafter\expandafter\@apply@envfunc\expandafter\@save\expandafter{\the\@args}{#2}#3}
 
-\def\@apply@envfunc\EnvFunc#1#2#3#4{\gdef\@@tco{#1#3{#4}#2\relax\relax}\aftergroup\@@tco}
+\def\@apply@envfunc\EnvFunc#1#2#3#4{\gdef\@@tco{#1#4{#3}#2\relax\relax}\aftergroup\@@tco}
 
 
 
@@ -698,23 +730,18 @@
        \expandafter\expandafter\expandafter{%
        \expandafter\the\expandafter\@args\@temp@iii}%
      \fi\@@@next}\@@@next
-     \expandafter\expandafter\expandafter\@make@closure@env
-     \expandafter\@save\the\@args\relax\relax
-     \expandafter\expandafter\expandafter\@@apply@closure
-     \expandafter\@save\expandafter{\the\@args}#3}
+     \expandafter\expandafter\expandafter\@apply@closure
+     \expandafter\@save\expandafter{\the\@args}{#2}#3}
 
 
-\def\@@apply@closure\Closure#1{%
-   \@@@apply@closure#1}
+\def\@apply@closure\Closure#1#2#3#4{\@@apply@closure#1{#2}#4}
+\def\@@apply@closure#1,#2,#3#4#5{%binds,body,cenv,args,reg
+  \@args{}\@closure@env#1#4\relax\relax%
+  \expandafter\@@@apply@closure\expandafter{\the\@args}#2{#3}#5}
+\def\@@@apply@closure#1#2#3#4#5{%bindings(env),label,cont,cenv,reg
+  \gdef\@@tco{\@eval#2{#3}{#1#4}#5}\aftergroup\@@tco}
 
-\def\@@@apply@closure#1,#2,#3#4#5{%
-  \gdef\@@tco{\@eval#2{#4#3}#5}\aftergroup\@@tco}
-
- 
-\def\@make@closure@env\Closure#1{%
-  \@args{}\@@closure@env#1}
-\def\@@closure@env#1,#2,#3{\@@@closure@env#1}
-\def\@@@closure@env#1:#2{\let\@@next\relax%
+\def\@closure@env#1:#2{\let\@@next\relax%
   \ifx\@dummy#1\@dummy
     \def\@@next{%
       \ifx\relax#2%
@@ -730,7 +757,7 @@
     \@args{\Error{CLOSURE: too few args}}%
   \else
     \expandafter\@args\expandafter{\the\@args#1{#4{#5}}}%
-    \def\@@next{\@@@closure@env#2:#3}%
+    \def\@@next{\@closure@env#2:#3}%
   \fi\@@next}
 
 \def\@@closure@make@list#1{%
@@ -763,7 +790,7 @@
     \expandafter\xdef
        \csname cdr\the\@malloc\endcsname{%
             \noexpand\Cons{\the\@@closure@list@cnt}}%
-    \expandafter\gdef\csname car\the\@@closure@list@cnt\endcsname{#1{#2}}
+    \expandafter\gdef\csname car\the\@@closure@list@cnt\endcsname{#1{#2}}%
   \fi\global\advance\@malloc1 \@@next}
 
 \def\@@next@macro#1#2#3{%
@@ -781,19 +808,16 @@
        \expandafter\expandafter\expandafter{%
        \expandafter\the\expandafter\@args\@temp@iii}%
      \fi\@@@next}\@@@next
-     \expandafter\expandafter\expandafter\@make@macro@env
-     \expandafter\@save\the\@args\relax\relax
-     \expandafter\expandafter\expandafter\@@apply@macro
+     \expandafter\expandafter\expandafter\@apply@macro
      \expandafter\@save\expandafter{\the\@args}{#2}#3}
 
-\def\@make@macro@env\Macro#1{%
-  \@args{}\@@closure@env#1}
 
-\def\@@apply@macro\Macro#1{%
-   \@@@apply@macro#1}
-
-\def\@@@apply@macro#1,#2,#3#4#5#6{%
-  \gdef\@@tco{\@eval#2{#4#3}#6\expandafter\@eval#6{#5}#6}\aftergroup\@@tco}
+\def\@apply@macro\Macro#1#2#3#4{\@@apply@macro#1{#2}{#3}#4}
+\def\@@apply@macro#1,#2,#3#4#5#6{%binds,body,menv,args,env,reg
+  \@args{}\@closure@env#1#4\relax\relax%
+  \expandafter\@@@apply@macro\expandafter{\the\@args}#2{#3}{#5}#6}
+\def\@@@apply@macro#1#2#3#4#5#6{%bindings(env),label,cont,menv,env,reg
+  \gdef\@@tco{\@eval#2{#3}{#1#4}#6\expandafter\@eval#6{#5}#6}\aftergroup\@@tco}
 
 
 \def\@@next@begin#1#2#3{%
