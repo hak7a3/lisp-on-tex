@@ -7,6 +7,20 @@
 			(\begin
 				(\setB \count (\- \count :1))
 				(\lispif (\< \count :0) 'Fire!' \count)))))
+	(\define \@@pair 
+		(\@mlet \evenQ ()
+		(\@mlet \oddQ ()
+			(\begin
+				(\setB \evenQ 
+					(\lambda (\n) 
+						(\lispif (\= \n :0) /t (\oddQ (\- \n :1)))))
+				(\setB \oddQ 
+					(\lambda (\n) 
+						(\lispif (\= \n :0) /f (\evenQ (\- \n :1)))))
+				(\cons \evenQ \oddQ)))))
+	(\define \evenQ (\car \@@pair))
+	(\define \oddQ (\cdr \@@pair))
+	(\define \not (\lambda (\b) (\lispif \b /f /t)))
 }
 \makeatother
 \begin{document}
@@ -29,5 +43,6 @@
 		(\print (\rocket))
 		(\print (\rocket))
 		(\print (\rocket)))
+	(\print (\evenQ :101))
 }
 \end{document}

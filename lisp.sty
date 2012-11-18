@@ -342,7 +342,6 @@
        \@@arith@div#1}%
   \fi\fi\@next@div}
 
-
 \addassoc\@globalenv\<{\Func{\@arith@lt}}
 \def\@arith@lt#1\Int#2\Int#3{\ifnum#2<#3 \gdef#1{\Bool{t}}\else\gdef#1{\Bool{f}}\fi}
 
@@ -412,8 +411,7 @@
   \else\ifx#1\Cons
     \@add@to@write@buffer\@temp@write@buffer{(}%
     \expandafter\expandafter\expandafter\@@tex@print\csname car#2\endcsname
-    \expandafter\expandafter\expandafter\@@tex@print@cons\csname
-    cdr#2\endcsname
+    \expandafter\expandafter\expandafter\@@tex@print@cons\csname cdr#2\endcsname
   \else\ifx#1\Dimen
     \@add@to@write@buffer\@temp@write@buffer{!#2}%
   \else\ifx#1\Skip
@@ -542,8 +540,7 @@
   \else\ifx#1\Symbol  \let\@next\@next@symbol@%
   \else               \let\@next\@gobble@iii
   \fi\fi\@next{#1}{#2}{#3}{#4}\let\@next\relax
-  % Mutable check!
-  \expandafter\@get@type#4\@check@mutable
+  \expandafter\@get@type#4\@check@mutable % mutable check
   \ifx\@check@mutable\Mutable
     \expandafter\@expand@mutable#4#4\fi
   \endgroup}
@@ -571,8 +568,7 @@
   \@@next{#1}{#2}{#3}\let\@@next\relax}
 
 
-\def\@next@symbol#1#2#3{%
-      % concat currentenv ++ globalenv
+\def\@next@symbol#1#2#3{% concat currentenv ++ globalenv
       \def\@temp@env{#2}%
       \expandafter\expandafter\expandafter\def
       \expandafter\expandafter\expandafter\@temp@env
@@ -641,7 +637,7 @@
    \expandafter\@malloc@mutable\@temp@i
    \expandafter\expandafter\expandafter\@modify@genv
    \expandafter\@save@ii\expandafter\Mutable\expandafter{\the\@malloc}%
-   \advance\@malloc1
+   \global\advance\@malloc1\relax
    \gdef#3{\Nil{}}}
 
 
@@ -709,6 +705,7 @@
   \expandafter{%
   \expandafter#1%
   \expandafter{\expandafter\Mutable\expandafter{\the\@malloc}}#5}#6}%
+  \global\advance\@malloc1\relax
   \aftergroup\@@tco}
 
 
@@ -864,7 +861,7 @@
     \let\@@next\relax
   \else
       \@@closure@list@cnt\@malloc\relax
-      \advance\@@closure@list@cnt1
+      \advance\@@closure@list@cnt1\relax
     \expandafter\xdef
        \csname cdr\the\@malloc\endcsname{%
             \noexpand\Cons{\the\@@closure@list@cnt}}%
