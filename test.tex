@@ -49,5 +49,9 @@
 (\define \id (\lambda (\x) \x))
 (\defmacro \hogehoge (\lambda (\x) (\cons \x (\cons \x ()))))
 (\print (\hogehoge \id))
+(\mdefine \foo :1234567)
+(\print \foo)
+(\setB \foo 'hoge')
+(\print \foo)
 }
 \end{document}
