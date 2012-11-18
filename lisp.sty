@@ -210,6 +210,8 @@
 \addassoc\@globalenv\begin{\Begin{}}
 \addassoc\@globalenv\mdefine{\MDefine{}}
 \addassoc\@globalenv\setB{\SetB{}}
+\addassoc\@globalenv\@let{\@Let{}}
+\addassoc\@globalenv\@mlet{\@MLet{}}
 % implemeted functions
 \newcount\@temp@count
 
@@ -506,7 +508,7 @@
 \addassoc\@globalenv\booleanQ{\Func{\@type@Bool}}
 \addassoc\@globalenv\stringQ{\Func{\@type@Value}}
 
-\def\@defined@specialform{Lambda,Quote,Define,If,DefMacro,Begin,MDefine,SetB}
+\def\@defined@specialform{Lambda,Quote,Define,If,DefMacro,Begin,MDefine,SetB,@Let,@MLet}
 
 \edef\@defined@lisp@on@tex{\@defined@datatype,\@defined@specialform}
 \def\@save@latex@world{%
@@ -614,7 +616,6 @@
     \expandafter\gdef\expandafter#3\expandafter{\@temp@i}}
 
 % cons cell, environment, target
-\def\@@next@let#1#2#3{}
 
 \def\@modify@genv\Symbol#1#2#3{\addassoc\@globalenv#1{#2{#3}}}
 \def\@@next@define#1#2#3{%
@@ -649,11 +650,10 @@
   \expandafter\expandafter\expandafter\def
   \expandafter\expandafter\expandafter\@save@ii
   \expandafter\expandafter\expandafter{\expandafter\@save@ii\@globalenv}%
-  \getassoc\@save@ii#1\@save@ii
-  \expandafter\@modify@mutable\@save@ii}
+  \getassoc\@save@ii#1\@find@result@mutable
+  \expandafter\@modify@mutable\@find@result@mutable}
 \def\@modify@mutable\Mutable#1#2{%
-  \expandafter\global\expandafter\let\csname mutable#1\endcsname#2%
-  \expandafter\show\csname mutable#1\endcsname}
+  \expandafter\global\expandafter\let\csname mutable#1\endcsname#2}
 
 \def\@@next@setb#1#2#3{%cons, env, reg
    \@@get@cdr{#1}\@temp@i
@@ -665,9 +665,51 @@
    \expandafter\@modify@symbol\@save@ii{#2}\@temp@i
    \gdef#3{\Nil{}}}
 
+\def\@@next@@let#1#2#3{%cons,env,arg
+  \@@get@cdr{#1}\@temp@i
+   \expandafter\@get@car\@temp@i\@temp@ii % cadr -> \Symbol{\cs}
+   \expandafter\@get@cdr\@temp@i\@temp@i
+   \expandafter\@get@car\@temp@i\@temp@iii  % caddr -> body
+   \expandafter\@get@cdr\@temp@i\@temp@i
+   \expandafter\@get@car\@temp@i\@temp@i % cadddr -> target
+   \let\@save@ii\@temp@ii
+   \let\@save@i\@temp@i
+   \expandafter\@eval\@temp@iii{#2}\@temp@iii
+   \expandafter\@set@@tco@let\@save@ii\@temp@iii\@save@i{#2}#3%
+}
+\def\@set@@tco@let\Symbol#1{%
+  \expandafter\@@set@@tco@let\expandafter#1}
+\def\@@set@@tco@let#1#2#3#4#5#6{%
+  \expandafter\gdef
+  \expandafter\@@tco
+  \expandafter{\expandafter\@eval#4{#1{#2{#3}}#5}#6}%
+  \aftergroup\@@tco}
 
-
-
+\def\@@next@@mlet#1#2#3{%cons,env,arg
+  \@@get@cdr{#1}\@temp@i
+   \expandafter\@get@car\@temp@i\@temp@ii % cadr -> \Symbol{\cs}
+   \expandafter\@get@cdr\@temp@i\@temp@i
+   \expandafter\@get@car\@temp@i\@temp@iii  % caddr -> body
+   \expandafter\@get@cdr\@temp@i\@temp@i
+   \expandafter\@get@car\@temp@i\@temp@i % cadddr -> target
+   \let\@save@ii\@temp@ii
+   \let\@save@i\@temp@i
+   \expandafter\@eval\@temp@iii{#2}\@temp@iii
+   \expandafter\@set@@tco@mlet\@save@ii\@temp@iii\@save@i{#2}#3%
+}
+\def\@set@@tco@mlet\Symbol#1{%
+  \expandafter\@@set@@tco@mlet\expandafter#1}
+\def\@@set@@tco@mlet#1#2#3#4#5#6{%
+  \expandafter\gdef\csname mutable\the\@malloc\endcsname{#2{#3}}%
+  \expandafter\expandafter\expandafter\gdef
+  \expandafter\expandafter\expandafter\@@tco
+  \expandafter\expandafter\expandafter{%
+  \expandafter\expandafter\expandafter\@eval
+  \expandafter#4%
+  \expandafter{%
+  \expandafter#1%
+  \expandafter{\expandafter\Mutable\expandafter{\the\@malloc}}#5}#6}%
+  \aftergroup\@@tco}
 
 
 \def\@convert@closure@to@macro\Closure#1#2{\def#2{\Macro{#1}}}

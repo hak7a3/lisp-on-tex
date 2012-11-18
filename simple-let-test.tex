@@ -1,0 +1,33 @@
+\documentclass{article}
+\usepackage{lisp}
+\makeatletter
+\lispinterpl{%
+	(\define \rocket (\@mlet \count :11
+		(\lambda ()
+			(\begin
+				(\setB \count (\- \count :1))
+				(\lispif (\< \count :0) 'Fire!' \count)))))
+}
+\makeatother
+\begin{document}
+\tracingmacros=1
+\noindent aaaaaa%
+\lispinterpl{
+	(\begin
+		(\print (\rocket))
+		(\print (\rocket))
+		(\print (\rocket))
+		(\print (\rocket))
+		(\print (\rocket))
+		(\print (\rocket))
+		(\print (\rocket))
+		(\print (\rocket))
+		(\print (\rocket))
+		(\print (\rocket))
+		(\print (\rocket))
+		(\print (\rocket))
+		(\print (\rocket))
+		(\print (\rocket))
+		(\print (\rocket)))
+}
+\end{document}
