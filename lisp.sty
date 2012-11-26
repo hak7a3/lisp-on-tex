@@ -5,7 +5,6 @@
 %%
 %% input buffer and read function
 
-\def\@dummy{\@@dummy}
 
 %%===========================================
 %%  Macros for Input Programs
@@ -32,6 +31,7 @@
 %%===========================================
 %% Private Field
 %%===========================================
+\def\@dummy{\@@dummy}
 \def\@read@buffer{} % The input
 \def\@currentread{} % The front letter
 \def\@eof{\@@eof}   % EOF
@@ -75,20 +75,6 @@
 \@showassoc#3\relax\fi}
 
 
-
-%% test code 2 -- LISP parser
-%% symbol is a \cs --> \Symbol{\cs}
-%% a value is a string --> \Value{string}
-%% escap char is \@escapechar
-%% cons cell is (a.b), both a and b are S-exp. --> \Cons{42}
-%%  where  \car42 => a and \cdr42 => b
-%% nil is () --> \Nil
-%% \quote -> \Quote
-%% \lambda -> \Lambda
-%% macros -> \Macro
-%% impl. functions -> \Func
-%% -- if parse fail is happen, the result is \Error
-
 % interface
 \def\@lisp@empty{}
 \def\lispinterpl#1{\begingroup%
@@ -106,809 +92,335 @@
   \@next}
 
 % reader
-\def\@lisp@empty{}%\@empty ...
-\newcount\@malloc
-\newcount\@temp@read@cnt
-\def\lispread#1#2{\gdef\@read@buffer{#2\@@eof\@@eof}\@lispread#1}
-\def\@lispread#1{%
-\begingroup
-  \readchar
-  \if(\expandafter\noexpand\@currentread
-   \readchar
-   \if\expandafter\noexpand\@currentread)%
-     \gdef#1{\Nil{}}%
-   \else
-     \unreadchar
-     \@lispread\@temp@i
-     \readchar
-     \if.\expandafter\noexpand\@currentread
-       \let\@save@temp\@temp@i
-       \@lispread\@temp@ii
-       \let\@temp@i\@save@temp
-       \readchar
-       \if)\expandafter\noexpand\@currentread
-         \expandafter\global\expandafter
-           \let\csname car\the\@malloc\endcsname\@temp@i
-         \expandafter\global\expandafter
-           \let\csname cdr\the\@malloc\endcsname\@temp@ii
-         \xdef#1{\noexpand\Cons{\the\@malloc}}%
-         \global\advance\@malloc1
-       \else
-         \gdef#1{\Error{read:cannot find ')'}}%
-       \fi
-     \else\if)\expandafter\noexpand\@currentread
-       \expandafter\global\expandafter
-         \let\csname car\the\@malloc\endcsname\@temp@i
-       \expandafter\gdef\csname cdr\the\@malloc\endcsname{\Nil{}}%
-       \xdef#1{\noexpand\Cons{\the\@malloc}}%
-       \global\advance\@malloc1
-     \else
-       \unreadchar
-       \expandafter\gdef
-       \expandafter\@read@buffer
-       \expandafter{%
-       \expandafter(\@read@buffer}%
-       \let\@save@temp\@temp@i
-       \@lispread\@temp@ii
-       \let\@temp@i\@save@temp
-       \expandafter\global\expandafter
-         \let\csname car\the\@malloc\endcsname\@temp@i
-       \expandafter\global\expandafter
-         \let\csname cdr\the\@malloc\endcsname\@temp@ii
-       \xdef#1{\noexpand\Cons{\the\@malloc}}%
-       \global\advance\@malloc1
-     \fi\fi
-   \fi
-  \else\ifcat\relax\expandafter\noexpand\@currentread
-     \expandafter\gdef\expandafter#1\expandafter{%
-     \expandafter\Symbol\expandafter{\@currentread}}%
-  \else\if'\expandafter\noexpand\@currentread
-     \expandafter\@read@string\expandafter#1\expandafter\@lisp@empty\@read@buffer\@@end
-  \else\if/\expandafter\noexpand\@currentread
-     \readchar
-     \xdef#1{\noexpand\Bool{\@currentread}}%
-  \else\if:\expandafter\noexpand\@currentread
-    \expandafter\@read@num\expandafter#1\@read@buffer
-  \else\if!\expandafter\noexpand\@currentread
-    \expandafter\@read@dimen\expandafter#1\@read@buffer
-  \else\if @\expandafter\noexpand\@currentread
-    \expandafter\@read@skip\expandafter#1\@read@buffer
-  \fi\fi\fi\fi\fi\fi\fi
-\endgroup}
+\input{lisp-read.tex}
 
-\def\@read@num#1#2\@@eof\@@eof{%
-  \afterassignment\@@read@num\@temp@read@cnt#2\@@end
-  \expandafter\gdef
-  \expandafter#1%
-  \expandafter{\expandafter\Int\expandafter{\the\@temp@read@cnt}}}
-\def\@@read@num#1\@@end{\gdef\@read@buffer{#1\@@eof\@@eof}}
-
-\def\@read@dimen#1#2\@@eof\@@eof{\afterassignment\@@read@dimen\dimen@#2\@@end
-\expandafter\gdef\expandafter#1\expandafter{\expandafter\Dimen\expandafter{\the\dimen@}}}
-\let\@@read@dimen\@@read@num
-
-\def\@read@skip#1#2\@@eof\@@eof{\afterassignment\@@read@skip\skip@#2\@@end
-\expandafter\gdef\expandafter#1\expandafter{\expandafter\Skip\expandafter{\the\skip@}}}
-\let\@@read@skip\@@read@num
-
-
-\def\@read@string#1#2'#3\@@end{%
-  \expandafter\gdef\expandafter#1%
-  \expandafter{\expandafter\Value\expandafter{#2}}% expand \@lisp@empty
-  \gdef\@read@buffer{#3}}% I don't consider that #3 is single grouped tokens. In LISP on TeX, it never happen.
 
 % eval
 %% write buffer
 \gdef\@temp@write@buffer{}
-\makeassoc\@globalenv % global environment
-% init global environment
-\addassoc\@globalenv\quote{\Quote{}}%
-\addassoc\@globalenv\lambda{\Lambda{}}
-\addassoc\@globalenv\define{\Define{}}
-\addassoc\@globalenv\lispif{\If{}}
-\addassoc\@globalenv\defmacro{\DefMacro{}}
-\addassoc\@globalenv\begin{\Begin{}}
-\addassoc\@globalenv\mdefine{\MDefine{}}
-\addassoc\@globalenv\setB{\SetB{}}
-\addassoc\@globalenv\@let{\@Let{}}
-\addassoc\@globalenv\@mlet{\@MLet{}}
-% implemeted functions
-\newcount\@temp@count
-
-\def\@get@car#1#2#3{\ifx#1\Cons\@@get@car{#2}#3\else\gdef#3{\Error{car:type error}}\fi}
-\def\@get@cdr#1#2#3{\ifx#1\Cons\@@get@cdr{#2}#3\else\gdef#3{\Error{cdr:type error}}\fi}
-
-\def\@@get@car#1#2{%
-  \expandafter\expandafter\expandafter\gdef
-  \expandafter\expandafter\expandafter#2%
-  \expandafter\expandafter\expandafter{\csname car#1\endcsname}}
-\def\@@get@cdr#1#2{%
-  \expandafter\expandafter\expandafter\gdef
-  \expandafter\expandafter\expandafter#2%
-  \expandafter\expandafter\expandafter{\csname cdr#1\endcsname}}
-
-\addassoc\@globalenv\car{\Func{\@car@lisp}}
-\def\@car@lisp#1#2#3{\@get@car#2{#3}#1}
-\addassoc\@globalenv\cdr{\Func{\@cdr@lisp}}
-\def\@cdr@lisp#1#2#3{\@get@cdr#2{#3}#1}
-
-
-
-\addassoc\@globalenv\cons{\Func{\@make@cons}}
-\def\@make@cons#1#2#3#4#5{%
-   \expandafter\gdef\csname car\the\@malloc\endcsname{#2{#3}}%
-   \expandafter\gdef\csname cdr\the\@malloc\endcsname{#4{#5}}%
-   \xdef#1{\noexpand\Cons{\the\@malloc}}%
-   \global\advance\@malloc1\relax}
-
-\addassoc\@globalenv\length{\Func{\@lisp@length}}
-\def\@lisp@length#1#2{%
-  \ifx#2\Nil
-    \expandafter\def
-    \expandafter\@next
-    \expandafter{%
-      \expandafter\gdef
-      \expandafter#1%
-      \expandafter{%
-        \expandafter\Int
-        \expandafter{\the\@temp@count}}}%
-  \else
-    \def\@next{\advance\@temp@count1\relax
-      \@@lisp@length#1}%
-  \fi\@next}
-\def\@@lisp@length#1#2{%
-  \expandafter\expandafter\expandafter\@lisp@length
-  \expandafter\expandafter\expandafter#1\csname cdr#2\endcsname}
-
-%arithmetical functions
-\newcount\@temp@inti
-\newcount\@temp@intii
-\addassoc\@globalenv\+{\Func{\@temp@inti0\relax\@arith@plus}}
-\def\@arith@plus#1#2#3{%
-  \ifx#2\relax
-    \def\@next@plus{%
-       \expandafter\gdef
-       \expandafter#1%
-       \expandafter{\expandafter\Int\expandafter{\the\@temp@inti}}}%
-  \else\ifx#2\Int
-    \def\@next@plus{%
-       \advance\@temp@inti#3\relax
-       \@arith@plus#1}%
-  \fi\fi\@next@plus}
-
-
-\addassoc\@globalenv\*{\Func{\@temp@inti1\relax\@arith@mult}}
-\def\@arith@mult#1#2#3{%
-  \ifx#2\relax
-    \def\@next@mult{%
-       \expandafter\gdef
-       \expandafter#1%
-       \expandafter{\expandafter\Int\expandafter{\the\@temp@inti}}}%
-  \else\ifx#2\Int
-    \def\@next@mult{%
-       \multiply\@temp@inti#3\relax
-       \@arith@mult#1}%
-  \fi\fi\@next@mult}
-
-\addassoc\@globalenv\-{\Func{\@arith@minus}}
-\def\@arith@minus#1#2#3#4#5{%
-  \@temp@inti#3\relax
-  \ifx#4\relax
-    \multiply\@temp@inti-1\relax
-    \expandafter\gdef
-    \expandafter#1%
-    \expandafter{\expandafter\Int\expandafter{\the\@temp@inti}}%
-    \let\@next@minus\relax
-  \else\ifx#4\Int
-    \def\@next@minus{\@@arith@minus#1#4{#5}}%
-  \fi\fi\@next@minus}
-
-\def\@@arith@minus#1#2#3{%
-  \ifx#2\relax
-    \def\@next@minus{%
-       \expandafter\gdef
-       \expandafter#1%
-       \expandafter{\expandafter\Int\expandafter{\the\@temp@inti}}}%
-  \else\ifx#2\Int
-    \def\@next@minus{%
-       \@temp@intii#3\relax
-       \multiply\@temp@intii-1\relax
-       \advance\@temp@inti\@temp@intii\relax
-       \@@arith@minus#1}%
-  \fi\fi\@next@minus}
-
-
-\addassoc\@globalenv\/{\Func{\@arith@div}}
-\def\@arith@div#1#2#3#4#5{%
-  \@temp@inti#3\relax
-  \ifx#4\relax
-    \expandafter\gdef
-    \expandafter#1%
-    \expandafter{\expandafter\Int\expandafter{\the\@temp@inti}}%
-    \let\@next@div\relax
-  \else\ifx#4\Int
-    \def\@next@div{\@@arith@div#1#4{#5}}%
-  \fi\fi\@next@div}
-
-\def\@@arith@div#1#2#3{%
-  \ifx#2\relax
-    \def\@next@div{%
-       \expandafter\gdef
-       \expandafter#1%
-       \expandafter{\expandafter\Int\expandafter{\the\@temp@inti}}}%
-  \else\ifx#2\Int
-    \def\@next@div{%
-       \divide\@temp@inti#3\relax
-       \@@arith@div#1}%
-  \fi\fi\@next@div}
-
-\addassoc\@globalenv\<{\Func{\@arith@lt}}
-\def\@arith@lt#1\Int#2\Int#3{\ifnum#2<#3 \gdef#1{\Bool{t}}\else\gdef#1{\Bool{f}}\fi}
-
-
-%equality
-\addassoc\@globalenv\={\Func{\@lisp@equal}}
-\def\@lisp@equal#1#2#3#4#5{%
-  \gdef#1{\Bool{f}}%
-  \ifx#2#4%
-    \def\@@temp@eqchecki{#3}%
-    \def\@@temp@eqcheckii{#5}%
-    \ifx\@@temp@eqchecki\@@temp@eqcheckii\gdef#1{\Bool{t}}\fi
-  \fi}
-
-%string manipulation
-\addassoc\@globalenv\concat{\Func{\def\@temp@str{}\@str@concat}}
-\def\@str@concat#1#2#3{\let\@@next@str\relax\ifx#2\Value
-    \expandafter\def\expandafter\@temp@str\expandafter{\@temp@str#3}\def\@@next@str{\@str@concat#1}%
-  \else\ifx#2\relax\expandafter\gdef\expandafter#1\expandafter{\expandafter\Value\expandafter{\@temp@str}}\else\gdef#1{\Error{concat:type error}}\fi\fi\@@next@str}
-
-\addassoc\@globalenv\strOfInt{\Func{\@conv@strint}}
-\def\@conv@strint#1\Int#2{\gdef#1{\Value{#2}}}
-
-% connection to TeX world
-\addassoc\@globalenv\immediatewrite{\Func{\@immediate@write}}
-\def\@immediate@write#1{\gdef#1{\Nil{}}\@temp@write@buffer\gdef\@temp@write@buffer{}}
-
-
-\addassoc\@globalenv\group{\Func{\@text@group}}
-\def\@text@group#1#2#3{\ifx#2\Value
-   \gdef#1{\Value{{#3}}}\else\gdef#1{\Error{group:type error}}\fi}
-
-\addassoc\@globalenv\ungroup{\Func{\@text@ungroup}}
-\def\@text@ungroup#1#2#3{\ifx#2\Value\@@text@ungroup#1#3\@@end\else\gdef#1{\Error{ungroup:type error}}\fi}
-\def\@@text@ungroup#1#2#3\@@end{\ifx\@dummy#3\@dummy\gdef#1{\Value{#2}}\else
-\gdef#1{\Error}\fi}
-
-\addassoc\@globalenv\readLaTeXCounter{\Func{\@tex@read@latex@counter}}
-\def\@tex@read@latex@counter#1#2#3{%
-  \expandafter\expandafter\expandafter\gdef
-  \expandafter\expandafter\expandafter#1%
-  \expandafter\expandafter\expandafter{%
-  \expandafter\expandafter\expandafter\Int
-  \expandafter\expandafter\expandafter{%
-   \expandafter\the\csname c@#3\endcsname}}}
-
-
-
-\addassoc\@globalenv\print{\Func{\@tex@print}}
-\def\@tex@print#1#2#3{%
-   \gdef#1{\Nil{}}\@@tex@print#2{#3}}
-\def\@@tex@print#1#2{%
-  \ifx#1\Closure
-    \@add@to@write@buffer\@temp@write@buffer{[LAMBDA]}%
-  \else\ifx#1\Func
-    \@add@to@write@buffer\@temp@write@buffer{[FUNCTION]}%
-  \else\ifx#1\Value
-    \@add@to@write@buffer\@temp@write@buffer{'#2'}%
-  \else\ifx#1\Int
-    \@add@to@write@buffer\@temp@write@buffer{:#2}%
-  \else\ifx#1\Nil
-    \@add@to@write@buffer\@temp@write@buffer{()}%
-  \else\ifx#1\Symbol
-    \@add@to@write@buffer\@temp@write@buffer{\string#2}%
-  \else\ifx#1\Bool
-    \@add@to@write@buffer\@temp@write@buffer{/#2}%
-  \else\ifx#1\Cons
-    \@add@to@write@buffer\@temp@write@buffer{(}%
-    \expandafter\expandafter\expandafter\@@tex@print\csname car#2\endcsname
-    \expandafter\expandafter\expandafter\@@tex@print@cons\csname cdr#2\endcsname
-  \else\ifx#1\Dimen
-    \@add@to@write@buffer\@temp@write@buffer{!#2}%
-  \else\ifx#1\Skip
-    \@add@to@write@buffer\@temp@write@buffer{@#2}%
-  \else\ifx#1\Macro
-    \@add@to@write@buffer\@temp@write@buffer{[MACRO]}%
-  \fi\fi\fi\fi\fi\fi\fi\fi\fi\fi\fi}
-
-\def\@@tex@print@cons#1#2{%
-  \ifx#1\Cons
-    \@add@to@write@buffer\@temp@write@buffer{ }%
-    \expandafter\expandafter\expandafter\@@tex@print\csname car#2\endcsname
-    \expandafter\expandafter\expandafter\@@tex@print@cons\csname cdr#2\endcsname
-  \else\ifx#1\Nil
-    \@add@to@write@buffer\@temp@write@buffer{)}%
-  \else
-    \@add@to@write@buffer\@temp@write@buffer{.}%
-    \@@tex@print#1{#2}%
-    \@add@to@write@buffer\@temp@write@buffer{)}%
-  \fi\fi}
-
-
-\addassoc\@globalenv\texprint{\Func{\@tex@texprint}}
-\def\@tex@texprint#1#2#3{%
-   \gdef#1{\Nil{}}\@@tex@texprint#2{#3}}
-\def\@@tex@texprint#1#2{%
-  \ifx#1\Value
-    \@add@to@write@buffer\@temp@write@buffer{#2}%
-  \else\ifx#1\Int
-    \@add@to@write@buffer\@temp@write@buffer{#2}%
-  \else
-    \@add@to@write@buffer\@temp@write@buffer{INNER TOKEN}%
-  \fi\fi}
-
-% Manipulate LISP
-\addassoc\@globalenv\eval{\EnvFunc{\@extern@eval}}
-\def\@extern@eval#1#2#3#4{\@eval#3{#4}{#2}#1}
-\addassoc\@globalenv\apply{\EnvFunc{\@extern@apply}}
-\def\@extern@apply#1#2#3#4#5#6{% reg, env, labelfun, contfun, labellist, contlist
-  {\gdef#1{}%
-  \@flatten@list#1#5{#6}%
-  \expandafter\@@extern@apply\expandafter{#1}#1{#2}#3{#4}}}
-\def\@@extern@apply#1#2#3#4#5{% fargs, reg, env, label, cont
-  \ifx#4\Func
-    \@apply@func#4{#5}{#1}{#3}#2%
-  \else\ifx#4\EnvFunc
-    \@apply@envfunc#4{#5}{#1}{#3}#2%
-  \else\ifx#4\Closure
-    \@apply@closure#4{#5}{#1}{#3}#2%
-  \else\ifx#4\Macro
-    \@apply@macro#4{#5}{#1}{#3}#2%
-  \fi\fi\fi\fi}
-
-\def\@flatten@next{}
-\def\@flatten@nextobj{}
-\def\@flatten@list#1#2#3{%
-  \def\@flatten@nextobj{\Dummy{}}%
-  \def\@flatten@next##1##2##3{}%
-  \ifx#2\Nil\else
-    \expandafter\@@flatten@list\csname car#3\endcsname#1%
-    \expandafter\expandafter\expandafter\def
-    \expandafter\expandafter\expandafter\@flatten@nextobj
-    \expandafter\expandafter\expandafter{\csname cdr#3\endcsname}%
-    \let\@flatten@next\@flatten@list
-  \fi
-  \expandafter\@flatten@next\expandafter#1\@flatten@nextobj}
-\def\@@flatten@list#1#2{%
-   \expandafter\expandafter\expandafter\def
-   \expandafter\expandafter\expandafter#2%
-   \expandafter\expandafter\expandafter{\expandafter#2#1}}
-
-
 \def\@add@to@write@buffer#1#2{%
  \expandafter\gdef\expandafter#1\expandafter{#1#2}}
 
-\def\@defined@datatype{Cons,Symbol,Value,Nil,Func,Closure,Int,Bool,Dimen,Skip,Macro,EnvFunc,Mutable,Error}
+%% global environment
+\makeassoc\@globalenv
 
-% Type predicates
-\def\@define@type@predicate#1{\expandafter\@@define@type@predicate\expandafter#1}
-\def\@@define@type@predicate#1#2{%
-  \expandafter\@@@define@type@predicate\expandafter#1\expandafter#2}
-\def\@@@define@type@predicate#1#2#3{%
-  \addassoc\@globalenv#1{\Func{#2}}%
-  \def#2##1##2##3{\ifx##2#3\gdef##1{\Bool{t}}\else\gdef##1{\Bool{f}}\fi}}
-\def\@for@define@type@predicate#1{%
-  \lowercase{\expandafter\@define@type@predicate\csname#1}Q\endcsname}
-\@for\@type:=\@defined@datatype\do{%
-    \expandafter\@for@define@type@predicate\expandafter{\@type}%
-    \csname @type@\@type\endcsname
-    \csname\@type\endcsname}
-\addassoc\@globalenv\pairQ{\Func{\@type@Cons}}
-\addassoc\@globalenv\booleanQ{\Func{\@type@Bool}}
-\addassoc\@globalenv\stringQ{\Func{\@type@Value}}
+% implemeted functions
 
-\def\@defined@specialform{Lambda,Quote,Define,If,DefMacro,Begin,MDefine,SetB,@Let,@MLet}
 
+% CONS CAR CDR
+\newcount\@malloc
+\def\@get@car#1\@tlabel@cons#2{\@@get@car#1#2}
+\def\@@get@car#1#2#3{\global\let#1#2}
+\def\@get@cdr#1\@tlabel@cons#2{\@@get@cdr#1#2}
+\def\@@get@cdr#1#2#3{\global\let#1#3}
+\def\@make@cons#1#2#3#4#5{%
+   \expandafter\gdef\csname car\the\@malloc\endcsname{#2{#3}}%
+   \expandafter\gdef\csname cdr\the\@malloc\endcsname{#4{#5}}%
+   \@@make@cons#1\csname car\the\@malloc\endcsname\csname cdr\the\@malloc\endcsname
+   \global\advance\@malloc1\relax}
+\def\@@make@cons#1{\expandafter\@@@make@cons\expandafter#1}
+\def\@@@make@cons#1#2{\expandafter\@@@@make@cons\expandafter#1\expandafter#2}
+\def\@@@@make@cons#1#2#3{\gdef#1{\@tlabel@cons{#2#3}}}
+
+
+%arithmetical functions
+\input{lisp-arith.tex}
+
+%string manipulation
+\input{lisp-string.tex}
+
+% connection to TeX world
+\input{lisp-latexutil.tex}
+
+\def\@defined@datatype{symbol,string,int,bool,dimen,skip,cons,nil,func,closure,macro,envfunc,mutable}
+\def\@defined@specialform{lambda,quote,define,if,defmacro,begin,mdefine,setb,@let,@mlet}
 \edef\@defined@lisp@on@tex{\@defined@datatype,\@defined@specialform}
-\def\@save@latex@world{%
-   \@for\@@temp@save:=\@defined@lisp@on@tex\do{%
-        \aftergroup\let
-        \expandafter\aftergroup\csname @\@@temp@save\endcsname
-        \expandafter\aftergroup\csname\@@temp@save\endcsname
-        \aftergroup\def
-        \expandafter\aftergroup\csname\@@temp@save\endcsname
-        \aftergroup{%
-          \expandafter\aftergroup\csname @\@@temp@save\endcsname
-        \aftergroup}}}
-\def\@restore@latex@world{%
-   \@for\@@temp@save:=\@defined@lisp@on@tex\do{%
-      \aftergroup\let
-        \expandafter\aftergroup\csname\@@temp@save\endcsname
-        \expandafter\aftergroup\csname @\@@temp@save\endcsname}}
+
+\input{lisp-prim.tex}
+
+%%%%%MEMO
+% \@tlabel@xxx -> \@eval@xxx\@apply@xxx\@@apply@xxx
+% \@dummy => ;
+% \@eval@xxx#1#2#3 : #1 = cont, #2 = env, #3 = reg
+%%%%%
+\def\@@select@eval#1#2#3{#1}
+\def\@@select@apply#1#2#3{#2}
+\def\@@select@@apply#1#2#3{#3}
+
+\def\@type@define@filed#1{\expandafter\@@type@define@filed\expandafter#1}
+\def\@@type@define@filed#1#2{\expandafter\@@@type@define@filed
+  \expandafter#1\expandafter#2}
+\def\@@@type@define@filed#1#2#3{\expandafter\@@@@type@define@field
+  \expandafter#1\expandafter#2\expandafter#3}
+\def\@@@@type@define@field#1#2#3#4{%
+  \def#1##1##2##3{\gdef##3{#4{##1}}}%
+  \def#2{\errmessage{LISP on TeX [internal apply]: cannot apply}}%
+  \def#3{\errmessage{LISP on teX [function --- apply]: cannot apply}}%
+  \def#4{#1#2#3}}
+
+\@for\@type:=\@defined@lisp@on@tex\do{%
+  \expandafter\@type@define@filed%
+  \csname @eval@\@type\endcsname%
+  \csname @apply@\@type\endcsname%
+  \csname @@apply@\@type\endcsname%
+  \csname @tlabel@\@type\endcsname}
 
 
 \def\lispeval#1#2{% #1 : \cs -> S-exp, #2 : target register
   \gdef\@temp@write@buffer{}%
-  {\@save@latex@world}%
   \expandafter\@eval#1{}#2%
-  {\@restore@latex@world}%
   \@temp@write@buffer}
 
-\def\@gobble@iii#1#2#3#4{\gdef#4{#1{#2}}}
-\def\@eval#1#2#3#4{%
-  \begingroup
-  \ifx#1\Cons         \let\@next\@next@apply@%
-  \else\ifx#1\Symbol  \let\@next\@next@symbol@%
-  \else               \let\@next\@gobble@iii
-  \fi\fi\@next{#1}{#2}{#3}{#4}\let\@next\relax
-  \expandafter\@get@type#4\@check@mutable % mutable check
-  \ifx\@check@mutable\Mutable
-    \expandafter\@expand@mutable#4#4\fi
-  \endgroup}
+\def\@eval#1#2#3#4{\begingroup\expandafter\@@select@eval#1{#2}{#3}#4\endgroup}
 
-\def\@expand@mutable\Mutable#1#2{%
-  \expandafter\global
-  \expandafter\let
-  \expandafter#2\csname mutable#1\endcsname}
-
-\def\@next@apply@#1#2#3#4{\@next@apply{#2}{#3}{#4}}
-\def\@next@symbol@#1#2#3#4{\@next@symbol{#2}{#3}{#4}}
-
-\def\@gobble@letter@ii#1#2{}
-\def\@set@@next#1{\lowercase{%
- \expandafter\let\expandafter\@@next\csname @@next@#1\endcsname}}
-\def\@get@type#1#2#3{\let#3#1}
-\def\@next@apply#1#2#3{%
-  \@@get@car{#1}\@temp@i
-  \expandafter\@eval\@temp@i{#2}\@temp@i
-  \def\@@next{\gdef#3{\Error{Apply:CAR of cons cell is not function.}}}%
-  \expandafter\@get@type\@temp@i\@test@label
-  \edef\@@next{\expandafter\expandafter\expandafter\@gobble@letter@ii
-    \expandafter\string\@test@label}%
-  \expandafter\@set@@next\expandafter{\@@next}%
-  \@@next{#1}{#2}{#3}\let\@@next\relax}
-
-
-\def\@next@symbol#1#2#3{% concat currentenv ++ globalenv
-      \def\@temp@env{#2}%
-      \expandafter\expandafter\expandafter\def
-      \expandafter\expandafter\expandafter\@temp@env
-      \expandafter\expandafter\expandafter{%
-      \expandafter\@temp@env\@globalenv}%
-      \getassoc\@temp@env#1#3}
-
-
-% (\csi \csii ...) -> \csi\csii... .
-\def\@bind@get@symbol\Symbol#1#2{\@add@to@write@buffer#2{#1}}
-\def\@create@bind#1#2#3{\let\@bind@next\relax%
-  \ifx#1\Symbol
-    \@add@to@write@buffer#3{:#2}%
-  \else\ifx#1\Cons
-    \expandafter\expandafter\expandafter\@bind@get@symbol
-      \csname car#2\endcsname#3%
-    \def\@bind@next{\expandafter\expandafter\expandafter\@create@bind
-      \csname cdr#2\endcsname#3}%
-  \else\ifx#1\Nil
-    \@add@to@write@buffer#3{:\relax}%
-  \fi\fi\fi\@bind@next}
-
-
-\def\@@next@lambda#1#2#3{%
-  \@@get@cdr{#1}\@temp@i
-  \expandafter\@get@car\@temp@i\@temp@ii % cadr -> bind list
-  \def\@temp@iii{}% init convert
-  \expandafter\@create@bind\@temp@ii\@temp@iii % convert bind list to inner form
-  \expandafter\@get@cdr\@temp@i\@temp@i
-  \expandafter\@get@car\@temp@i\@temp@i% caddr -> body
-  \expandafter\expandafter\expandafter\gdef
-  \expandafter\expandafter\expandafter#3%
-  \expandafter\expandafter\expandafter{%
-  \expandafter\@temp@iii
-  \expandafter,\@temp@i,{#2}}%
-  \expandafter\gdef\expandafter#3\expandafter{\expandafter\Closure\expandafter{#3}}}
-
-\def\@@next@quote#1#2#3{%
-    \@@get@cdr{#1}\@temp@i
-    \expandafter\@get@car\@temp@i\@temp@i
-    \expandafter\gdef\expandafter#3\expandafter{\@temp@i}}
-
-% cons cell, environment, target
-
-\def\@modify@genv\Symbol#1#2#3{\addassoc\@globalenv#1{#2{#3}}}
-\def\@@next@define#1#2#3{%
-   \@@get@cdr{#1}\@temp@i
-   \expandafter\@get@car\@temp@i\@temp@ii % cadr -> \Symbol{\cs}
-   \expandafter\@get@cdr\@temp@i\@temp@i
-   \expandafter\@get@car\@temp@i\@temp@i  % caddr -> body
-   \let\@save@ii\@temp@ii
-   \expandafter\@eval\@temp@i{#2}\@temp@i
-   \expandafter\expandafter\expandafter\@modify@genv
-   \expandafter\@save@ii\@temp@i
-   \gdef#3{\Nil{}}}
-
-\def\@malloc@mutable#1#2{%
-  \expandafter\gdef\csname mutable\the\@malloc\endcsname{#1{#2}}}
-\def\@@next@mdefine#1#2#3{%
-   \@@get@cdr{#1}\@temp@i
-   \expandafter\@get@car\@temp@i\@temp@ii % cadr -> \Symbol{\cs}
-   \expandafter\@get@cdr\@temp@i\@temp@i
-   \expandafter\@get@car\@temp@i\@temp@i  % caddr -> body
-   \let\@save@ii\@temp@ii
-   \expandafter\@eval\@temp@i{#2}\@temp@i
-   \expandafter\@malloc@mutable\@temp@i
-   \expandafter\expandafter\expandafter\@modify@genv
-   \expandafter\@save@ii\expandafter\Mutable\expandafter{\the\@malloc}%
-   \global\advance\@malloc1\relax
-   \gdef#3{\Nil{}}}
-
-
-\def\@modify@symbol\Symbol#1#2{%cs, env
-  \def\@save@ii{#2}%
+\def\@append@env@global#1#2{%
+  \def#2{#1}%
   \expandafter\expandafter\expandafter\def
-  \expandafter\expandafter\expandafter\@save@ii
-  \expandafter\expandafter\expandafter{\expandafter\@save@ii\@globalenv}%
-  \getassoc\@save@ii#1\@find@result@mutable
-  \expandafter\@modify@mutable\@find@result@mutable}
-\def\@modify@mutable\Mutable#1#2{%
-  \expandafter\global\expandafter\let\csname mutable#1\endcsname#2}
+  \expandafter\expandafter\expandafter#2%
+  \expandafter\expandafter\expandafter{\expandafter#2\@globalenv}}
 
-\def\@@next@setb#1#2#3{%cons, env, reg
-   \@@get@cdr{#1}\@temp@i
-   \expandafter\@get@car\@temp@i\@temp@ii % cadr -> \Symbol{\cs}
-   \expandafter\@get@cdr\@temp@i\@temp@i
-   \expandafter\@get@car\@temp@i\@temp@i  % caddr -> body
-   \let\@save@ii\@temp@ii
-   \expandafter\@eval\@temp@i{#2}\@temp@i
-   \expandafter\@modify@symbol\@save@ii{#2}\@temp@i
-   \gdef#3{\Nil{}}}
+\def\@eval@symbol#1#2#3{%
+  \@append@env@global{#2}\@temp@env
+  %% \@temp@env = #2(local environment) ++ global environment
+  \getassoc\@temp@env#1#3%
+  \expandafter\@expand@if@mutable#3#3}
+\def\@expand@if@mutable#1#2#3{\ifx#1\@tlabel@mutable\global\let#3#2\fi}
 
-\def\@@next@@let#1#2#3{%cons,env,arg
-  \@@get@cdr{#1}\@temp@i
-   \expandafter\@get@car\@temp@i\@temp@ii % cadr -> \Symbol{\cs}
-   \expandafter\@get@cdr\@temp@i\@temp@i
-   \expandafter\@get@car\@temp@i\@temp@iii  % caddr -> body
-   \expandafter\@get@cdr\@temp@i\@temp@i
-   \expandafter\@get@car\@temp@i\@temp@i % cadddr -> target
-   \let\@save@ii\@temp@ii
-   \let\@save@i\@temp@i
-   \expandafter\@eval\@temp@iii{#2}\@temp@iii
-   \expandafter\@set@@tco@let\@save@ii\@temp@iii\@save@i{#2}#3%
-}
-\def\@set@@tco@let\Symbol#1{%
-  \expandafter\@@set@@tco@let\expandafter#1}
-\def\@@set@@tco@let#1#2#3#4#5#6{%
-  \expandafter\gdef
-  \expandafter\@@tco
-  \expandafter{\expandafter\@eval#4{#1{#2{#3}}#5}#6}%
-  \aftergroup\@@tco}
+\def\@eval@envcs#1#2#3#4{\expandafter\@@eval@envcs\expandafter{#1}#2{#3}#4}
+\def\@@eval@envcs#1#2#3#4{\@eval#2{#3}{#1}#4}
 
-\def\@@next@@mlet#1#2#3{%cons,env,arg
-  \@@get@cdr{#1}\@temp@i
-   \expandafter\@get@car\@temp@i\@temp@ii % cadr -> \Symbol{\cs}
-   \expandafter\@get@cdr\@temp@i\@temp@i
-   \expandafter\@get@car\@temp@i\@temp@iii  % caddr -> body
-   \expandafter\@get@cdr\@temp@i\@temp@i
-   \expandafter\@get@car\@temp@i\@temp@i % cadddr -> target
-   \let\@save@ii\@temp@ii
-   \let\@save@i\@temp@i
-   \expandafter\@eval\@temp@iii{#2}\@temp@iii
-   \expandafter\@set@@tco@mlet\@save@ii\@temp@iii\@save@i{#2}#3%
-}
-\def\@set@@tco@mlet\Symbol#1{%
-  \expandafter\@@set@@tco@mlet\expandafter#1}
-\def\@@set@@tco@mlet#1#2#3#4#5#6{%
-  \expandafter\gdef\csname mutable\the\@malloc\endcsname{#2{#3}}%
-  \expandafter\expandafter\expandafter\gdef
-  \expandafter\expandafter\expandafter\@@tco
-  \expandafter\expandafter\expandafter{%
-  \expandafter\expandafter\expandafter\@eval
-  \expandafter#4%
-  \expandafter{%
-  \expandafter#1%
-  \expandafter{\expandafter\Mutable\expandafter{\the\@malloc}}#5}#6}%
+\def\@eval@cons#1#2#3{\@@eval@cons#1{#2}#3}
+\def\@@eval@cons#1#2#3#4{%
+  \expandafter\@eval#1{#3}\@temp@i
+  \def\@temp@ii{}% init
+  \expandafter\@flatten@args#2\@temp@ii
+  \expandafter\expandafter\expandafter\@@select@apply@pre\expandafter\@temp@i\@temp@ii\@{#3}#4}
+\def\@@select@apply@pre{\expandafter\@@select@apply}
+
+\def\@flatten@args#1#2#3{%
+  \ifx#1\@tlabel@cons
+    \let\@flatten@next\@@flatten@next
+  \else\ifx#1\@tlabel@nil
+    \let\@flatten@next\@@flatten@fin
+  \else
+    \errmessage{LISP on TeX [internal apply]: Invalid args}%
+  \fi\fi
+  \@flatten@next#2#3}
+
+\def\@@flatten@next#1#2#3{%
+  \expandafter\expandafter\expandafter\def
+  \expandafter\expandafter\expandafter#3%
+  \expandafter\expandafter\expandafter{\expandafter#3#1}%
+  \expandafter\@flatten@args#2#3}
+
+\def\@@flatten@fin#1{}
+
+\def\@apply@lambda#1#2#3#4#5\@#6#7{%
+  \def\@lambda@args{}% init
+  \@create@bind#2{#3}\@lambda@args % convert arg list into internal form
+  \expandafter\@create@closure\@lambda@args\@{#6}#4{#5}#7}
+\def\@create@closure#1\@#2#3#4#5{\gdef#5{\@tlabel@closure{{#1}{#2}#3{#4}}}}
+
+\def\@create@bind#1#2#3{%
+  \ifx#1\@tlabel@symbol
+    \let\@create@bind@next\@@create@listarg
+  \else\ifx#1\@tlabel@cons
+    \let\@create@bind@next\@@create@normalarg
+  \else\ifx#1\@tlabel@nil
+    \let\@create@bind@next\@@create@finarg
+  \fi\fi\fi
+  \@create@bind@next#2#3}
+\def\@@create@listarg#1#2{\expandafter\def\expandafter#2\expandafter{#2:#1}}
+\def\@@create@normalarg#1#2#3{%
+  \expandafter\@@create@bind@symbol#1#3%
+  \expandafter\@create@bind#2#3}
+\def\@@create@bind@symbol\@tlabel@symbol#1#2{\expandafter\def\expandafter#2\expandafter{#2#1}}
+\def\@@create@finarg#1{\expandafter\def\expandafter#1\expandafter{#1:\@@unused}}
+\def\@@unused{\@@unused}
+
+\def\@apply@quote#1#2#3\@#4#5{\gdef#5{#2{#3}}}
+
+\def\@apply@define#1\@tlabel@symbol#2#3#4\@#5#6{%
+  \@eval#3{#4}{#5}#6% define does NOT use local environment
+  \expandafter\addassoc\expandafter\@globalenv\expandafter#2\expandafter{#6}%
+  \gdef#6{\@tlabel@nil{}}}
+
+\def\@apply@mdefine#1\@tlabel@symbol#2#3#4\@#5#6{%
+  \@eval#3{#4}{#5}#6% mdefine does NOT use local environment
+  \expandafter\@mutable@allocate#6%
+  \expandafter\addassoc
+  \expandafter\@globalenv
+  \expandafter#2%
+  \expandafter{\expandafter\@tlabel@mutable
+  \expandafter{\csname mutable\the\@malloc\endcsname}}%
   \global\advance\@malloc1\relax
+  \gdef#6{\@tlabel@nil{}}}
+\def\@mutable@allocate#1#2{\expandafter\gdef\csname mutable\the\@malloc\endcsname{#1#2}}
+
+
+\def\@apply@setb#1\@tlabel@symbol#2#3#4\@#5#6{%
+  \@eval#3{#4}{#5}#6%
+  \getassoc\@temp@env#2\@temp@i
+  \expandafter\@set@mutable\@temp@i#6%
+  \gdef#6{\@tlabel@nil{}}}
+\def\@set@mutable\@tlabel@mutable#1#2{\global\let#1#2}
+
+
+\def\@apply@@let#1\@tlabel@symbol#2#3#4#5#6\@#7#8{%
+  \@eval#3{#4}{#7}#8%
+  \expandafter\def\expandafter\@temp@env\expandafter{\expandafter#2\expandafter{#8}#7}%
+  \expandafter\gdef\expandafter\@@tco
+    \expandafter{\expandafter\@@eval@envcs\expandafter{\@temp@env}#5{#6}#8}%
+  \aftergroup\@@tco}
+
+\def\@apply@@mlet#1\@tlabel@symbol#2#3#4#5#6\@#7#8{%
+  \@eval#3{#4}{#7}#8%
+  \expandafter\global\expandafter\let\csname mutable\the\@malloc\endcsname#8%
+  \expandafter\def\expandafter#8\expandafter{\expandafter\@tlabel@mutable
+    \expandafter{\csname mutable\the\@malloc\endcsname}}%
+  \global\advance\@malloc1\relax
+  \expandafter\def\expandafter\@temp@env\expandafter{\expandafter#2\expandafter{#8}#7}%
+  \expandafter\gdef\expandafter\@@tco
+    \expandafter{\expandafter\@@eval@envcs\expandafter{\@temp@env}#5{#6}#8}%
   \aftergroup\@@tco}
 
 
-\def\@convert@closure@to@macro\Closure#1#2{\def#2{\Macro{#1}}}
-% \Macro : vars,body,env
+\def\@apply@defmacro#1\@tlabel@symbol#2#3#4\@#5#6{%
+  \@eval#3{#4}{#5}#6% NOT use local env!
+  \expandafter\@apply@defmacro@next\expandafter#2#6%
+  \gdef#6{\@tlabel@nil{}}}
+\def\@apply@defmacro@next#1\@tlabel@closure#2{\addassoc\@globalenv#1{\@tlabel@macro{#2}}}
 
-
-\def\@@next@defmacro#1#2#3{%
-   \@@get@cdr{#1}\@temp@i
-   \expandafter\@get@car\@temp@i\@temp@ii % cadr -> \Symbol{\cs}
-   \expandafter\@get@cdr\@temp@i\@temp@i
-   \expandafter\@get@car\@temp@i\@temp@i  % caddr -> body
-   \let\@save@ii\@temp@ii
-   \expandafter\@eval\@temp@i{#2}\@temp@i
-   \expandafter\@convert@closure@to@macro\@temp@i\@temp@i
-   \expandafter\expandafter\expandafter\@modify@genv
-   \expandafter\@save@ii\@temp@i
-   \gdef#3{\Nil{}}}
-
-
-\def\@if@true{t}
-\def\@if@false{f}
-\def\@get@bool\Bool#1#2{\def#2{#1}}
-\def\@@next@if#1#2#3{%
-   \@@get@cdr{#1}\@temp@i
-   \expandafter\@get@car\@temp@i\@temp@ii % cadr -> \Bool{value}
-   \let\@save@temp@i\@temp@i
-   \expandafter\@eval\@temp@ii{#2}\@temp@ii
-   \expandafter\@get@cdr\@save@temp@i\@temp@i
-   \expandafter\@get@bool\@temp@ii\@temp@ii
-   \ifx\@temp@ii\@if@false
-      \expandafter\@get@cdr\@temp@i\@temp@i
-   \fi
-   \expandafter\@get@car\@temp@i\@temp@ii
-   \expandafter\gdef\expandafter\@@tco\expandafter{\expandafter\@eval\@temp@ii{#2}#3}%
-   \aftergroup\@@tco}
-
-\newtoks\@args
-\def\@@next@func#1#2#3{%
-   \@@get@cdr{#1}\@temp@ii
-   \@args{}%
-   \let\@save\@temp@i % \@temp@i=\Func{\cs}
-   \def\@@@next{%
-     \expandafter\@get@type\@temp@ii\@test@label % \@test@label = type
-     \ifx\Nil\@test@label
-       \let\@@@next\relax
-     \else
-       \expandafter\@get@car\@temp@ii\@temp@iii
-       \expandafter\@get@cdr\@temp@ii\@temp@ii
-       \let\@save@ii\@temp@ii
-       \expandafter\@eval\@temp@iii{#2}\@temp@iii
-       \let\@temp@ii\@save@ii
-       \expandafter\expandafter\expandafter\@args\expandafter\expandafter\expandafter{\expandafter\the\expandafter\@args\@temp@iii}%
-     \fi\@@@next}\@@@next
-   \expandafter\expandafter\expandafter\@apply@func\expandafter\@save\expandafter{\the\@args}{#2}#3}
-
-\def\@apply@func\Func#1#2#3#4{\gdef\@@tco{#1#4#2\relax\relax}\aftergroup\@@tco}
-
-
-\def\@@next@envfunc#1#2#3{%
-   \@@get@cdr{#1}\@temp@ii
-   \@args{}%
-   \let\@save\@temp@i % \@temp@i=\Func{\cs}
-   \def\@@@next{%
-     \expandafter\@get@type\@temp@ii\@test@label % \@test@label = type
-     \ifx\Nil\@test@label
-       \let\@@@next\relax
-     \else
-       \expandafter\@get@car\@temp@ii\@temp@iii
-       \expandafter\@get@cdr\@temp@ii\@temp@ii
-       \let\@save@ii\@temp@ii
-       \expandafter\@eval\@temp@iii{#2}\@temp@iii
-       \let\@temp@ii\@save@ii
-       \expandafter\expandafter\expandafter\@args\expandafter\expandafter\expandafter{\expandafter\the\expandafter\@args\@temp@iii}%
-     \fi\@@@next}\@@@next
-   \expandafter\expandafter\expandafter\@apply@envfunc\expandafter\@save\expandafter{\the\@args}{#2}#3}
-
-\def\@apply@envfunc\EnvFunc#1#2#3#4{\gdef\@@tco{#1#4{#3}#2\relax\relax}\aftergroup\@@tco}
-
-
-
-\def\@@next@closure#1#2#3{%
-   \@@get@cdr{#1}\@temp@ii
-   \@args{}%
-   \let\@save\@temp@i % \@temp@i=\Closure{vars,body,env}
-   \def\@@@next{% \@args <- argument list
-     \expandafter\@get@type\@temp@ii\@test@label % \@test@label = type
-     \ifx\Nil\@test@label
-       \let\@@@next\relax
-     \else
-       \expandafter\@get@car\@temp@ii\@temp@iii
-       \expandafter\@get@cdr\@temp@ii\@temp@ii
-       \let\@save@ii\@temp@ii
-       \expandafter\@eval\@temp@iii{#2}\@temp@iii
-       \let\@temp@ii\@save@ii
-       \expandafter\expandafter\expandafter\@args
-       \expandafter\expandafter\expandafter{%
-       \expandafter\the\expandafter\@args\@temp@iii}%
-     \fi\@@@next}\@@@next
-     \expandafter\expandafter\expandafter\@apply@closure
-     \expandafter\@save\expandafter{\the\@args}{#2}#3}
-
-
-\def\@apply@closure\Closure#1#2#3#4{\@@apply@closure#1{#2}#4}
-\def\@@apply@closure#1,#2,#3#4#5{%binds,body,cenv,args,reg
-  \@args{}\@closure@env#1#4\relax\relax%
-  \expandafter\@@@apply@closure\expandafter{\the\@args}#2{#3}#5}
-\def\@@@apply@closure#1#2#3#4#5{%bindings(env),label,cont,cenv,reg
-  \gdef\@@tco{\@eval#2{#3}{#1#4}#5}\aftergroup\@@tco}
-
-\def\@closure@env#1:#2{\let\@@next\relax%
-  \ifx\@dummy#1\@dummy
-    \def\@@next{%
-      \ifx\relax#2%
-        \let\@@next\relax%
-      \else
-        \def\@@next{\@@closure@make@list#2}%
-      \fi\@@next}%
+\def\@apply@if#1#2#3#4#5#6#7\@#8#9{%
+  \@eval#2{#3}{#8}#9%
+  \expandafter\@apply@if@next#9#4{#5}#6{#7}{#8}#9%
+  \aftergroup\@@tco
+  }
+\def\@apply@if@next\@tlabel@bool#1#2#3#4#5#6#7{%
+  \ifx#1t%
+    \gdef\@@tco{\@eval#2{#3}{#6}#7}%
+  \else\ifx#1f%
+    \gdef\@@tco{\@eval#4{#5}{#6}#7}%
   \else
-      \def\@@next{\@@bind@arg#1:#2;}%
-  \fi\@@next}
-\def\@@bind@arg#1#2:#3;#4#5{\let\@@next\relax%
-  \ifx#4\relax
-    \@args{\Error{CLOSURE: too few args}}%
-  \else
-    \expandafter\@args\expandafter{\the\@args#1{#4{#5}}}%
-    \def\@@next{\@closure@env#2:#3}%
-  \fi\@@next}
+    \errmessage{LISP on TeX [if]: Invalid boolean. It's BUG. Please report.}%
+  \fi\fi}
 
-\def\@@closure@make@list#1{%
-  \expandafter\@args\expandafter{\the\@args#1}%
-  \@@@closure@make@list}
-\def\@@@closure@make@list#1#2{%
-  \let\@@next\relax
+
+%% use general
+\def\@apply@eval@args#1#2#3#4{%
+  \ifx#3\relax
+    \let\@@next\@@next@fin
+  \else
+    \let\@@save#1%
+    \@eval#3{#4}{#2}#1%
+    \expandafter\expandafter\expandafter\def
+    \expandafter\expandafter\expandafter#1\expandafter\expandafter\expandafter{%
+    \expandafter\@@save#1}%
+    \let\@@next\@apply@eval@args
+  \fi\@@next#1{#2}}
+\def\@@next@fin#1#2{}
+
+\def\@apply@func#1#2\@#3#4{%
+  \def\@temp@i{}%
+  \@apply@eval@args\@temp@i{#3}#2\relax\relax
+  \expandafter\@apply@func@next\expandafter{\@temp@i}{#1}{#3}#4}
+\def\@apply@func@next#1#2#3#4{\@@apply@func{#2}#1\@{#3}#4}
+
+\def\@@apply@func#1#2\@#3#4{\gdef\@@tco{#1#4#2\relax\relax}\aftergroup\@@tco}
+
+
+\def\@apply@envfunc#1#2\@#3#4{%
+  \def\@temp@i{}%
+  \@apply@eval@args\@temp@i{#3}#2\relax\relax
+  \expandafter\@apply@envfunc@next\expandafter{\@temp@i}{#1}{#3}#4}
+\def\@apply@envfunc@next#1#2#3#4{\@@apply@envfunc{#2}#1\@{#3}#4}
+
+\def\@@apply@envfunc#1#2\@#3#4{\gdef\@@tco{#1#4{#3}#2\relax\relax}\aftergroup\@@tco}
+
+
+\def\@apply@closure#1#2\@#3#4{%
+  \def\@temp@i{}%
+  \@apply@eval@args\@temp@i{#3}#2\relax\relax
+  \expandafter\@apply@closure@next\expandafter{\@temp@i}{#1}{#3}#4}
+\def\@apply@closure@next#1#2#3#4{\@@apply@closure{#2}#1\@{#3}#4}
+
+\def\@@apply@closure#1#2\@#3#4{\@@apply@closure@next#1#2\@#4}
+\def\@@apply@closure@next#1#2#3#4#5\@#6{%
+  \def\@temp@env{}%
+  \@@apply@create@env\@temp@env#1#5\relax\relax
+  \expandafter\gdef\expandafter\@@tco\expandafter{%
+    \expandafter\@@eval@envcs\expandafter{\@temp@env#2}#3{#4}#6}%
+  \aftergroup\@@tco}
+
+\def\@@apply@create@env#1#2:#3#4#5{%
+  \ifx!#2!% if #2 is empty
+    \let\@@next@args@\@empty
+    \ifx#3\@@unused
+      \let\@@next\@@apply@create@env@fin
+    \else
+      \@@apply@create@env@phantom
+      \expandafter\@@apply@modify@env\expandafter#1\@@@@ph#3\@
+      \expandafter\gdef\csname car\the\@malloc\endcsname{#4{#5}}%
+      \let\@@next\@@apply@create@env@cdr
+    \fi
+  \else
+    \@@apply@modify@env#1#4{#5}#2\@
+    \@@next@args#2\@
+    \let\@@next\@@apply@create@env
+  \fi\expandafter\@@next\expandafter#1\@@next@args@:#3}
+
+\def\@@apply@create@env@cdr#1:#2{\@@@apply@create@env@cdr}
+\def\@@@apply@create@env@cdr#1#2{%
   \ifx#1\relax
-    \expandafter\@args\expandafter{\the\@args{\Nil{}}}%
-  \else
-    \expandafter\expandafter\expandafter\@args
-    \expandafter\expandafter\expandafter{%
-    \expandafter\the
-    \expandafter\@args
-    \expandafter{%
-    \expandafter\Cons
-    \expandafter{\the\@malloc}}}%
-    \expandafter\gdef\csname car\the\@malloc\endcsname{#1{#2}}%
-    \let\@@next\@@@closure@make@list@cons
-  \fi\@@next}
-
-\newcount\@@closure@list@cnt
-\def\@@@closure@make@list@cons#1#2{%
-  \ifx#1\relax
-    \expandafter\gdef\csname cdr\the\@malloc\endcsname{\Nil{}}%
+    \expandafter\gdef\csname cdr\the\@malloc\endcsname{\@tlabel@nil{}}%
+    \global\advance\@malloc1\relax
     \let\@@next\relax
   \else
-      \@@closure@list@cnt\@malloc\relax
-      \advance\@@closure@list@cnt1\relax
-    \expandafter\xdef
-       \csname cdr\the\@malloc\endcsname{%
-            \noexpand\Cons{\the\@@closure@list@cnt}}%
-    \expandafter\gdef\csname car\the\@@closure@list@cnt\endcsname{#1{#2}}%
-  \fi\global\advance\@malloc1 \@@next}
+    \global\advance\@malloc1\relax
+    \@@apply@create@env@phantom
+    \global\advance\@malloc-1\relax
+    \expandafter\@@set@cdr\@@@@ph
+    \global\advance\@malloc1\relax
+    \expandafter\gdef\csname car\the\@malloc\endcsname{#1{#2}}%
+    \let\@@next\@@@apply@create@env@cdr
+  \fi\@@next}
 
-\def\@@next@macro#1#2#3{%
-   \@@get@cdr{#1}\@temp@ii
-   \@args{}%
-   \let\@save\@temp@i % \@temp@i=\Macro{vars,body}
-   \def\@@@next{% \@args <- argument list
-     \expandafter\@get@type\@temp@ii\@test@label % \@test@label = type
-     \ifx\Nil\@test@label
-       \let\@@@next\relax
-     \else
-       \expandafter\@get@car\@temp@ii\@temp@iii
-       \expandafter\@get@cdr\@temp@ii\@temp@ii
-       \expandafter\expandafter\expandafter\@args
-       \expandafter\expandafter\expandafter{%
-       \expandafter\the\expandafter\@args\@temp@iii}%
-     \fi\@@@next}\@@@next
-     \expandafter\expandafter\expandafter\@apply@macro
-     \expandafter\@save\expandafter{\the\@args}{#2}#3}
+\def\@@set@cdr#1#2{\expandafter\gdef\csname cdr\the\@malloc\endcsname{#1{#2}}}
+\def\@@apply@create@env@phantom{%
+  \expandafter\@@@apply@ph\csname car\the\@malloc\endcsname\csname cdr\the\@malloc\endcsname}
+\def\@@@apply@ph#1{\expandafter\@@@@apply@ph\expandafter#1}
+\def\@@@@apply@ph#1#2{\def\@@@@ph{\@tlabel@cons{#1#2}}}
+\def\@@apply@create@env@fin#1:#2{}
+\def\@@apply@modify@env#1#2#3#4#5\@{%
+  \ifx#2\relax
+    \errmessage{LISP on TeX [apply --- closure]: too few args}%
+  \else
+    \expandafter\def\expandafter#1\expandafter{#1#4{#2{#3}}}%
+  \fi}
+\def\@@next@args#1#2\@{\def\@@next@args@{#2}}
 
 
-\def\@apply@macro\Macro#1#2#3#4{\@@apply@macro#1{#2}{#3}#4}
-\def\@@apply@macro#1,#2,#3#4#5#6{%binds,body,menv,args,env,reg
-  \@args{}\@closure@env#1#4\relax\relax%
-  \expandafter\@@@apply@macro\expandafter{\the\@args}#2{#3}{#5}#6}
-\def\@@@apply@macro#1#2#3#4#5#6{%bindings(env),label,cont,menv,env,reg
-  \gdef\@@tco{\@eval#2{#3}{#1#4}#6\expandafter\@eval#6{#5}#6}\aftergroup\@@tco}
+\def\@@apply@macro#1#2\@#3#4{\@@apply@macro@next#1#2\@{#3}#4}
+\def\@@apply@macro@next#1#2#3#4#5\@#6#7{%
+  \def\@temp@env{}%
+  \@@apply@create@env\@temp@env#1#5\relax\relax
+  \expandafter\gdef\expandafter\@@tco\expandafter{%
+    \expandafter\@@eval@envcs\expandafter{\@temp@env#2}#3{#4}#7%
+    \expandafter\@eval#7{#6}#7}%
+  \aftergroup\@@tco}
+\let\@apply@macro\@@apply@macro
 
 
-\def\@@next@begin#1#2#3{%
-   \@@get@cdr{#1}\@temp@ii
-   \@args{\Nil{}}%
-   \def\@@@next{%
-     \expandafter\@get@type\@temp@ii\@test@label % \@test@label = type
-     \ifx\Nil\@test@label
-       \let\@@@next\relax
-     \else
-       \expandafter\@get@car\@temp@ii\@temp@iii
-       \expandafter\@get@cdr\@temp@ii\@temp@ii
-       \let\@save\@temp@iii
-       \let\@@save\@temp@ii
-       \expandafter\@eval\the\@args{#2}#3%
-       \let\@temp@ii\@@save
-       \@args\expandafter{\@save}%
-     \fi\@@@next}\@@@next
-   \expandafter\gdef\expandafter\@@tco\expandafter{\expandafter\@eval\the\@args{#2}#3}\aftergroup\@@tco}
+
+\def\@apply@begin#1#2\@#3#4{%
+  \@apply@begin@next#4{#3}#2\relax\relax}
+\def\@apply@begin@next#1#2#3#4#5#6{%
+  \ifx#5\relax
+    \gdef\@@tco{\@eval#3{#4}{#2}#1}%
+    \aftergroup\@@tco
+    \let\@@next\@apply@begin@end
+  \else
+    \@eval#3{#4}{#2}#1%
+    \let\@@next\@apply@begin@next
+  \fi\@@next#1{#2}#5{#6}}
+\def\@apply@begin@end#1#2{}
