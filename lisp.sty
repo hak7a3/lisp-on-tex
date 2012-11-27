@@ -171,7 +171,8 @@
   \expandafter\@eval#1{}#2%
   \@temp@write@buffer}
 
-\def\@eval#1#2#3#4{\begingroup\expandafter\@@select@eval#1{#2}{#3}#4\endgroup}
+\def\@eval#1#2#3#4{%
+  \begingroup\expandafter\@@select@eval#1{#2}{#3}#4\endgroup}
 
 \def\@append@env@global#1#2{%
   \def#2{#1}%
@@ -255,11 +256,12 @@
   \expandafter{\csname mutable\the\@malloc\endcsname}}%
   \global\advance\@malloc1\relax
   \gdef#6{\@tlabel@nil{}}}
-\def\@mutable@allocate#1#2{\expandafter\gdef\csname mutable\the\@malloc\endcsname{#1#2}}
+\def\@mutable@allocate#1#2{\expandafter\gdef\csname mutable\the\@malloc\endcsname{#1{#2}}}
 
 
 \def\@apply@setb#1\@tlabel@symbol#2#3#4\@#5#6{%
   \@eval#3{#4}{#5}#6%
+  \@append@env@global{#5}\@temp@env
   \getassoc\@temp@env#2\@temp@i
   \expandafter\@set@mutable\@temp@i#6%
   \gdef#6{\@tlabel@nil{}}}

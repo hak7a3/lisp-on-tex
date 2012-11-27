@@ -1,0 +1,61 @@
+%% CONCAT : string -> string -> string
+%% (\concat str1 str2) => str1 ++ str2
+\addassoc\@globalenv\concat{\@tlabel@func{\def\@temp@str{}\@str@concat}}
+\def\@str@concat#1#2#3{%
+	\let\@@next@str\relax
+	\ifx#2\@tlabel@string
+    	\expandafter\def
+    	\expandafter\@temp@str
+    	\expandafter{\@temp@str#3}%
+    	\let\@@next@str\@str@concat
+  	\else\ifx#2\relax
+  		\let\@@next@str\@str@fin
+  	\else
+  		\errmessage{LISP on TeX [function --- concat]:%
+  			 Arguments of concat must be strings}%
+  	\fi\fi\@@next@str#1}
+\def\@str@fin#1{%
+	\expandafter\gdef\expandafter#1%
+	\expandafter{\expandafter\@tlabel@string\expandafter{\@temp@str}}}
+
+%% INT2STRING : int -> string
+%% (\intTOstring i) -> 'i'
+\addassoc\@globalenv\intTOstring{\@tlabel@func{\@conv@intTOstr}}
+\def\@conv@intTOstr#1\@tlabel@int#2{\gdef#1{\@tlabel@string{#2}}}
+
+%% IMMEDIATEWRITE : () -> ()
+%% It outputs the output buffer immediately.
+%% It cause error if the buffer is imcomlete.
+\addassoc\@globalenv\immediatewrite{\@tlabel@func{\@immediate@write}}
+\def\@immediate@write#1{%
+	\gdef#1{\@tlabel@nil{}}%
+	\@temp@write@buffer\gdef\@temp@write@buffer{}}
+
+%% GROUP : string -> string
+%% (\group str) -> '{str}'
+\addassoc\@globalenv\group{\@tlabel@func{\@text@group}}
+\def\@text@group#1#2#3{%
+	\ifx#2\@tlabel@string
+   		\gdef#1{\@tlabel@string{{#3}}}%
+   	\else
+   		\errmessage{LISP on TeX [function --- group]:%
+   			The argument of group must be a string.}%
+   	\fi}
+
+%% UNGROUP : string -> string
+%% (\group '{str}') -> 'str'
+\addassoc\@globalenv\ungroup{\@tlabel@func{\@text@ungroup}}
+\def\@text@ungroup#1#2#3{%
+	\ifx#2\@tlabel@string
+		\@@text@ungroup#1#3\@@end
+	\else
+		\errmessage{LISP on TeX [function --- ungroup]:%
+   			The argument of ungroup must be a string.}%
+	\fi}
+\def\@@text@ungroup#1#2#3\@@end{%
+	\ifx;#3;%
+		\gdef#1{\@tlabel@string{#2}}%
+	\else
+		\errmessage{LISP on TeX [function --- ungroup]:%
+   			The argument of ungroup must be a grouped string.}%
+	\fi}

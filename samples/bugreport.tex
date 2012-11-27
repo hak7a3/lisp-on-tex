@@ -1,0 +1,41 @@
+
+
+% -*- coding: euc-jp -*-
+\documentclass[10pt,draft]{jsarticle}
+
+\usepackage{lisp}
+%\usepackage{copy/lisp}
+
+% cause error
+\input{lisputil.tex}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% document
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+
+hogehoge%
+\tracingmacros=1
+\makeatletter
+\lispinterpl{
+(\define \a 'hoge')
+(\define \lis (\list :1 \a :3))
+(\define \eqa (\lambda (\x) (\= \x \a)))
+(\define \eqea (\lambda (\x) (\= (\eval \x) \a)))
+(\print (\list
+  (\eqa \a)
+  % => /t
+  (\eqea \a)
+  % => /t
+  (\@inner@map \eqa \lis)
+  % => (/f /f /f)
+  (\@inner@map \eqea \lis)
+  % => (/f /t /f)
+  ))
+}
+\makeatother
+
+\end{document}

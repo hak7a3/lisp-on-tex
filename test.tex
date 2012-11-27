@@ -11,7 +11,7 @@
 % Thanks to ZR (^^)
 \section{hogehoges}
 =()
-%\tracingmacros=1
+\tracingmacros=1
 =\lispinterpl{%
 (\define \zero (\lambda (\s) (\lambda (\z) \z)))
 (\define \inc (\lambda (\n) (\lambda (\s) (\lambda (\z) (\s ((\n \s) \z))))))
@@ -36,7 +36,7 @@
         %<BODY \sk>
           (\inc \k))%</BODY>
     )))))
-(\print (\stars (\isqrt ((\inc (\inc \two)) (\inc \two)))))
+%(\print (\stars (\isqrt ((\inc (\inc \two)) (\inc \two)))))
 (\print (\< (\+ :10 :100 :1) :11))
 (\print (\concat '*' '/'))
 (\print (\ungroup '{\def\hoge{aaaa}\hoge}'))
@@ -51,6 +51,7 @@
 (\print (\hogehoge \id))
 (\mdefine \foo :1234567)
 (\print \foo)
+(\texprint '\expandafter\show\csname mutable259\endcsname')
 (\setB \foo 'hoge')
 (\print \foo)
 }

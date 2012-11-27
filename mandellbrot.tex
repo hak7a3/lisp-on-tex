@@ -1,5 +1,5 @@
 \documentclass{article}
-\usepackage[dvipdfm,a4paper,margin=1pt]{geometry}
+\usepackage[dvipdfm,a3paper,margin=1pt,landscape]{geometry}
 \def\w{\hspace*{1pt}}
 \def\b{\vrule width 1pt height 1pt depth 0pt}
 \usepackage{lisp}
@@ -31,7 +31,7 @@
 (\define \modulo (\lambda (\n \m) (\- \n (\* \m (\/ \n \m)))))
 (\define \loopMandell
   (\lambda (\n)
-    (\lispif (\= \n (\* :6 \scale \scale)) 
+    (\lispif (\= \n (\* :6 \scale \scale))  % (\* :6 \scale \scale)
       ()
       (\begin
          (\drawMandell 

@@ -1,0 +1,11 @@
+%% READ_LaTeX_Counter : string -> int
+%% (\readLaTeXCounter str) -> i
+%% where i = \the\c@str
+\addassoc\@globalenv\readLaTeXCounter{\@tlabel@func{\@tex@read@latex@counter}}
+\def\@tex@read@latex@counter#1#2#3{%
+  \expandafter\expandafter\expandafter\gdef
+  \expandafter\expandafter\expandafter#1%
+  \expandafter\expandafter\expandafter{%
+  \expandafter\expandafter\expandafter\@tlabel@int
+  \expandafter\expandafter\expandafter{%
+   \expandafter\the\csname c@#3\endcsname}}}

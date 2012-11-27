@@ -1,0 +1,10 @@
+\documentclass{article}
+\tracingmacros=1
+\usepackage{lisp}
+\begin{document}
+\makeatletter
+aaaa\lispinterpl{%
+(\texprint (\/ :10 :2))
+}%
+\tracingmacros=0
+\end{document}
