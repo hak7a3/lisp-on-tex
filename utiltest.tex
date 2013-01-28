@@ -21,6 +21,8 @@ aaaaaaaaa%
 	(\lispif (\pairQ \x) 'CONS cell'
 	'Others')))))
 (\print (\map \typeswitch (\list :2 :3 'hoge'  /t () (\list :1 :2) )))
+(\define \f (\lambda \x \x))
+(\print (\f :1 :2 :3))
 }
 bbbbbbb\\
 cccc
