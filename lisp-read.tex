@@ -1,0 +1,78 @@
+\def\lispread#1#2{\gdef\@read@buffer{#2\@@eof\@@eof}\@lispread#1}
+\def\@lispread#1{%
+\begingroup
+  \readchar
+  \if(\expandafter\noexpand\@currentread
+   \readchar
+   \if\expandafter\noexpand\@currentread)%
+     \gdef#1{\@tlabel@nil{}}%
+   \else
+     \unreadchar
+     \@lispread\@temp@i
+     \readchar
+     \if.\expandafter\noexpand\@currentread
+       \let\@save@temp\@temp@i
+       \@lispread\@temp@ii
+       \let\@temp@i\@save@temp
+       \readchar
+       \if)\expandafter\noexpand\@currentread
+          \expandafter\expandafter\expandafter\@make@cons
+          \expandafter\expandafter\expandafter#1%
+            \expandafter\@temp@i\@temp@ii
+       \else
+          \errmessage{LISP on TeX [Parse] :CANNOT FIND )}%
+       \fi
+     \else\if)\expandafter\noexpand\@currentread
+       \expandafter\@make@cons\expandafter#1\@temp@i\@tlabel@nil{}%
+     \else
+       \unreadchar
+       \expandafter\gdef
+       \expandafter\@read@buffer
+       \expandafter{%
+       \expandafter(\@read@buffer}%
+       \let\@save@temp\@temp@i
+       \@lispread\@temp@ii
+       \let\@temp@i\@save@temp
+       \expandafter\expandafter\expandafter\@make@cons
+          \expandafter\expandafter\expandafter#1%
+            \expandafter\@temp@i\@temp@ii
+     \fi\fi
+   \fi
+  \else\ifcat\relax\expandafter\noexpand\@currentread
+     \expandafter\gdef\expandafter#1\expandafter{%
+     \expandafter\@tlabel@symbol\expandafter{\@currentread}}%
+  \else\if'\expandafter\noexpand\@currentread
+     \expandafter\@read@string\expandafter#1\expandafter\@lisp@empty\@read@buffer\@@end
+  \else\if/\expandafter\noexpand\@currentread
+     \readchar
+     \xdef#1{\noexpand\@tlabel@bool{\@currentread}}%
+  \else\if:\expandafter\noexpand\@currentread
+    \expandafter\@read@num\expandafter#1\@read@buffer
+  \else\if!\expandafter\noexpand\@currentread
+    \expandafter\@read@dimen\expandafter#1\@read@buffer
+  \else\if @\expandafter\noexpand\@currentread
+    \expandafter\@read@skip\expandafter#1\@read@buffer
+  \fi\fi\fi\fi\fi\fi\fi
+\endgroup}
+
+\newcount\@temp@read@cnt
+\def\@read@num#1#2\@@eof\@@eof{%
+  \afterassignment\@@read@num\@temp@read@cnt#2\@@end
+  \expandafter\gdef
+  \expandafter#1%
+  \expandafter{\expandafter\@tlabel@int\expandafter{\the\@temp@read@cnt}}}
+\def\@@read@num#1\@@end{\gdef\@read@buffer{#1\@@eof\@@eof}}
+
+\def\@read@dimen#1#2\@@eof\@@eof{\afterassignment\@@read@dimen\dimen@#2\@@end
+\expandafter\gdef\expandafter#1\expandafter{\expandafter\@tlabel@dimen\expandafter{\the\dimen@}}}
+\let\@@read@dimen\@@read@num
+
+\def\@read@skip#1#2\@@eof\@@eof{\afterassignment\@@read@skip\skip@#2\@@end
+\expandafter\gdef\expandafter#1\expandafter{\expandafter\@tlabel@skip\expandafter{\the\skip@}}}
+\let\@@read@skip\@@read@num
+
+
+\def\@read@string#1#2'#3\@@end{%
+  \expandafter\gdef\expandafter#1%
+  \expandafter{\expandafter\@tlabel@string\expandafter{#2}}% expand \@lisp@empty
+  \gdef\@read@buffer{#3}}% I don't consider that #3 is single grouped tokens. In LISP on TeX, it never happen.

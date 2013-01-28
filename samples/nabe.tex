@@ -13,14 +13,14 @@
   (\internabe \i) ' ' (\nabe (\+ \i :1))))))
 (\define \internabe (\lambda (\m) 
    (\lispif (\= (\* (\/ \m :3) :3) \m) 
-        (\group (\concat '\hoge' (\strOfInt \m)))
+        (\group (\concat '\hoge' (\intTOstring \m)))
         (\internabei \m :1))))
 (\define \internabei  (\lambda (\i \base) 
-   (\lispif (\< \i \base) (\strOfInt \i) 
+   (\lispif (\< \i \base) (\intTOstring \i) 
       (\lispif (\= :3 
               (\/ (\- \i (\*(\/ \i (\* \base :10)) (\* \base :10))) 
                   \base)) 
-        (\group (\concat '\hoge' (\strOfInt \i)))
+        (\group (\concat '\hoge' (\intTOstring \i)))
         (\internabei \i (\* \base :10))))))
 (\print (\nabe :1))
 }}

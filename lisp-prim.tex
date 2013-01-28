@@ -1,0 +1,139 @@
+%% Syntax functions
+\addassoc\@globalenv\quote{\@tlabel@quote{}}%
+\addassoc\@globalenv\lambda{\@tlabel@lambda{}}
+\addassoc\@globalenv\define{\@tlabel@define{}}
+\addassoc\@globalenv\lispif{\@tlabel@if{}}
+\addassoc\@globalenv\defmacro{\@tlabel@defmacro{}}
+\addassoc\@globalenv\begin{\@tlabel@begin{}}
+\addassoc\@globalenv\mdefine{\@tlabel@mdefine{}}
+\addassoc\@globalenv\setB{\@tlabel@setb{}}
+\addassoc\@globalenv\@let{\@tlabel@@let{}}
+\addassoc\@globalenv\@mlet{\@tlabel@@mlet{}}
+
+
+
+\addassoc\@globalenv\car{\@tlabel@func{\@get@car}}
+\addassoc\@globalenv\cdr{\@tlabel@func{\@get@cdr}}
+\addassoc\@globalenv\cons{\@tlabel@func{\@make@cons}}
+
+\newcount\@temp@count
+\addassoc\@globalenv\length{\@temp@count0\relax\@tlabel@func{\@lisp@length}}
+\def\@lisp@length#1#2#3{%
+  \ifx#2\@tlabel@nil
+    \expandafter\gdef\expandafter#1%
+    \expandafter{\expandafter\@tlabel@int\expandafter{\the\@temp@count}}%
+    \let\@length@next\@length@gobble
+  \else\ifx#2\@tlabel@cons
+    \advance\@temp@count1\relax
+    \let\@length@next\@@lisp@length
+  \else
+    \errmessage{LISP on TeX [function--length]: The Argument must be a LIST}%
+  \fi\fi\@length@next#3}
+\def\@length@gobble#1{}
+\def\@@lisp@length#1#2#3{\expandafter\@lisp@length#3}
+
+%equality
+\addassoc\@globalenv\={\@tlabel@func{\@lisp@equal}}
+\def\@lisp@equal#1#2#3#4#5{%
+  \gdef#1{\@tlabel@bool{f}}%
+  \ifx#2#4%
+    \def\@@temp@eqchecki{#3}%
+    \def\@@temp@eqcheckii{#5}%
+    \ifx\@@temp@eqchecki\@@temp@eqcheckii\gdef#1{\@tlabel@bool{t}}\fi
+  \fi}
+
+% printing function
+\addassoc\@globalenv\print{\@tlabel@func{\@tex@print}}
+\def\@tex@print#1{\gdef#1{\@tlabel@nil{}}\@tex@print@}
+\def\@tex@print@#1#2{%
+  \ifx#1\@tlabel@int
+    \@add@to@write@buffer\@temp@write@buffer{:#2}%
+  \else\ifx#1\@tlabel@symbol
+    \@add@to@write@buffer\@temp@write@buffer{\string#2}%
+  \else\ifx#1\@tlabel@string
+    \@add@to@write@buffer\@temp@write@buffer{'#2'}%
+  \else\ifx#1\@tlabel@bool
+    \@add@to@write@buffer\@temp@write@buffer{/#2}%
+  \else\ifx#1\@tlabel@dimen
+    \@add@to@write@buffer\@temp@write@buffer{!#2}%
+  \else\ifx#1\@tlabel@skip
+    \@add@to@write@buffer\@temp@write@buffer{@#2}%
+  \else\ifx#1\@tlabel@nil
+    \@add@to@write@buffer\@temp@write@buffer{()}%
+  \else\ifx#1\@tlabel@cons
+    \@add@to@write@buffer\@temp@write@buffer{(}%
+    \@tex@print@cell#2%
+  \else
+    \@add@to@write@buffer\@temp@write@buffer{[INNER]}%
+  \fi\fi\fi\fi\fi\fi\fi\fi}
+\def\@tex@print@cell#1#2{%
+  \expandafter\@tex@print@#1%
+  \expandafter\@tex@print@cdr#2}
+\def\@tex@print@cdr#1#2{%
+  \ifx#1\@tlabel@cons
+    \@add@to@write@buffer\@temp@write@buffer{ }%
+    \@tex@print@cell#2%
+  \else\ifx#1\@tlabel@nil
+    \@add@to@write@buffer\@temp@write@buffer{)}%
+  \else
+    \@add@to@write@buffer\@temp@write@buffer{.}%
+    \@tex@print@#1{#2}%
+    \@add@to@write@buffer\@temp@write@buffer{)}%
+  \fi\fi}
+
+
+
+\addassoc\@globalenv\texprint{\@tlabel@func{\@tex@texprint}}
+\def\@tex@texprint#1#2#3{%
+   \gdef#1{\@tlabel@nil{}}\@@tex@texprint#2{#3}}
+\def\@@tex@texprint#1#2{%
+  \ifx#1\@tlabel@string
+    \@add@to@write@buffer\@temp@write@buffer{#2}%
+  \else\ifx#1\@tlabel@int
+    \@add@to@write@buffer\@temp@write@buffer{#2}%
+  \else
+    \@add@to@write@buffer\@temp@write@buffer{INNER TOKEN}%
+  \fi\fi}
+
+\addassoc\@globalenv\stdprint{\@tlabel@func{\@tex@stdprint}}
+\def\@tex@stdprint#1#2#3{%
+   \gdef#1{\@tlabel@nil{}}\@@tex@stdprint#2{#3}}
+\def\@@tex@stdprint#1#2{%
+  \ifx#1\@tlabel@string
+    \message{#2}%
+  \else\ifx#1\@tlabel@int
+    \message{#2}%
+  \else
+    \message{INNER TOKEN}%
+  \fi\fi}
+
+% Type predicates
+\def\@type@pred@add#1{\expandafter\@@type@pred@add\expandafter#1}
+\def\@@type@pred@add#1#2{\addassoc\@globalenv#1{\@tlabel@func{#2}}}
+\def\@type@pred@define#1{\expandafter\@@type@pred@define\expandafter#1}
+\def\@@type@pred@define#1#2{%
+	\def#1##1##2##3{\ifx##2#2\gdef##1{\@tlabel@bool{t}}\else\gdef##1{\@tlabel@bool{f}}\fi}}
+
+\def\@type@addassoc{\addassoc\@globalenv}
+\@for\@type:=\@defined@datatype\do{%
+  \expandafter\@type@pred@add\csname\@type Q\endcsname\csname @type@\@type\endcsname
+  \expandafter\@type@pred@define\csname @type@\@type\endcsname\csname @tlabel@\@type\endcsname}
+
+\addassoc\@globalenv\pairQ{\@tlabel@func{\@type@cons}}
+\addassoc\@globalenv\booleanQ{\@tlabel@func{\@type@bool}}
+
+% eval , apply
+\addassoc\@globalenv\eval{\@tlabel@envfunc{\@extern@eval}}
+\def\@extern@eval#1#2#3#4{\@eval#3{#4}{#2}#1}
+\addassoc\@globalenv\apply{\@tlabel@envfunc{\@extern@apply}}
+\def\@extern@apply#1#2#3#4#5#6{% reg, env, labelfun, contfun, labellist, contlist
+  \def\@lisp@apply@temp{}% init
+  \@flatten@args#5{#6}\@lisp@apply@temp
+  \expandafter\@extern@apply@next\expandafter{\@lisp@apply@temp}#3{#4}{#2}#1}
+\def\@extern@apply@next#1#2#3#4#5{% arglist-flatten, labelfun, contfun env, reg
+  {\expandafter\@@select@@apply#2{#3}#1\@{#4}#5}}
+
+% values
+\addassoc\@globalenv\values{\@tlabel@func{\@lisp@multivalues}}
+\def\@lisp@multivalues#1#2\relax{\gdef#1{#2}}
+

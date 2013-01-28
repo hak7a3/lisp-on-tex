@@ -1,0 +1,69 @@
+\newcount\@temp@inti
+\newcount\@temp@intii
+\addassoc\@globalenv\+{\@tlabel@func{\@temp@inti0\relax\@arith@plus}}
+\def\@arith@plus#1#2#3{%
+  \ifx#2\relax
+    \let\@next@plus\@@arith@pm@fin
+  \else\ifx#2\@tlabel@int
+    \advance\@temp@inti#3\relax
+    \let\@next@plus\@arith@plus
+  \else
+    \errmessage{LISP on TeX [integer plus]: Invalid argument}%
+  \fi\fi\@next@plus#1}
+
+\addassoc\@globalenv\*{\@tlabel@func{\@temp@inti1\relax\@arith@mul}}
+\def\@arith@mul#1#2#3{%
+  \ifx#2\relax
+    \let\@next@mul\@@arith@pm@fin
+  \else\ifx#2\@tlabel@int
+    \multiply\@temp@inti#3\relax
+    \let\@next@mul\@arith@mul
+  \fi\fi\@next@mul#1}
+
+\def\@@arith@pm@fin#1{\expandafter\gdef
+  \expandafter#1\expandafter{%
+  \expandafter\@tlabel@int\expandafter{\the\@temp@inti}}}
+
+\addassoc\@globalenv\-{\@tlabel@func{\@arith@minus}}
+\def\@arith@minus#1#2#3#4#5{%
+  \@temp@inti#3\relax
+  \ifx#4\relax
+    \multiply\@temp@inti-1\relax
+    \let\@next@minus\@@arith@pm@fin
+  \else\ifx#4\@tlabel@int
+    \let\@next@minus\@@arith@minus
+  \fi\fi\@next@minus#1#4{#5}}
+
+\def\@@arith@minus#1#2#3{%
+  \ifx#2\relax
+    \let\@next@minus\@@arith@pm@fin
+  \else\ifx#2\@tlabel@int
+    \@temp@intii#3\relax % #3 < 0
+    \advance\@temp@inti-\@temp@intii\relax
+    \let\@next@minus\@@arith@minus
+  \fi\fi\@next@minus#1}
+
+
+\addassoc\@globalenv\/{\@tlabel@func{\@arith@div}}
+\def\@arith@div#1#2#3#4#5{%
+  \@temp@inti#3\relax
+  \ifx#4\relax
+    \@temp@intii\@temp@inti\relax
+    \@temp@inti1\relax
+    \divide\@temp@inti\@temp@intii\relax
+    \let\@next@div\@@arith@pm@fin
+  \else\ifx#4\@tlabel@int
+    \let\@next@div\@@arith@div
+  \fi\fi\@next@div#1#4{#5}}
+
+\def\@@arith@div#1#2#3{%
+  \ifx#2\relax
+    \let\@next@div\@@arith@pm@fin
+  \else\ifx#2\@tlabel@int
+    \divide\@temp@inti#3\relax
+    \let\@next@div\@@arith@div
+  \fi\fi\@next@div#1}
+
+\addassoc\@globalenv\<{\@tlabel@func{\@arith@lt}}
+\def\@arith@lt#1\@tlabel@int#2\@tlabel@int#3{%
+  \ifnum#2<#3 \gdef#1{\@tlabel@bool{t}}\else\gdef#1{\@tlabel@bool{f}}\fi}
