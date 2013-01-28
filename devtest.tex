@@ -5,6 +5,8 @@
 \makeatletter
 aaaa\lispinterpl{%
 (\texprint (\/ :10 :2))
+(\texprint (\apply \* (\quote (:1 :2 :3 :4))))
+(\print (\* (\values :1 :2 :3 :4 :5)))
 }%
 \tracingmacros=0
 \end{document}

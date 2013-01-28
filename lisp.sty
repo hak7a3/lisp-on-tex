@@ -360,10 +360,15 @@
     \ifx#3\@@unused
       \let\@@next\@@apply@create@env@fin
     \else
-      \@@apply@create@env@phantom
-      \expandafter\@@apply@modify@env\expandafter#1\@@@@ph#3\@
-      \expandafter\gdef\csname car\the\@malloc\endcsname{#4{#5}}%
-      \let\@@next\@@apply@create@env@cdr
+      \ifx#4\relax
+        \let\@@next\@@apply@create@env@fin
+        \@@apply@modify@env#1\@tlabel@nil{}#3\@
+      \else
+        \@@apply@create@env@phantom
+        \expandafter\@@apply@modify@env\expandafter#1\@@@@ph#3\@
+        \expandafter\gdef\csname car\the\@malloc\endcsname{#4{#5}}%
+        \let\@@next\@@apply@create@env@cdr
+      \fi
     \fi
   \else
     \@@apply@modify@env#1#4{#5}#2\@

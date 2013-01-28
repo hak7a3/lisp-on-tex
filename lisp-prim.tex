@@ -125,19 +125,15 @@
 % eval , apply
 \addassoc\@globalenv\eval{\@tlabel@envfunc{\@extern@eval}}
 \def\@extern@eval#1#2#3#4{\@eval#3{#4}{#2}#1}
-% \addassoc\@globalenv\apply{\@tlabel@envfunc{\@extern@apply}}
-% \def\@extern@apply#1#2#3#4#5#6{% reg, env, labelfun, contfun, labellist, contlist
-%   {\gdef#1{}%
-%   \@flatten@list#1#5{#6}%
-%   \expandafter\@@extern@apply\expandafter{#1}#1{#2}#3{#4}}}
-% \def\@@extern@apply#1#2#3#4#5{% fargs, reg, env, label, cont
-%   \ifx#4\Func
-%     \@apply@func#4{#5}{#1}{#3}#2%
-%   \else\ifx#4\EnvFunc
-%     \@apply@envfunc#4{#5}{#1}{#3}#2%
-%   \else\ifx#4\Closure
-%     \@apply@closure#4{#5}{#1}{#3}#2%
-%   \else\ifx#4\Macro
-%     \@apply@macro#4{#5}{#1}{#3}#2%
-%   \fi\fi\fi\fi}
+\addassoc\@globalenv\apply{\@tlabel@envfunc{\@extern@apply}}
+\def\@extern@apply#1#2#3#4#5#6{% reg, env, labelfun, contfun, labellist, contlist
+  \def\@lisp@apply@temp{}% init
+  \@flatten@args#5{#6}\@lisp@apply@temp
+  \expandafter\@extern@apply@next\expandafter{\@lisp@apply@temp}#3{#4}{#2}#1}
+\def\@extern@apply@next#1#2#3#4#5{% arglist-flatten, labelfun, contfun env, reg
+  {\expandafter\@@select@@apply#2{#3}#1\@{#4}#5}}
+
+% values
+\addassoc\@globalenv\values{\@tlabel@func{\@lisp@multivalues}}
+\def\@lisp@multivalues#1#2\relax{\gdef#1{#2}}
 

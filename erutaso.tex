@@ -15,7 +15,7 @@
 	(\lispif (\= \n :1001) ()
 		(\begin
 			(\texprint '\tanda')
-			(\texprint (\group (\strOfInt \n)))
+			(\texprint (\group (\intTOstring \n)))
 			(\texprint (\strofkananum (\modulo \n :26)))
 			(\lispif (\= \n :1000) () (\texprint '\\'))
 			(\immediatewrite)
@@ -35,5 +35,6 @@
 	\if0#5\else\kansuji#5\fi
 	反田}
 \begin{document}
+\tracingmacros=1
 \noindent\lispinterpl{(\erutaso)}
 \end{document}
