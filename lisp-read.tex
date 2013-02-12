@@ -52,7 +52,10 @@
     \expandafter\@read@dimen\expandafter#1\@read@buffer
   \else\if @\expandafter\noexpand\@currentread
     \expandafter\@read@skip\expandafter#1\@read@buffer
-  \fi\fi\fi\fi\fi\fi\fi
+  \else\if +\expandafter\noexpand\@currentread % parser module
+    \readchar
+    \expandafter\@read@module\expandafter#1\@currentread\@@end
+  \fi\fi\fi\fi\fi\fi\fi\fi
 \endgroup}
 
 \newcount\@temp@read@cnt
@@ -71,8 +74,10 @@
 \expandafter\gdef\expandafter#1\expandafter{\expandafter\@tlabel@skip\expandafter{\the\skip@}}}
 \let\@@read@skip\@@read@num
 
-
 \def\@read@string#1#2'#3\@@end{%
   \expandafter\gdef\expandafter#1%
   \expandafter{\expandafter\@tlabel@string\expandafter{#2}}% expand \@lisp@empty
   \gdef\@read@buffer{#3}}% I don't consider that #3 is single grouped tokens. In LISP on TeX, it never happen.
+
+\def\@read@module#1#2::#3\@@end{% #1 : register, #2 : module name (MUST unique), #3 : parse target
+  \csname @mod@read@#2\endcsname#1{#3}}

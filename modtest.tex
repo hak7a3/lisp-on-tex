@@ -1,0 +1,12 @@
+\documentclass{jsarticle}
+\usepackage{lisp}
+\usepackage{lisp-mod-stdout}
+\usepackage{lisp-mod-fpnum}
+\begin{document}
+	\lispinterpl{(\print +{stdout::日本語でもおｋ?})}
+	\lispinterpl{%
+		(\define \x +{fpnum::1.2})
+		(\define \y +{fpnum::0.1})
+		(\texprint (\fpnumTOstring (\fpminus \x \y)))
+	}
+\end{document}

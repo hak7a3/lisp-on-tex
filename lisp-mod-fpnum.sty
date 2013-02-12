@@ -1,0 +1,76 @@
+%%% module name :: fpnum
+
+\def\@mod@read@fpnum#1#2{\gdef#1{\@tlabel@fpnum{#2}}}
+\def\@tlabel@fpnum{\@eval@fpnum\@apply@fpnum\@@apply@fpnum}
+
+\def\@eval@fpnum#1#2#3{\gdef#3{\@tlabel@fpnum{#1}}} % #1 contents, #2 environment, #3 register
+\def\@apply@fpnum{\errmessage{LISP on TeX [internal apply, module fpnum] cannot apply}}
+\def\@@apply@fpnum{\errmessage{LISP on TeX [function --- apply, module fpnum] cannot apply}}
+
+\newdimen\@tempdimeni
+\newdimen\@tempdimenii
+
+\addassoc\@globalenv\fpnumTOstring{\@tlabel@func{\@mod@fpnum@tostring}}
+\def\@mod@fpnum@tostring#1\@tlabel@fpnum#2{\gdef#1{\@tlabel@string{#2}}}
+
+\addassoc\@globalenv\fpplus{\@tlabel@func{\@tempdimeni0pt\relax\@mod@fpnum@plus}}
+\def\@mod@fpnum@plus#1#2#3{%
+	\ifx#2\relax
+		\let\@next@fpnum@plus\@@fin@fpnum@plus
+	\else\ifx#2\@tlabel@fpnum
+		\advance\@tempdimeni#3pt\relax
+		\let\@next@fpnum@plus\@mod@fpnum@plus
+	\else
+		\errmessage{LISP on TeX [fpnum --- plus]: Invalid argument}%
+	\fi\fi\@next@fpnum@plus#1}
+\def\@@fin@fpnum@plus#1{\xdef#1{\noexpand\@tlabel@fpnum{\strip@pt\@tempdimeni}}}
+
+\addassoc\@globalenv\fpmul{\@tlabel@func{\@tempdimeni1pt\relax\@mod@fpnum@mul}}
+\def\@mod@fpnum@mul#1#2#3{%
+	\ifx#2\relax
+		\let\@next@fpnum@mul\@@fin@fpnum@mul
+	\else\ifx#2\@tlabel@fpnum
+		\@tempdimeni#3\@tempdimeni
+		\let\@next@fpnum@mul\@mod@fpnum@mul
+	\else
+		\errmessage{LISP on TeX [fpnum --- mul]: Invalid argument}%
+	\fi\fi\@next@fpnum@mul#1}
+\def\@@fin@fpnum@mul#1{\xdef#1{\noexpand\@tlabel@fpnum{\strip@pt\@tempdimeni}}}
+
+\addassoc\@globalenv\fpminus{\@tlabel@func{\@mod@fpnum@minus}}
+\def\@mod@fpnum@minus#1#2#3#4#5{%
+	\ifx#4\relax
+		\ifx#2\@tlabel@fpnum
+			\@tempdimenii#3pt
+			\@tempdimeni0pt
+			\advance\@tempdimeni-\@tempdimenii
+			\let\@next@fpnum@minus\@@fin@fpnum@minus
+		\else
+			\errmessage{LISP on TeX [fpnum --- minus]: Invalid argument}%
+		\fi
+	\else\ifx#4\@tlabel@fpnum
+		\ifx#2\@tlabel@fpnum
+			\@tempdimeni#3pt
+			\let\@next@fpnum@minus\@@next@fpnum@minus
+		\else
+			\errmessage{LISP on TeX [fpnum --- minus]: Invalid argument}%
+		\fi
+	\else
+		\errmessage{LISP on TeX [fpnum --- minus]: Invalid argument}%
+	\fi\fi
+	\@next@fpnum@minus#1#4{#5}}
+\def\@@fin@fpnum@minus#1{\xdef#1{\noexpand\@tlabel@fpnum{\strip@pt\@tempdimeni}}}
+\def\@@next@fpnum@minus#1#2#3{%
+	\ifx#2\relax
+		\let\@next@fpnum@minus\@@fin@fpnum@minus
+	\else\ifx#2\@tlabel@fpnum
+		\@tempdimenii#3pt
+		\advance\@tempdimeni-\@tempdimenii
+		\let\@next@fpnum@minus\@@next@fpnum@minus
+	\else
+		\errmessage{LISP on TeX [fpnum --- minus]: Invalid argument}%
+	\fi\fi
+	\@next@fpnum@minus#1}
+
+
+
