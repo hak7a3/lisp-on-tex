@@ -1,12 +1,40 @@
-\documentclass{jsarticle}
+\documentclass{article}
+\usepackage[dvipdfm,a3paper,margin=1pt,landscape]{geometry}
+\def\w{\hspace*{1pt}}
+\def\b{\vrule width 1pt height 1pt depth 0pt}
 \usepackage{lisp}
 \usepackage{lisp-mod-stdout}
 \usepackage{lisp-mod-fpnum}
+\lispinterpl{%
+	(\define \maxloop :100)
+	(\define \scale +{fpnum::0.005})
+	(\define \isMandell
+		(\lambda (\a \b \k \x \y)
+			(\lispif (\< \maxloop \k) /t
+				(\lispif (\fplt +{fpnum::4.0} (\fpplus (\fpmul \x \x) (\fpmul \y \y)))
+					/f
+					(\isMandell \a \b (\+ \k :1)
+						(\fpplus \a (\fpmul \x \x) (\fpminus (\fpmul \y \y)))
+						(\fpplus \b (\fpmul +{fpnum::2.0} \x \y)))))))
+	(\define \drawMandell (\lambda (\a \b)
+		(\begin
+			(\lispif (\isMandell \a \b :0 +{fpnum::0} +{fpnum::0})
+				(\texprint '\b') (\texprint '\w'))
+			(\immediatewrite))))
+	(\define \loopMandell (\lambda (\a \b)
+		(\lispif (\fplt \b +{fpnum::-1.0}) ()
+			(\begin
+				(\drawMandell \a \b)
+				(\lispif  (\fplt +{fpnum::1.0} \a)
+					(\begin
+						(\texprint '\\')
+						(\immediatewrite)
+						(\loopMandell +{fpnum::-2.0} (\fpminus \b \scale)))
+					(\loopMandell (\fpplus \a \scale) \b))))))
+}
+
 \begin{document}
-	\lispinterpl{(\print +{stdout::日本語でもおｋ?})}
-	\lispinterpl{%
-		(\define \x +{fpnum::1.2})
-		(\define \y +{fpnum::0.1})
-		(\texprint (\fpnumTOstring (\fpminus \x \y)))
-	}
+	\noindent
+	\leavevmode\baselineskip=1pt
+	\lispinterpl{(\loopMandell +{fpnum::-2.0} +{fpnum::1.0})}
 \end{document}

@@ -72,5 +72,13 @@
 	\fi\fi
 	\@next@fpnum@minus#1}
 
+\addassoc\@globalenv\fplt{\@tlabel@func{\@mod@fpnum@lt}}
+\def\@mod@fpnum@lt#1\@tlabel@fpnum#2\@tlabel@fpnum#3{%
+	\ifdim#2pt<#3pt
+		\gdef#1{\@tlabel@bool{t}}%
+	\else
+		\gdef#1{\@tlabel@bool{f}}%
+	\fi
+}
 
 
