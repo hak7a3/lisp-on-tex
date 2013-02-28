@@ -1,0 +1,182 @@
+===== LISP on TeX --- A LISP interpreter on TeX ======
+==== Introduction ====
+LISP on TeX is a LISP interpreter written only with TeX macros.
+It works as a style file of LaTeX and adopts static scoping.
+Thus, we can program easily with LISP on TeX.
+
+==== Files ====
+
+README             : This file.
+--------------------------------------------------------------------------------------
+LICENCE            :
+--------------------------------------------------------------------------------------
+lisp.sty           : Main routine. (evaluator)
+--------------------------------------------------------------------------------------
+lisp-prim.tex      : Primitive functions. (Automatically loaded by lisp.sty)
+--------------------------------------------------------------------------------------
+lisp-read.tex      : Parser. (Automatically loaded by lisp.sty)
+--------------------------------------------------------------------------------------
+lisp-arith.tex     : Arithmetical functions. (Automatically loaded by lisp.sty)
+--------------------------------------------------------------------------------------
+lisp-string.tex    : Functions which manipulates strings. 
+                   : (Automatically loaded by lisp.sty)
+--------------------------------------------------------------------------------------
+lisputil.tex       : Utility functions written with LISP on TeX.
+                   : See the section "Utility Functions" in this document.
+--------------------------------------------------------------------------------------
+lisp-mod-fpnum.sty : The module which enables us to use fixed point numbers.
+                   : See the section "Fixed Point Numbers" in this document.
+--------------------------------------------------------------------------------------
+examples/*         : example files
+--------------------------------------------------------------------------------------
+==== Usage ====
+To use LISP on TeX, write
+
+  \usepackage{lisp}
+
+in the preamble of document. If you want to use
+utility functions, load lisputil.tex like
+
+  \input{lisputil}
+
+after loading LISP on TeX. We can load module files
+using \usepackage. For example, the command
+
+  \usepackage{lisp-mod-fpnum}
+
+loads the module of fixed point numbers. 
+
+It the document, we can start LISP interpreter with \lispinterp.
+
+To get more detail, please read example files. It is the better way to know about LISP on TeX.
+
+==== Syntax ====
+The syntax of LISP on TeX is the following;
+
+<S-exp>   ::= <cons> 
+            | <int> 
+            | <string> 
+            | <symbol>
+            | <bool>
+            | <nil>
+            | <p-module>
+            | <skip>
+            | <dimen>
+<cons>    ::= (<S-exp>+) | (<S-exp> . <S-exp>)
+<int>     ::= :[TeX's integer]
+<string>  ::= '[TeX's tokens]'
+<symbol>  ::= [a control sequence]
+<bool>    ::= /t | /f
+<nil>     ::= ()
+<p-module>::= +{<modname>::<tokens>}
+<modname> ::= [TeX's tokens]
+<tokens>  ::= [TeX's tokens]
+<skip>    ::= @[TeX's skip]
+<dimen>   ::= ![TeX's dimen]
+
+==== Function ====
+=== Special Forms ===
+  * (\define \symbol <S-exp>) 
+      -- Binds the evaluation result of <S-exp> to \symbol.
+  * (\lambda <ptn> <S-exp>)
+      -- Lambda abstraction. The bind pattern <ptn> has the following syntax;
+  	     <ptn> ::= <symbol> | (<symbol>*) | (<symbol>+ . <symbol>)
+  * (\quote <S-exp>) 
+      -- Return <S-exp>.
+  * (\lispif <S-exp 1> <S-exp 2> <S-exp 3>)
+      -- Branch. The type of the evaluation result of <S-exp 1> must be bool.
+  * (\defmacro \symbol <Lambda abstraction>)
+      -- Define a macro.
+  * (\begin <S-exp>+)
+      -- Evaluate all arguments in a sequential order
+         and returns the the evaluation result of the last argument.
+  * (\mdefine \symbol <S-exp>)
+      -- Binds the evaluation result of <S-exp> to \symbol
+         and \symbol becomes "mutable".
+  * (\setB \symbol <S-exp>)
+      -- If \symbol is "mutable", the evaluation result of <S-exp>
+         is stored in the location of which \symbol is bound.
+
+=== Evaluation ===
+  * (\eval <S-exp>)
+      -- Evaluate <S-exp> in the current environment.
+  * (\apply <func> <list>)
+      -- Evaluate (<func> <args>) where <list> = (<args>).
+
+=== Types ===
+  * (\intQ <S-exp>)
+      -- If the evaluation result of <S-exp> is an integer, it returns /t.
+         Otherwise, it returns /f.
+      -- Likewise, \pairQ, \booleanQ, \symbolQ, \stringQ, \dimenQ, \skipQ,
+         \nilQ, \funcQ, \closureQ, and \macroQ are defined.
+  * (\intTOstring <integer>)
+      -- convert the argument into a string.
+
+=== Arithmetical Functions ===
+  * (\+ <S-exp>*)
+      -- Addition.
+      -- If, the argument is empty, it returns 0.
+  * (\- <S-exp>+)
+      -- Subtraction.
+  * (\* <S-exp>*)
+      -- Multiplication.
+      -- If, the argument is empty, it returns 1.
+  * (\/ <S-exp>+)
+      -- Division.
+  * (\< <S-exp 1> <S-exp 2>)
+      -- Let n be the evaluation result of <S-exp 1> and m be that of <S-exp 2>.
+         If n < m, it returns /t. Otherwise, it returns /f.
+
+=== Manipulation of Strings ===
+  * (\concat <string 1> <string 2>)
+      -- Concatenate two strings.
+  *  (\group <string>)
+      -- Grouping.
+      -- If <string> is 'foo\bar{baz}', it returns '{foo\bar{baz}}'.
+  * (\ungroup <string>)
+      -- Ungrouping.
+      -- If <string> is '{foo\bar{baz}}', it returns 'foo\bar{baz}'.
+
+=== Manipulation of Cons Cells ===
+  * (\cons <S-exp 1> <S-exp 2>)
+      -- Create a cons cell: the CAR of the cell is the evaluation result of
+         <S-exp 1> and the CDR of the cell is  the evaluation result of
+         <S-exp 2>.
+  * (\car <cons>)
+      -- Get CAR part of the argument.
+  * (\cdr <cons>)
+      -- Get CAR part of the argument.
+  * (\length <list>)
+      -- If the argument is "list", count the length of the argument.
+      -- We define the term "list" as following;
+           - The value nil.
+           - A cons cell whose CDR is "list".
+
+=== Misc ===
+  * (\= <S-exp 1> <S-exp 2>)
+     -- If the evaluation result of <S-exp 1> equals that of <S-exp 2>, it returns /t.
+        Otherwise, it returns /f.
+  * (\print <S-exp>)
+     -- Write the evaluation result of <S-exp> as LISP on TeX form.
+  * (\texprint <S-exp>)
+     -- Write the evaluation result of <S-exp> as useful form in TeX.
+  * (\immediatewrite)
+     -- Flush the output buffer immediately.
+     -- It may brake the evaluation routine.
+
+==== Utility Functions ====
+
+==== Fixed Point Numbers ====
+  * +{fpnum::<fixed point number>}
+     -- Create an fixed point number.
+  * (\fpplus <S-exp>*)
+      -- Addition.
+      -- If, the argument is empty, it returns 0.0.
+  * (\fpmunus <S-exp>+)
+      -- Subtraction.
+  * (\fpmul <S-exp>*)
+      -- Multiplication.
+      -- If, the argument is empty, it returns 1.0.
+  * (\fplt <S-exp 1> <S-exp 2>)
+      -- Let n be the evaluation result of <S-exp 1> and m be that of <S-exp 2>.
+         If n < m, it returns /t. Otherwise, it returns /f.

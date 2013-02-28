@@ -1,13 +1,28 @@
 \documentclass{article}
 \usepackage[dvipdfm,a3paper,margin=1pt,landscape]{geometry}
-\def\w{\hspace*{1pt}}
-\def\b{\vrule width 1pt height 1pt depth 0pt}
+\newcount\mlength
+\newcount\cstate
+\newdimen\mandelunit
+\mandelunit=1pt
+
+\def\w{%
+	\ifnum\cstate=1 \global\advance\mlength1
+	\else \vrule width \mlength\mandelunit height \mandelunit depth 0pt \global\mlength1 \fi
+	\global\cstate1}
+\def\b{%
+	\ifnum\cstate=-1 \global\advance\mlength1
+	\else \hspace*{\mlength\mandelunit}\global\mlength1 \fi
+	\global\cstate-1}
+\def\r{%
+	\ifnum\cstate=1\hspace*{\mlength\mandelunit}\else\vrule width \mlength\mandelunit height \mandelunit depth 0pt \fi
+	\global\cstate0 \global\mlength0}
+
 \usepackage{lisp}
 \usepackage{lisp-mod-stdout}
 \usepackage{lisp-mod-fpnum}
 \lispinterpl{%
-	(\define \maxloop :100)
-	(\define \scale +{fpnum::0.005})
+	(\define \maxloop :20)
+	(\define \scale +{fpnum::0.01})
 	(\define \isMandell
 		(\lambda (\a \b \k \x \y)
 			(\lispif (\< \maxloop \k) /t
@@ -25,16 +40,16 @@
 		(\lispif (\fplt \b +{fpnum::-1.0}) ()
 			(\begin
 				(\drawMandell \a \b)
-				(\lispif  (\fplt +{fpnum::1.0} \a)
+				(\lispif  (\fplt +{fpnum::0.5} \a)
 					(\begin
-						(\texprint '\\')
+						(\texprint '\r\\')
 						(\immediatewrite)
-						(\loopMandell +{fpnum::-2.0} (\fpminus \b \scale)))
+						(\loopMandell +{fpnum::-1.5} (\fpminus \b \scale)))
 					(\loopMandell (\fpplus \a \scale) \b))))))
 }
 
 \begin{document}
 	\noindent
-	\leavevmode\baselineskip=1pt
-	\lispinterpl{(\loopMandell +{fpnum::-2.0} +{fpnum::1.0})}
+	\leavevmode\baselineskip=\mandelunit
+	\lispinterpl{(\loopMandell +{fpnum::-1.5} +{fpnum::1.0})}
 \end{document}

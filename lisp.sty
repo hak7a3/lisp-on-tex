@@ -77,9 +77,9 @@
 
 % interface
 \def\@lisp@empty{}
-\def\lispinterpl#1{\begingroup%
-  \gdef\@read@buffer{#1\@@eof\@@eof}\@lispinterpl}
-\def\@lispinterpl{%
+\def\lispinterp#1{\begingroup%
+  \gdef\@read@buffer{#1\@@eof\@@eof}\@lispinterp}
+\def\@lispinterp{%
   \readchar
   \ifx\@currentread\@eof
     \def\@next{\endgroup}%
@@ -88,7 +88,7 @@
        \unreadchar
        \@lispread\@lisp@input
        \lispeval\@lisp@input\@lisp@result
-       \@lispinterpl}\fi
+       \@lispinterp}\fi
   \@next}
 
 % reader
