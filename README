@@ -74,7 +74,7 @@ The syntax of LISP on TeX is the following;
 <skip>    ::= @[TeX's skip]
 <dimen>   ::= ![TeX's dimen]
 
-==== Function ====
+==== Functions and Others ====
 === Special Forms ===
   * (\define \symbol <S-exp>) 
       -- Binds the evaluation result of <S-exp> to \symbol.

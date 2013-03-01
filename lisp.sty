@@ -261,8 +261,10 @@
 
 \def\@apply@setb#1\@tlabel@symbol#2#3#4\@#5#6{%
   \@eval#3{#4}{#5}#6%
+  \let\@@save#6%
   \@append@env@global{#5}\@temp@env
   \getassoc\@temp@env#2\@temp@i
+  \let#6\@@save%
   \expandafter\@set@mutable\@temp@i#6%
   \gdef#6{\@tlabel@nil{}}}
 \def\@set@mutable\@tlabel@mutable#1#2{\global\let#1#2}
@@ -425,9 +427,8 @@
   \ifx#5\relax
     \gdef\@@tco{\@eval#3{#4}{#2}#1}%
     \aftergroup\@@tco
-    \let\@@next\@apply@begin@end
+    \let\@@next\relax
   \else
     \@eval#3{#4}{#2}#1%
-    \let\@@next\@apply@begin@next
-  \fi\@@next#1{#2}#5{#6}}
-\def\@apply@begin@end#1#2{}
+    \def\@@next{\@apply@begin@next#1{#2}#5{#6}}%
+  \fi\@@next}

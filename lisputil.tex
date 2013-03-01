@@ -2,7 +2,7 @@
 %% Definition of Utility Functions
 %%================================
 \makeatletter
-\lispinterpl{%
+\lispinterp{%
 (\define \listQ (\lambda (\x) (\or (\pairQ \x) (\= () \x))))
 (\define \procedureQ (\lambda (\x) 
   (\or (\funcQ \x) (\closureQ \x) (\envfuncQ \x) (\macroQ \x))))
@@ -39,12 +39,15 @@
 %% list
 (\define \list (\lambda \x \x))
 %% let bindings
-(\defmacro \let 
+(\defmacro \let
   (\lambda (\binds \body)
-    (\cons
-        (\cons \lambda
-           (\cons (\@inner@map \car \binds)
-               (\cons \body ())))  
-        (\@inner@map (\lambda (\x) (\car (\cdr \x))) \binds))))
+    (\lispif (\= \binds ())
+      \body
+      (\list \let (\cdr \binds) (\list \@let (\car (\car \binds)) (\car (\cdr (\car \binds))) \body)))))
+(\defmacro \letM
+  (\lambda (\binds \body)
+    (\lispif (\= \binds ())
+      \body
+      (\list \let (\cdr \binds) (\list \@mlet (\car (\car \binds)) (\car (\cdr (\car \binds))) \body)))))
 }
 \makeatother
