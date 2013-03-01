@@ -48,7 +48,8 @@ loads the module of fixed point numbers.
 
 It the document, we can start LISP interpreter with \lispinterp.
 
-To get more detail, please read example files. It is the better way to know about LISP on TeX.
+To get more detail, please read example files. 
+It is the better way to know about LISP on TeX.
 
 ==== Syntax ====
 The syntax of LISP on TeX is the following;
@@ -90,65 +91,65 @@ The syntax of LISP on TeX is the following;
   * (\begin <S-exp>+)
       -- Evaluate all arguments in a sequential order
          and returns the the evaluation result of the last argument.
-  * (\mdefine \symbol <S-exp>)
+  * (\defineM \symbol <S-exp>)
       -- Binds the evaluation result of <S-exp> to \symbol
-         and \symbol becomes "mutable".
+         and the location which binds \symbol becomes "mutable".
   * (\setB \symbol <S-exp>)
-      -- If \symbol is "mutable", the evaluation result of <S-exp>
-         is stored in the location of which \symbol is bound.
+      -- If location of which binds \symbol is "mutable", 
+         the evaluation result of <S-exp> is stored in the location.
 
 === Evaluation ===
   * (\eval <S-exp>)
-      -- Evaluate <S-exp> in the current environment.
+     -- Evaluate <S-exp> in the current environment.
   * (\apply <func> <list>)
-      -- Evaluate (<func> <args>) where <list> = (<args>).
+     -- Evaluate (<func> <args>) where <list> = (<args>).
 
 === Types ===
   * (\intQ <S-exp>)
-      -- If the evaluation result of <S-exp> is an integer, it returns /t.
+     -- If the evaluation result of <S-exp> is an integer, it returns /t.
          Otherwise, it returns /f.
-      -- Likewise, \pairQ, \booleanQ, \symbolQ, \stringQ, \dimenQ, \skipQ,
+     -- Likewise, \pairQ, \booleanQ, \symbolQ, \stringQ, \dimenQ, \skipQ,
          \nilQ, \funcQ, \closureQ, and \macroQ are defined.
   * (\intTOstring <integer>)
-      -- convert the argument into a string.
+     -- convert the argument into a string.
 
 === Arithmetical Functions ===
   * (\+ <S-exp>*)
-      -- Addition.
-      -- If, the argument is empty, it returns 0.
+     -- Addition.
+     -- If, the argument is empty, it returns 0.
   * (\- <S-exp>+)
-      -- Subtraction.
+     -- Subtraction.
   * (\* <S-exp>*)
-      -- Multiplication.
-      -- If, the argument is empty, it returns 1.
+     -- Multiplication.
+     -- If, the argument is empty, it returns 1.
   * (\/ <S-exp>+)
-      -- Division.
+     -- Division.
   * (\< <S-exp 1> <S-exp 2>)
-      -- Let n be the evaluation result of <S-exp 1> and m be that of <S-exp 2>.
+     -- Let n be the evaluation result of <S-exp 1> and m be that of <S-exp 2>.
          If n < m, it returns /t. Otherwise, it returns /f.
 
 === Manipulation of Strings ===
   * (\concat <string 1> <string 2>)
-      -- Concatenate two strings.
+     -- Concatenate two strings.
   *  (\group <string>)
-      -- Grouping.
-      -- If <string> is 'foo\bar{baz}', it returns '{foo\bar{baz}}'.
+     -- Grouping.
+     -- If <string> is 'foo\bar{baz}', it returns '{foo\bar{baz}}'.
   * (\ungroup <string>)
-      -- Ungrouping.
-      -- If <string> is '{foo\bar{baz}}', it returns 'foo\bar{baz}'.
+     -- Ungrouping.
+     -- If <string> is '{foo\bar{baz}}', it returns 'foo\bar{baz}'.
 
 === Manipulation of Cons Cells ===
   * (\cons <S-exp 1> <S-exp 2>)
-      -- Create a cons cell: the CAR of the cell is the evaluation result of
+     -- Create a cons cell: the CAR of the cell is the evaluation result of
          <S-exp 1> and the CDR of the cell is  the evaluation result of
          <S-exp 2>.
   * (\car <cons>)
-      -- Get CAR part of the argument.
+     -- Get CAR part of the argument.
   * (\cdr <cons>)
-      -- Get CAR part of the argument.
+     -- Get CAR part of the argument.
   * (\length <list>)
-      -- If the argument is "list", count the length of the argument.
-      -- We define the term "list" as following;
+     -- If the argument is "list", count the length of the argument.
+     -- We define the term "list" as following;
            - The value nil.
            - A cons cell whose CDR is "list".
 
@@ -165,18 +166,37 @@ The syntax of LISP on TeX is the following;
      -- It may brake the evaluation routine.
 
 ==== Utility Functions ====
+=== Types ===
+  * (\listQ <S-exp>)
+     -- Return /t iff <S-exp> is a nil or a cons cell.
+        Otherwise, it returns /f. 
+  * (\procedureQ <S-exp>)
+     -- Return /t iff <S-exp> is a closure or a function (or a macro).
+
+=== Logical Functions ===
+  * (\and <bool 1> <bopl 2> ...)
+  * (\or <bool 1> <bopl 2> ...)
+  * (\not <bool>)
+
+=== Misc ===
+  * (\map <proc> <list 1> <list 2> ...)
+     -- Mapping function like Scheme's map.
+  * (\let <bindings> <body>)
+     -- Let bindings.
+  * (\letM <bindings> <body>)
+     -- Let bindings (mutable).
 
 ==== Fixed Point Numbers ====
   * +{fpnum::<fixed point number>}
      -- Create an fixed point number.
   * (\fpplus <S-exp>*)
-      -- Addition.
-      -- If, the argument is empty, it returns 0.0.
+     -- Addition.
+     -- If, the argument is empty, it returns 0.0.
   * (\fpmunus <S-exp>+)
-      -- Subtraction.
+     -- Subtraction.
   * (\fpmul <S-exp>*)
-      -- Multiplication.
-      -- If, the argument is empty, it returns 1.0.
+     -- Multiplication.
+     -- If, the argument is empty, it returns 1.0.
   * (\fplt <S-exp 1> <S-exp 2>)
-      -- Let n be the evaluation result of <S-exp 1> and m be that of <S-exp 2>.
+     -- Let n be the evaluation result of <S-exp 1> and m be that of <S-exp 2>.
          If n < m, it returns /t. Otherwise, it returns /f.
