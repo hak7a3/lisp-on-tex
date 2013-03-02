@@ -1,3 +1,10 @@
+
+%%
+%% This is file `README'.
+%%
+%%  License: Modified BSD - see LICENSE file.
+%%
+
 ===== LISP on TeX --- A LISP interpreter on TeX ======
 ==== Introduction ====
 LISP on TeX is a LISP interpreter written only with TeX macros.
@@ -8,7 +15,7 @@ Thus, we can program easily with LISP on TeX.
 
 README             : This file.
 --------------------------------------------------------------------------------------
-LICENCE            :
+LICENCE            : About LICENCE.
 --------------------------------------------------------------------------------------
 lisp.sty           : Main routine. (evaluator)
 --------------------------------------------------------------------------------------
@@ -22,7 +29,7 @@ lisp-string.tex    : Functions which manipulates strings.
                    : (Automatically loaded by lisp.sty)
 --------------------------------------------------------------------------------------
 lisputil.tex       : Utility functions written with LISP on TeX.
-                   : See the section "Utility Functions" in this document.
+                   : (Automatically loaded by lisp.sty)
 --------------------------------------------------------------------------------------
 lisp-mod-fpnum.sty : The module which enables us to use fixed point numbers.
                    : See the section "Fixed Point Numbers" in this document.
@@ -110,6 +117,11 @@ The syntax of LISP on TeX is the following;
          Otherwise, it returns /f.
      -- Likewise, \pairQ, \booleanQ, \symbolQ, \stringQ, \dimenQ, \skipQ,
          \nilQ, \funcQ, \closureQ, and \macroQ are defined.
+  * (\listQ <S-exp>)
+     -- Return /t iff <S-exp> is a nil or a cons cell.
+        Otherwise, it returns /f. 
+  * (\procedureQ <S-exp>)
+     -- Return /t iff <S-exp> is a closure or a function (or a macro).
   * (\intTOstring <integer>)
      -- convert the argument into a string.
 
@@ -153,10 +165,15 @@ The syntax of LISP on TeX is the following;
            - The value nil.
            - A cons cell whose CDR is "list".
 
+=== Logical Functions ===
+  * (\and <bool 1> <bopl 2> ...)
+  * (\or <bool 1> <bopl 2> ...)
+  * (\not <bool>)
+
 === Misc ===
   * (\= <S-exp 1> <S-exp 2>)
-     -- If the evaluation result of <S-exp 1> equals that of <S-exp 2>, it returns /t.
-        Otherwise, it returns /f.
+     -- If the evaluation result of <S-exp 1> equals that of <S-exp 2>,
+        it returns /t. Otherwise, it returns /f.
   * (\print <S-exp>)
      -- Write the evaluation result of <S-exp> as LISP on TeX form.
   * (\texprint <S-exp>)
@@ -164,21 +181,6 @@ The syntax of LISP on TeX is the following;
   * (\immediatewrite)
      -- Flush the output buffer immediately.
      -- It may brake the evaluation routine.
-
-==== Utility Functions ====
-=== Types ===
-  * (\listQ <S-exp>)
-     -- Return /t iff <S-exp> is a nil or a cons cell.
-        Otherwise, it returns /f. 
-  * (\procedureQ <S-exp>)
-     -- Return /t iff <S-exp> is a closure or a function (or a macro).
-
-=== Logical Functions ===
-  * (\and <bool 1> <bopl 2> ...)
-  * (\or <bool 1> <bopl 2> ...)
-  * (\not <bool>)
-
-=== Misc ===
   * (\map <proc> <list 1> <list 2> ...)
      -- Mapping function like Scheme's map.
   * (\let <bindings> <body>)

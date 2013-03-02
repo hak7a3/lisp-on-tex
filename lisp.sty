@@ -91,9 +91,6 @@
        \@lispinterp}\fi
   \@next}
 
-% reader
-\input{lisp-read.tex}
-
 
 % eval
 %% write buffer
@@ -123,20 +120,10 @@
 \def\@@@@make@cons#1#2#3{\gdef#1{\@tlabel@cons{#2#3}}}
 
 
-%arithmetical functions
-\input{lisp-arith.tex}
-
-%string manipulation
-\input{lisp-string.tex}
-
-% connection to TeX world
-\input{lisp-latexutil.tex}
-
 \def\@defined@datatype{symbol,string,int,bool,dimen,skip,cons,nil,func,closure,macro,envfunc,mutable}
 \def\@defined@specialform{lambda,quote,define,if,defmacro,begin,mdefine,setb,@let,@mlet}
 \edef\@defined@lisp@on@tex{\@defined@datatype,\@defined@specialform}
 
-\input{lisp-prim.tex}
 
 %%%%%MEMO
 % \@tlabel@xxx -> \@eval@xxx\@apply@xxx\@@apply@xxx
@@ -432,3 +419,19 @@
     \@eval#3{#4}{#2}#1%
     \def\@@next{\@apply@begin@next#1{#2}#5{#6}}%
   \fi\@@next}
+
+% reader
+\input{lisp-read.sty}
+
+%arithmetical functions
+\input{lisp-arith.sty}
+
+%string manipulation
+\input{lisp-string.sty}
+
+% connection to TeX world
+\input{lisp-latexutil.sty}
+
+\input{lisp-prim.tex}
+
+\input{lisp-util.sty}
