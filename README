@@ -6,6 +6,9 @@
 %%
 
 ===== LISP on TeX --- A LISP interpreter on TeX ======
+Version 1.0
+Author : HAKUTA Shizuya <hak7a3@live.jp>
+
 ==== Introduction ====
 LISP on TeX is a LISP interpreter written only with TeX macros.
 It works as a style file of LaTeX and adopts static scoping.
@@ -17,24 +20,27 @@ README             : This file.
 --------------------------------------------------------------------------------------
 LICENCE            : About LICENCE.
 --------------------------------------------------------------------------------------
-lisp.sty           : Main routine. (evaluator)
+lisp-on-tex.sty    : Main routine. (evaluator)
 --------------------------------------------------------------------------------------
-lisp-prim.tex      : Primitive functions. (Automatically loaded by lisp.sty)
+lisp-prim.sty      : Primitive functions. (Automatically loaded by lisp.sty)
 --------------------------------------------------------------------------------------
-lisp-read.tex      : Parser. (Automatically loaded by lisp.sty)
+lisp-read.sty      : Parser. (Automatically loaded by lisp.sty)
 --------------------------------------------------------------------------------------
-lisp-arith.tex     : Arithmetical functions. (Automatically loaded by lisp.sty)
+lisp-arith.sty     : Arithmetical functions. (Automatically loaded by lisp.sty)
 --------------------------------------------------------------------------------------
-lisp-string.tex    : Functions which manipulates strings. 
+lisp-string.sty    : Functions which manipulates strings. 
                    : (Automatically loaded by lisp.sty)
 --------------------------------------------------------------------------------------
-lisputil.tex       : Utility functions written with LISP on TeX.
+lisp-latexutil.sty : Utility functions for LaTeX.
+                   : (Automatically loaded by lisp.sty)
+--------------------------------------------------------------------------------------
+lisp-util.sty      : Utility functions written with LISP on TeX.
                    : (Automatically loaded by lisp.sty)
 --------------------------------------------------------------------------------------
 lisp-mod-fpnum.sty : The module which enables us to use fixed point numbers.
-                   : See the section "Fixed Point Numbers" in this document.
+                   : See the "Fixed Point Numbers" section in this document.
 --------------------------------------------------------------------------------------
-examples/*         : example files
+examples/*         : Example files. See the "Examples" section.
 --------------------------------------------------------------------------------------
 ==== Usage ====
 To use LISP on TeX, write
@@ -57,6 +63,15 @@ It the document, we can start LISP interpreter with \lispinterp.
 
 To get more detail, please read example files. 
 It is the better way to know about LISP on TeX.
+
+==== Examples ====
+  * fact.tex
+    -- Calculate the factorial function.
+  * rocket.tex
+    -- Show how to use "mutable" locations. 
+  * fpnum-mandelbrot.tex
+    -- Calculate the mandelbrot set.
+    -- It takes a long long time to typeset.
 
 ==== Syntax ====
 The syntax of LISP on TeX is the following;
@@ -136,6 +151,8 @@ The syntax of LISP on TeX is the following;
      -- If, the argument is empty, it returns 1.
   * (\/ <S-exp>+)
      -- Division.
+  * (\mod <int 1> <int 2>)
+     -- Modulus.
   * (\< <S-exp 1> <S-exp 2>)
      -- Let n be the evaluation result of <S-exp 1> and m be that of <S-exp 2>.
          If n < m, it returns /t. Otherwise, it returns /f.
@@ -164,6 +181,9 @@ The syntax of LISP on TeX is the following;
      -- We define the term "list" as following;
            - The value nil.
            - A cons cell whose CDR is "list".
+  * (\nth <list> <int>)
+     -- Get the <int>-th element of the <list>.
+     -- The numbering starts from 0. 
 
 === Logical Functions ===
   * (\and <bool 1> <bopl 2> ...)
@@ -181,6 +201,8 @@ The syntax of LISP on TeX is the following;
   * (\immediatewrite)
      -- Flush the output buffer immediately.
      -- It may brake the evaluation routine.
+  * (\message <str>)
+     -- Write <str> to console.
   * (\map <proc> <list 1> <list 2> ...)
      -- Mapping function like Scheme's map.
   * (\let <bindings> <body>)

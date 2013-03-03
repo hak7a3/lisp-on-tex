@@ -64,6 +64,15 @@
     \let\@next@div\@@arith@div
   \fi\fi\@next@div#1}
 
+\addassoc\@globalenv\mod{\@tlabel@func{\@arith@mod}}
+\def\@arith@mod#1\@tlabel@int#2\@tlabel@int#3{%
+  \@temp@intii#2\relax
+  \divide\@temp@intii#3\relax
+  \multiply\@temp@intii#3\relax
+  \@temp@inti#2\relax
+  \advance\@temp@inti-\@temp@intii
+  \@@arith@pm@fin#1}
+
 \addassoc\@globalenv\<{\@tlabel@func{\@arith@lt}}
 \def\@arith@lt#1\@tlabel@int#2\@tlabel@int#3{%
   \ifnum#2<#3 \gdef#1{\@tlabel@bool{t}}\else\gdef#1{\@tlabel@bool{f}}\fi}

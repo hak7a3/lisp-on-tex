@@ -1,0 +1,26 @@
+\documentclass{article}
+\usepackage{lisp-on-tex}
+\lispinterp{%
+%rocket body
+(\define \rocket
+  (\letM ((\count :11))
+    (\lambda ()
+      (\begin
+        (\setB \count (\- \count :1))
+        (\lispif (\< \count :0)
+          (\texprint '{\small fired...}\\')
+          (\lispif (\= \count :0)
+            (\texprint '{\Large FIRE!}\\')
+            (\texprint (\concat 'count ' (\intTOstring \count) '...\\'))))))))
+(\define \MAX :15)
+%LOOP function
+(\define \loop
+  (\lambda (\n)
+    (\lispif (\= \n \MAX)
+      ()
+      (\begin (\rocket) (\loop (\+ \n :1))))))
+}
+\begin{document}
+\noindent\lispinterp{(\loop :0)}
+Test done.
+\end{document}

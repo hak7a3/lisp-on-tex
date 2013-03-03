@@ -9,3 +9,7 @@
   \expandafter\expandafter\expandafter\@tlabel@int
   \expandafter\expandafter\expandafter{%
    \expandafter\the\csname c@#3\endcsname}}}
+
+\addassoc\@globalenv\message{\@tlabel@func{\@tex@lisp@message}}
+\def\@tex@lisp@message#1\@tlabel@string#2{%
+	\gdef#1{\@tlabel@nil{}}\message{^^J#2^^J}}

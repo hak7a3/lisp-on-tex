@@ -49,5 +49,8 @@
     (\lispif (\= \binds ())
       \body
       (\list \let (\cdr \binds) (\list \@mlet (\car (\car \binds)) (\car (\cdr (\car \binds))) \body)))))
+% nth
+(\define \nth (\lambda (\lst \n)
+  (\lispif (\= \n :0) (\car \lst) (\nth (\cdr \lst) (\- \n :1)))))
 }
 \makeatother
