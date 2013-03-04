@@ -1,6 +1,12 @@
-lisp.sty, test.tex, nabe.tex
+LISP on TeX
 
-Copyright (c) 2012, HAKUTA Shizuya
+lisp-on-tex.sty, lisp-arith.sty,
+lisp-latexutil.sty, lisp-prim.sty,
+lisp-read.sty, lisp-string.sty, 
+lisp-util.sty, lisp-mod-fpnum.sty,
+fact.tex, rocket.tex, fpnummodule-mandelbrot.tex
+
+Copyright (c) 2012 2013, HAKUTA Shizuya
  All rights reserved.
 
 

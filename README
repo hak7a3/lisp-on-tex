@@ -11,8 +11,9 @@ Author : HAKUTA Shizuya <hak7a3@live.jp>
 
 ==== Introduction ====
 LISP on TeX is a LISP interpreter written only with TeX macros.
-It works as a style file of LaTeX and adopts static scoping.
-Thus, we can program easily with LISP on TeX.
+It works as a style file of LaTeX.
+LISP on TeX adopts static scoping, dynamic typing, and eager evaluation.
+We can program easily with LISP on TeX.
 
 ==== Files ====
 
@@ -47,12 +48,9 @@ To use LISP on TeX, write
 
   \usepackage{lisp}
 
-in the preamble of document. If you want to use
-utility functions, load lisputil.tex like
+in the preamble of document. 
 
-  \input{lisputil}
-
-after loading LISP on TeX. We can load module files
+We can load module files
 using \usepackage. For example, the command
 
   \usepackage{lisp-mod-fpnum}
@@ -60,6 +58,11 @@ using \usepackage. For example, the command
 loads the module of fixed point numbers. 
 
 It the document, we can start LISP interpreter with \lispinterp.
+For example,
+
+  \lispinterp{(\texprint :1)}
+
+outputs "1".
 
 To get more detail, please read example files. 
 It is the better way to know about LISP on TeX.
