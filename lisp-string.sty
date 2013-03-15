@@ -25,7 +25,7 @@
 
 %% IMMEDIATEWRITE : () -> ()
 %% It outputs the output buffer immediately.
-%% It cause error if the buffer is imcomlete.
+%% It cause error if the buffer is incomplete.
 \addassoc\@globalenv\immediatewrite{\@tlabel@func{\@immediate@write}}
 \def\@immediate@write#1{%
 	\gdef#1{\@tlabel@nil{}}%
@@ -60,5 +60,11 @@
    			The argument of ungroup must be a grouped string.}%
 	\fi}
 
-
+%% FGETS : () -> string
+%% (\fgets) -> read tokens from standard-in
+\addassoc\@globalenv\fgets{\@tlabel@func{\@text@fgets}}
+\def\@text@fgets#1{%
+\endlinechar=-1
+\read-1to#1%
+\expandafter\gdef\expandafter#1\expandafter{\expandafter\@tlabel@string\expandafter{#1}}}
 

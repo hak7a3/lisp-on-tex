@@ -48,7 +48,22 @@
   (\lambda (\binds \body)
     (\lispif (\= \binds ())
       \body
-      (\list \let (\cdr \binds) (\list \@mlet (\car (\car \binds)) (\car (\cdr (\car \binds))) \body)))))
+      (\list \letM (\cdr \binds) (\list \@mlet (\car (\car \binds)) (\car (\cdr (\car \binds))) \body)))))
+% letrec
+(\defmacro \letrec (\lambda (\binds \body) (\list \@letrec \binds \binds \body)))
+(\defmacro \@letrec
+  (\lambda (\binds \save \body)
+    (\lispif (\= \binds ())
+      (\list \@@letrec \save \body)
+      (\list \@letrec (\cdr \binds) \save 
+        (\list \begin  
+          (\list \setB (\car (\car \binds)) (\car (\cdr (\car \binds))))
+          \body)))))
+(\defmacro \@@letrec
+  (\lambda (\binds \body)
+    (\lispif (\= \binds ())
+      \body
+      (\list \@@letrec (\cdr \binds) (\list \@mlet (\car (\car \binds)) () \body)))))
 % nth
 (\define \nth (\lambda (\lst \n)
   (\lispif (\= \n :0) (\car \lst) (\nth (\cdr \lst) (\- \n :1)))))
