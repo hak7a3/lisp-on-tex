@@ -121,7 +121,7 @@
 
 
 \def\@defined@datatype{symbol,string,int,bool,dimen,skip,cons,nil,func,closure,macro,envfunc,mutable}
-\def\@defined@specialform{lambda,quote,define,if,defmacro,begin,mdefine,setb,@let,@mlet}
+\def\@defined@specialform{lambda,quote,define,if,defmacro,begin,mdefine,setb,@let,@mlet,macroexpand}
 \edef\@defined@lisp@on@tex{\@defined@datatype,\@defined@specialform}
 
 
@@ -395,7 +395,6 @@
   \fi}
 \def\@@next@args#1#2\@{\def\@@next@args@{#2}}
 
-
 \def\@@apply@macro#1#2\@#3#4{\@@apply@macro@next#1#2\@{#3}#4}
 \def\@@apply@macro@next#1#2#3#4#5\@#6#7{%
   \def\@temp@env{}%
@@ -405,6 +404,25 @@
     \expandafter\@eval#7{#6}#7}%
   \aftergroup\@@tco}
 \let\@apply@macro\@@apply@macro
+
+\def\@apply@macroexpand#1#2#3\@#4#5{% cont, args, \@ env, reg
+  \let\@@apply@macro@next\@@apply@macro@next@expand@only
+  \@eval#2{#3}{#4}#5%
+  \expandafter\@eval#5{#4}#5}
+\def\@@apply@macro@next@expand@only#1#2#3#4#5\@#6#7{%
+  \def\@temp@env{}%
+  \@@apply@create@env\@temp@env#1#5\relax\relax
+  \expandafter\gdef\expandafter\@@tco\expandafter{%
+    \expandafter\@@eval@envcs\expandafter{\@temp@env#2}#3{#4}#7%
+    \expandafter\@eval@if@macro#7{#6}#7}%
+  \aftergroup\@@tco}
+\def\@eval@if@macro#1#2#3#4{%
+  \ifx#1\@tlabel@cons\@eval@if@macro@#2{#3}#4\fi}
+\def\@eval@if@macro@#1#2#3#4{%
+  \expandafter\@eval#1{#3}\@temp@i
+  \expandafter\@eval@if@macro@@\@temp@i#1#2{#3}#4}
+\def\@eval@if@macro@@#1#2#3#4#5#6{%
+  \ifx#1\@tlabel@macro\@eval\@tlabel@cons{#3#4}{#5}#6\else\gdef#6{\@tlabel@cons{#3#4}}\fi}
 
 
 
