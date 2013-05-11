@@ -1,42 +1,62 @@
-\def\@end@lispread{\@@end@lispread}%%EOF
+%%
+%% This is file `lisp-read.sty'.
+%%
+%%  License: Modified BSD - see LICENSE file
+%%
+
+%% End Of Input(EOI)
+\def\@end@lispread{\@@end@lispread}
+
+%% Reader Macro
+%% @param #1 callback function (which gets a S-exp and do something)
+%% @param #2 the first letter of the input or EOI
+%% @return #1\@tlabel@xxx{contents}
 \def\@lispread#1#2{\begingroup\@lispread@main#1#2}
-\def\@lispread@main#1#2{%callback, char
-  \if\noexpand#2(%
+
+%% The first branch
+%% @param #1 callback function
+%% @param #2 the first letter of the input or EOI
+\def\@lispread@main#1#2{% Define \@@next, the continuation. 
+  \if\noexpand#2(% [Branch 1] CONS cell or NIL
     \def\@@next{\@lispread@cell#1}%
-  \else\ifcat\noexpand#2\relax%
-    \ifx#2\@end@lispread
-      \def\@@next\relax
+  \else\ifcat\noexpand#2\relax% [Branch 2] A control sequence or a control symbol 
+    \ifx#2\@end@lispread % [Branch 2-1] EOI
+      \def\@@next{#1\@tlabel@exception{!Found End of Input!}}%
     \else
-      \def\@@next{\@lispread@symbol#1#2}%
+      \def\@@next{\@lispread@symbol#1#2}% [Branch 2-2] Symbol
     \fi
-  \else\if\noexpand#2'%
+  \else\if\noexpand#2'% [Branch 3] String
       \def\@@next{\@lispread@string#1}%
-  \else\if\noexpand#2/%
+  \else\if\noexpand#2/% [Branch 4] Boolean
     \def\@@next{\@lispread@bool#1}%
-  \else\if\noexpand#2:%
+  \else\if\noexpand#2:% [Branch 5] Integer
     \def\@@next{\@lispread@int#1}%
-  \else\if\noexpand#2!%
+  \else\if\noexpand#2!% [Branch 6] Dimension 
     \def\@@next{\@lispread@dimen#1}%
-  \else\if\noexpand#2@%
+  \else\if\noexpand#2@% [Branch 7] Skip
     \def\@@next{\@lispread@skip#1}%
-  \else\if\noexpand#2+%
+  \else\if\noexpand#2+% [Branch 8] call a Reader Module 
     \def\@@next{\@lispread@module#1}%
-  \else
+  \else % Otherwise -- parse error
     \errmessage{LISP on teX [read]: no such type start with \noexpand#2}%
   \fi\fi\fi\fi\fi\fi\fi\fi
   \@@next}
+%% Symbol 
 \def\@lispread@symbol#1#2{%
   \endgroup#1\@tlabel@symbol{#2}}
+%% String
 \def\@lispread@string#1#2'{%
   \endgroup#1\@tlabel@string{#2}}
+%% Boolean
 \def\@lispread@bool#1#2{%
   \endgroup#1\@tlabel@bool{#2}}
+%% Reader Module
 \def\@lispread@module#1#2{%
   \@lispread@module@main\@register@lispread@module#2\@@end
   \endgroup
   \expandafter#1\@register@lispread@module}
 \def\@lispread@module@main#1#2::#3\@@end{\csname @mod@read@#2\endcsname#1{#3}}
-%% integer etc
+%% Integer
 \newcount\@cnt@lispread@int
 \def\@lispread@int#1{%
   \gdef\@lispread@int@callback{\@lispread@int@main#1}%
@@ -44,6 +64,7 @@
   \global\@cnt@lispread@int}
 \def\@lispread@int@main#1{%
   \endgroup\expandafter#1\expandafter\@tlabel@int\expandafter{\the\@cnt@lispread@int}}
+%% Skip
 \newskip\@cnt@lispread@skip
 \def\@lispread@skip#1{%
   \gdef\@lispread@skip@callback{\@lispread@skip@main#1}%
@@ -51,6 +72,7 @@
   \global\@cnt@lispread@skip}
 \def\@lispread@skip@main#1{%
   \endgroup\expandafter#1\expandafter\@tlabel@skip\expandafter{\the\@cnt@lispread@skip}}
+%% Dimen
 \newdimen\@cnt@lispread@dimen
 \def\@lispread@dimen#1{%
   \gdef\@lispread@dimen@callback{\@lispread@dimen@main#1}%
@@ -58,13 +80,14 @@
   \global\@cnt@lispread@dimen}
 \def\@lispread@dimen@main#1{%
   \endgroup\expandafter#1\expandafter\@tlabel@dimen\expandafter{\the\@cnt@lispread@dimen}}
-%%
+%% CONS cell or NIL
 \def\@lispread@cell#1#2{%
-  \if\noexpand#2)%
+  \if\noexpand#2)% [Branch 1] NIL
     \def\@@next{\endgroup#1\@tlabel@nil{}}%
-  \else
+  \else % Otherwise CONS cell
     \def\@@next{\@lispread@cell@car#1#2}%
   \fi\@@next}
+%% first part of CONS cell : read CAR
 \def\@lispread@cell@car#1{%
   \def\@lispread@car@reg##1##2{%
     \def\@reg@lispread@car{##1{##2}}%

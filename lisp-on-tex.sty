@@ -1,5 +1,5 @@
 %%
-%% This is file `lisp.sty'.
+%% This is file `lisp-on-tex.sty'.
 %%
 %%  License: Modified BSD - see LICENSE file
 %%
@@ -77,19 +77,17 @@
 
 % interface
 \def\@lisp@empty{}
-\def\lispinterp#1{\begingroup%
-  \gdef\@read@buffer{#1\@@eof\@@eof}\@lispinterp}
-\def\@lispinterp{%
-  \readchar
-  \ifx\@currentread\@eof
-    \def\@next{\endgroup}%
+\def\lispinterp#1{%
+  \@lispread\@lisp@read@eval@loop#1\@end@lispread}
+\def\@lisp@read@eval@loop#1#2{%
+  \ifx#1\@tlabel@exception
+    \let\@@next\relax
   \else
-    \def\@next{%
-       \unreadchar
-       \@lispread\@lisp@input
-       \lispeval\@lisp@input\@lisp@result
-       \@lispinterp}\fi
-  \@next}
+    \def\@reg@tmp{#1{#2}}%
+    \def\@@next{%
+      \lispeval\@reg@tmp\@reg@tmp
+      \@lispread\@lisp@read@eval@loop}
+  \fi\@@next}
 
 
 % eval
@@ -120,7 +118,7 @@
 \def\@@@@make@cons#1#2#3{\gdef#1{\@tlabel@cons{#2#3}}}
 
 
-\def\@defined@datatype{symbol,string,int,bool,dimen,skip,cons,nil,func,closure,macro,envfunc,mutable}
+\def\@defined@datatype{symbol,string,int,bool,dimen,skip,cons,nil,func,closure,macro,envfunc,mutable,exception}
 \def\@defined@specialform{lambda,quote,define,if,defmacro,begin,mdefine,setb,@let,@mlet,macroexpand}
 \edef\@defined@lisp@on@tex{\@defined@datatype,\@defined@specialform}
 
