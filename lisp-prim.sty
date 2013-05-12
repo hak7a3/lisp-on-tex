@@ -97,15 +97,14 @@
 
 \addassoc\@globalenv\stdprint{\@tlabel@func{\@tex@stdprint}}
 \def\@tex@stdprint#1#2#3{%
-   \gdef#1{\@tlabel@nil{}}\@@tex@stdprint#2{#3}}
-\def\@@tex@stdprint#1#2{%
-  \ifx#1\@tlabel@string
-    \message{#2}%
-  \else\ifx#1\@tlabel@int
-    \message{#2}%
-  \else
-    \message{INNER TOKEN}%
-  \fi\fi}
+  \gdef#1{\@tlabel@nil{}}%
+  \let\@save@write@buffer\@temp@write@buffer
+  \def\@temp@write@buffer{}%
+  \@tex@print@#2{#3}%
+  \toks0\expandafter{\@temp@write@buffer}%
+  \immediate\write16{\the\toks0}%
+  \let\@temp@write@buffer\@save@write@buffer}
+
 
 % Type predicates
 \def\@type@pred@add#1{\expandafter\@@type@pred@add\expandafter#1}
@@ -134,6 +133,13 @@
   {\expandafter\@@select@@apply#2{#3}#1\@{#4}#5}}
 
 % values
-\addassoc\@globalenv\values{\@tlabel@func{\@lisp@multivalues}}
-\def\@lisp@multivalues#1#2\relax{\gdef#1{#2}}
+%\addassoc\@globalenv\values{\@tlabel@func{\@lisp@multivalues}}
+%\def\@lisp@multivalues#1#2\relax{\gdef#1{#2}}
 
+% read
+\addassoc\@globalenv\read{\@tlabel@func{\@lisp@read@stdin}}
+\def\@lisp@read@stdin#1{%
+  \read-1 to#1%
+  \def\@lisp@read@stdin@callback##1##2{%
+    \gdef#1{##1{##2}}}%
+  \expandafter\@lispread\expandafter\@lisp@read@stdin@callback#1}

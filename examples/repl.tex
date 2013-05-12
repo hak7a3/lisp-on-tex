@@ -1,0 +1,12 @@
+\documentclass{article}
+\usepackage{lisp-on-tex}
+\lispinterp{%
+  (\define \repl (\lambda ()
+    (\begin
+      (\stdprint (\eval (\read)))
+      (\repl))))
+}
+\begin{document}
+  \typeout{LISP on TeX interpretor mode}
+  \lispinterp{(\repl)}
+\end{document}
