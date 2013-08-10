@@ -68,3 +68,12 @@
 \read-1to#1%
 \expandafter\gdef\expandafter#1\expandafter{\expandafter\@tlabel@string\expandafter{#1}}}
 
+%% EXPAND : string -> string
+%% (\expand '<token>') -> '<token+>' where <token+> is expanded tokens of <token>
+\addassoc\@globalenv\expand{\@tlabel@func{\@lot@text@expand}}
+\def\@lot@text@expand#1\@tlabel@string#2{%
+  \edef\@temp@i{#2}%
+  \xdef#1{\noexpand\@tlabel@string{\@temp@i}}}
+
+
+

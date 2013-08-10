@@ -6,7 +6,7 @@
 %%
 
 ===== LISP on TeX --- A LISP interpreter on TeX ======
-Version 1.0
+Version 1.1
 Author : HAKUTA Shizuya <hak7a3@live.jp>
 
 ==== Introduction ====
@@ -169,6 +169,8 @@ The syntax of LISP on TeX is the following;
   * (\ungroup <string>)
      -- Ungrouping.
      -- If <string> is '{foo\bar{baz}}', it returns 'foo\bar{baz}'.
+  * (\expand <string>)
+     -- Expand macros in string.
 
 === Manipulation of Cons Cells ===
   * (\cons <S-exp 1> <S-exp 2>)
@@ -212,7 +214,8 @@ The syntax of LISP on TeX is the following;
      -- Let bindings.
   * (\letM <bindings> <body>)
      -- Let bindings (mutable).
-
+  * (\letrec <bindings> <body>)
+     -- Let bindings (recursive and mutable).
 ==== Fixed Point Numbers ====
   * +{fpnum::<fixed point number>}
      -- Create an fixed point number.
@@ -227,3 +230,9 @@ The syntax of LISP on TeX is the following;
   * (\fplt <S-exp 1> <S-exp 2>)
      -- Let n be the evaluation result of <S-exp 1> and m be that of <S-exp 2>.
          If n < m, it returns /t. Otherwise, it returns /f.
+
+==== CHANGELOG ====
+  * Mar. 04, 2013 : 1.0
+  * Aug. 10, 2013 : 1.1
+     -- add \letrec. \macroexpand, and \expand
+     -- debug  

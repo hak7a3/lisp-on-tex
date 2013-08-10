@@ -1,0 +1,32 @@
+\documentclass{article}
+\usepackage{lisp-on-tex}
+\newcount\hoge \hoge\endlinechar
+\endlinechar=-1
+\read16 to\tmp
+\endlinechar=\hoge
+\global\font\testfont="\tmp"
+\lispinterp{
+  (\define \foldl (\lambda (\func \init \list)
+    (\lispif (\= \list ()) 
+      \init 
+      (\foldl \func (\func \init (\car \list)) (\cdr \list)))))
+  (\define \createtoken (\lambda (\code)
+      (\concat '\iffontchar\testfont' (\concat (\intTOstring \code) 't\else f\fi' ))))
+  (\define \MAX :"30000)}
+\begin{document}
+\noindent
+\lispinterp{
+  (\letrec ((\count :0) 
+    (\loop (\lambda ()
+      (\lispif (\< \MAX \count) ()
+        (\begin
+          (\lispif (\= 't' (\expand (\createtoken \count)))
+            (\texprint (\group (\concat '\testfont\char' (\intTOstring \count))))
+            ())
+          (\texprint '\hskip0pt plus1pt')
+          (\immediatewrite)
+          (\setB \count (\+ \count :1))
+          (\loop))))))
+    (\loop))
+  }
+\end{document}

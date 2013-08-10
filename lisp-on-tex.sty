@@ -170,7 +170,13 @@
   %% \@temp@env = #2(local environment) ++ global environment
   \getassoc\@temp@env#1#3%
   \expandafter\@expand@if@mutable#3#3}
-\def\@expand@if@mutable#1#2#3{\ifx#1\@tlabel@mutable\global\let#3#2\fi}
+\def\@expand@if@mutable#1#2#3{%
+  \let\@@next\@expand@if@mutable@next@f
+  \ifx#1\@tlabel@mutable\let\@@next\@expand@if@mutable@next@t\fi
+  \@@next{#2}{#3}}
+\def\@expand@if@mutable@next@f#1#2{}
+\def\@expand@if@mutable@next@t#1#2{\global\let#2#1}
+
 
 \def\@eval@envcs#1#2#3#4{\expandafter\@@eval@envcs\expandafter{#1}#2{#3}#4}
 \def\@@eval@envcs#1#2#3#4{\@eval#2{#3}{#1}#4}
@@ -286,27 +292,36 @@
   \aftergroup\@@tco
   }
 \def\@apply@if@next\@tlabel@bool#1#2#3#4#5#6#7{%
+  \let\@@next\relax
   \ifx#1t%
-    \gdef\@@tco{\@eval#2{#3}{#6}#7}%
+    \let\@@next\@apply@if@next@t
   \else\ifx#1f%
-    \gdef\@@tco{\@eval#4{#5}{#6}#7}%
+    \let\@@next\@apply@if@next@f
   \else
     \errmessage{LISP on TeX [if]: Invalid boolean. It's BUG. Please report.}%
-  \fi\fi}
+  \fi\fi\@@next{#1}{#2}{#3}{#4}{#5}{#6}{#7}}
+\def\@apply@if@next@t#1#2#3#4#5#6#7{\gdef\@@tco{\@eval#2{#3}{#6}#7}}
+\def\@apply@if@next@f#1#2#3#4#5#6#7{\gdef\@@tco{\@eval#4{#5}{#6}#7}}
 
 
 %% use general
 \def\@apply@eval@args#1#2#3#4{%
+  \let\@@next@pre\@apply@eval@args@pre@default
   \ifx#3\relax
     \let\@@next\@@next@fin
   \else
-    \let\@@save#1%
-    \@eval#3{#4}{#2}#1%
-    \expandafter\expandafter\expandafter\def
-    \expandafter\expandafter\expandafter#1\expandafter\expandafter\expandafter{%
-    \expandafter\@@save#1}%
-    \let\@@next\@apply@eval@args
-  \fi\@@next#1{#2}}
+    \let\@@next@pre\@apply@eval@args@pre@i
+  \fi\@@next@pre{#1}{#2}{#3}{#4}\@@next#1{#2}}
+
+\def\@apply@eval@args@pre@default#1#2#3#4{}
+\def\@apply@eval@args@pre@i#1#2#3#4{%
+  \let\@@save#1%
+  \@eval#3{#4}{#2}#1%
+  \expandafter\expandafter\expandafter\def
+  \expandafter\expandafter\expandafter#1\expandafter\expandafter\expandafter{%
+  \expandafter\@@save#1}%
+  \let\@@next\@apply@eval@args}
+
 \def\@@next@fin#1#2{}
 
 \def\@apply@func#1#2\@#3#4{%
@@ -342,6 +357,7 @@
   \aftergroup\@@tco}
 
 \def\@@apply@create@env#1#2:#3#4#5{%
+  \let\@@next@pre\@@apply@create@env@pre@default
   \ifx!#2!% if #2 is empty
     \let\@@next@args@\@empty
     \ifx#3\@@unused
@@ -351,17 +367,24 @@
         \let\@@next\@@apply@create@env@fin
         \@@apply@modify@env#1\@tlabel@nil{}#3\@
       \else
-        \@@apply@create@env@phantom
-        \expandafter\@@apply@modify@env\expandafter#1\@@@@ph#3\@
-        \expandafter\gdef\csname car\the\@malloc\endcsname{#4{#5}}%
-        \let\@@next\@@apply@create@env@cdr
+        \let\@@next@pre\@@apply@create@env@pre@i
       \fi
     \fi
   \else
-    \@@apply@modify@env#1#4{#5}#2\@
-    \@@next@args#2\@
-    \let\@@next\@@apply@create@env
-  \fi\expandafter\@@next\expandafter#1\@@next@args@:#3}
+    \let\@@next@pre\@@apply@create@env@pre@ii
+  \fi\@@next@pre{#1}{#2}{#3}{#4}{#5}\expandafter\@@next\expandafter#1\@@next@args@:#3}
+
+\def\@@apply@create@env@pre@default#1#2#3#4#5{}
+\def\@@apply@create@env@pre@i#1#2#3#4#5{%
+  \@@apply@create@env@phantom
+  \expandafter\@@apply@modify@env\expandafter#1\@@@@ph#3\@
+  \expandafter\gdef\csname car\the\@malloc\endcsname{#4{#5}}%
+  \let\@@next\@@apply@create@env@cdr}
+\def\@@apply@create@env@pre@ii#1#2#3#4#5{%
+  \@@apply@modify@env#1#4{#5}#2\@
+  \@@next@args#2\@
+  \let\@@next\@@apply@create@env}
+
 
 \def\@@apply@create@env@cdr#1:#2{\@@@apply@create@env@cdr}
 \def\@@@apply@create@env@cdr#1#2{%
