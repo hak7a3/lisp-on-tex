@@ -76,3 +76,6 @@
 \addassoc\@globalenv\<{\@tlabel@func{\@arith@lt}}
 \def\@arith@lt#1\@tlabel@int#2\@tlabel@int#3{%
   \ifnum#2<#3 \gdef#1{\@tlabel@bool{t}}\else\gdef#1{\@tlabel@bool{f}}\fi}
+\addassoc\@globalenv\>{\@tlabel@func{\@arith@gt}}
+\def\@arith@gt#1\@tlabel@int#2\@tlabel@int#3{%
+  \ifnum#2>#3 \gdef#1{\@tlabel@bool{t}}\else\gdef#1{\@tlabel@bool{f}}\fi}

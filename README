@@ -159,6 +159,9 @@ The syntax of LISP on TeX is the following;
   * (\< <S-exp 1> <S-exp 2>)
      -- Let n be the evaluation result of <S-exp 1> and m be that of <S-exp 2>.
          If n < m, it returns /t. Otherwise, it returns /f.
+  * (\> <S-exp 1> <S-exp 2>)
+     -- Let n be the evaluation result of <S-exp 1> and m be that of <S-exp 2>.
+         If n > m, it returns /t. Otherwise, it returns /f.
 
 === Manipulation of Strings ===
   * (\concat <string 1> <string 2>)
