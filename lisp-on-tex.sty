@@ -151,13 +151,36 @@
   \csname @tlabel@\@type\endcsname}
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% memo of fasteval branch
+% Each bound variables \var
+% is defined as TeX macro [[@lisp@env@\var]]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\def\@lisp@expand@env@last{\@lisp@expand@env@last}
+
+\def\@lisp@expand@environment#1#2{%
+  \ifx#1\@lisp@expand@env@last
+    \let\@@next\relax
+  \else
+    \expandafter\def\csname @lisp@env@\string#1\endcsname{#2}%
+    \let\@@next\@lisp@expand@environment
+  \fi
+  \@@next}
+
+
+
 \def\lispeval#1#2{% #1 : \cs -> S-exp, #2 : target register
   \gdef\@temp@write@buffer{}%
-  \expandafter\@eval#1{}#2%
+    \expandafter\@lisp@expand@environment\@globalenv\@lisp@expand@env@last\@lisp@expand@env@last % 
+    \expandafter\@eval#1{}#2%
   \@temp@write@buffer}
 
 \def\@eval#1#2#3#4{%
-  \begingroup\expandafter\@@select@eval#1{#2}{#3}#4\endgroup}
+  \begingroup
+    \@lisp@expand@environment#3\@lisp@expand@env@last\@lisp@expand@env@last
+    \expandafter\@@select@eval#1{#2}{#3}#4%
+  \endgroup}
 
 \def\@append@env@global#1#2{%
   \def#2{#1}%
@@ -165,11 +188,20 @@
   \expandafter\expandafter\expandafter#2%
   \expandafter\expandafter\expandafter{\expandafter#2\@globalenv}}
 
-\def\@eval@symbol#1#2#3{%
-  \@append@env@global{#2}\@temp@env
-  %% \@temp@env = #2(local environment) ++ global environment
-  \getassoc\@temp@env#1#3%
-  \expandafter\@expand@if@mutable#3#3}
+% \def\@eval@symbol#1#2#3{%
+%   \@append@env@global{#2}\@temp@env
+%   %% \@temp@env = #2(local environment) ++ global environment
+%   \getassoc\@temp@env#1#3%
+%   \expandafter\@expand@if@mutable#3#3}
+\def\@eval@symbol#1#2#3{% #1 symbol #2 current env (ignored) #3 dist
+  \expandafter\global\expandafter\let\expandafter#3\csname @lisp@env@\string#1\endcsname
+  \ifx#3\relax % not found
+    %\errmessage{LISP on TeX [evaluation of a symbol]: The symbol \string#1 is not bound}%
+    \errmessage{LISP on TeX [evaluation of a symbol]: unbound variable...}%
+  \else
+    \expandafter\@expand@if@mutable#3#3%
+  \fi
+}
 \def\@expand@if@mutable#1#2#3{%
   \let\@@next\@expand@if@mutable@next@f
   \ifx#1\@tlabel@mutable\let\@@next\@expand@if@mutable@next@t\fi
