@@ -196,7 +196,8 @@
 \def\@eval@symbol#1#2#3{% #1 symbol #2 current env (ignored) #3 dist
   \expandafter\global\expandafter\let\expandafter#3\csname @lisp@env@\string#1\endcsname
   \ifx#3\relax % not found
-    \errmessage{LISP on TeX [evaluation of a symbol]: The symbol \string#1 is not bound}%
+    %\errmessage{LISP on TeX [evaluation of a symbol]: The symbol \string#1 is not bound}%
+    \errmessage{LISP on TeX [evaluation of a symbol]: unbound variable...}%
   \else
     \expandafter\@expand@if@mutable#3#3%
   \fi
