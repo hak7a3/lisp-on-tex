@@ -1,0 +1,213 @@
+\documentclass[pdftex,10pt,c,compress]{beamer}
+%Settings for LaTeX beamer
+\usetheme{Berkeley}
+\usecolortheme{orchid}
+\setbeamertemplate{navigation symbols}{}
+
+%Font Info
+\usepackage[T1]{fontenc}
+\renewcommand{\sfdefault}{phv}
+\renewcommand{\ttdefault}{pcr}
+% Font Info(pLaTeX only)
+%\renewcommand{\kanjifamilydefault}{\gtdefault}
+
+%packages
+\usepackage{url}
+\usepackage{lisp-on-tex}
+
+%colors
+\definecolor{orderzero}{HTML}{04BBFF}
+\definecolor{orderi}{HTML}{03A8E5}
+\definecolor{orderii}{HTML}{038CBF}
+\definecolor{orderiii}{HTML}{025E7F}
+\definecolor{orderover}{HTML}{012F40}
+
+\lispinterp{
+  (\define \fact (\lambda (\n)
+    (\lispif (\= \n :0) :1
+      (\* (\fact (\- \n :1)) \n))))
+}
+
+%Document Info
+\title{LISP on \TeX}
+\subtitle{A LISP Interpreter Written Using \TeX{} Macros}
+\author[S. HAKUTA]{HAKUTA Shizuya}
+\date[TUG2013]{The 34th Annual Meeting of the TeX Users Group, 2013}
+
+\begin{document}
+  \frame{\titlepage}
+  
+  \section{Introduction}
+  
+  \begin{frame}{Background}
+    \begin{itemize}
+      \item Writing \TeX{} macros is useful.
+        \begin{itemize}
+          \item e.g. Calculating some small numeric expressions. 
+        \end{itemize}
+      \item However, it is difficult for novice users.
+      \vspace{1cm}
+      \item To improve, there are some researches that combine
+          \TeX{} and another programming language.
+    \end{itemize}
+  \end{frame}
+
+  \begin{frame}{\TeX{} with Other Languages}
+    Pakin[TUGboat '03] showed four way to connect \TeX{}
+    and a foreign programing language;
+    \begin{enumerate}
+      \item using \texttt{\string\write18} to call an outer processor,
+      \begin{itemize}
+        \item python package (CTAN:macros/latex/contrib/python)
+      \end{itemize}
+      \item embedding an interpreter in a \TeX{} engine,
+      \begin{itemize}
+        \item Lua\TeX{} (CTAN:systems/luatex)
+      \end{itemize}
+      \item constructing macros that enable \LaTeX{} to communicate
+            with an external interpreter,
+      \begin{itemize}
+        \item Perl\TeX{} (CTAN:macros/latex/conrtib/perltex)
+      \end{itemize}
+      \item creating a language processor with \TeX{} macros
+      \begin{itemize}
+        \item \LaTeX3 project created expl3: a new interface of \TeX{} macros,
+              but {\color{red}no ordinary language was implemented}.
+      \end{itemize}
+    \end{enumerate}
+  \end{frame}
+
+  \section{Goal and Mean}
+  \begin{frame}{The Goal and the Mean}
+    Our goals are
+    \begin{itemize}
+      \item Implementing a language's interpreter with \TeX{} macros, and
+      \item Comparing its performance with other approaches. 
+    \end{itemize}
+    \vspace{0.5cm}
+    We take two design choices;
+    \begin{enumerate}
+      \item Choosing LISP as a ordinary language, and
+      \item Creating the product as a LaTeX package.
+    \end{enumerate}
+  \end{frame}
+
+  \section{LISP on TeX}
+  \begin{frame}{LISP on \TeX}
+    We name the our product {\color{red} LISP on \TeX{}}.
+    \begin{itemize}
+      \item It was already archived on CTAN and \TeX Live.
+      \begin{itemize}
+        \item \url{macros/latex/contrib/lisp-on-tex}
+      \end{itemize}
+      \item We constructed all parts of LISP on \TeX{} with \TeX{} macros;
+      \begin{itemize}
+        \item parser, recognizing LISP expressions,
+        \item evaluator, calculating a expression, and
+        \item environment, mapping symbols to LISP objects. 
+      \end{itemize}
+      \item The code is written with traditional TeX macros only,
+          so it works in all \LaTeX{} engines,
+      \begin{itemize}
+        \item \LaTeX, pdf\LaTeX, Lua\LaTeX, Xe\LaTeX, p\LaTeX, \dots
+      \end{itemize}
+    \end{itemize}
+  \end{frame}
+
+
+  \begin{frame}[t, fragile]{Examples (1/2)}
+    \structure{Source}
+      \begin{footnotesize}
+        \begin{block}{The Preamble of the Slides}\vspace{-\baselineskip}
+\begin{semiverbatim}
+\\usepackage\{lisp-on-tex\}
+
+\\lispinterp\{
+  (\\define \\fact
+    (\\lambda (\\n)
+      (\\lispif (\\= \\n :0) :1
+        (\\* (\\fact (\\- \\n :1)) \\n))))\}        
+\end{semiverbatim}\vspace{-\baselineskip}
+        \end{block}
+      \end{footnotesize}
+      \structure{Result}\mbox{}\\
+        \strut\alt<2->{$10!=\lispinterp{(\texprint (\fact :10))}$}%
+          {\footnotesize
+            \texttt{\$10!=\string\lispinterp\{(\string\texprint (\string
+              \fact :10))\}\$}}
+        \begin{center}\color{red}\Large
+          \onslide<3->{LISP codes were evaluated!}
+        \end{center}
+\end{frame}
+
+  \begin{frame}{Examples (2/2)}
+    \begin{center}
+      \alt<2>{\includegraphics[scale=0.38]{dest_mandel.png}}
+        {\includegraphics[scale=0.3]{source_mandel.png}}
+    \end{center}
+  \end{frame}
+
+
+  \begin{frame}{Memory Management Problems}
+    \begin{itemize}
+      \item LISP on \TeX{} uses a lot of memory.
+      \begin{itemize}
+        \item Yato showed that LISP on \TeX{} stalls
+          when using a lot of LISP objects\footnote{%
+            \url{http://d.hatena.ne.jp/zrbabbler/20121116/1353068217} (Japanese Only)}.
+      \end{itemize}
+      \item It is caused by spending a lot of control sequences.
+      \item Building a garbage collection system is one of our future work.
+    \end{itemize}
+  \end{frame}
+
+
+  \section{Comparison}
+  \begin{frame}{Comparison to other approaches}
+    We compared LISP on \TeX{} and other approaches 
+      by three benchmarks.
+      \begin{itemize}
+        \item CPU Core i7 2.2GHz, 8GByte Memory, W32TeX
+      \end{itemize}
+    \begin{center}
+      \begin{tabular}{|c||c|c|c|}\hline
+        & tarai[sec] & asterisks[sec] & Mandelbrot[sec] \\ \hline\hline
+        LISP on \TeX & 13 & $1.6 \times 10^2$ & $2.1 \times 10^4$\\ \hline
+        Perl\TeX & 1.0 & 1.0 & $1.6 \times 10^2$ \\ \hline
+        Lua\TeX & 0.45 & 0.55 & 7.6 \\ \hline
+        \TeX{} macros & 0.24 & 0.22 &  $1.2 \times 10^2$ \\ \hline
+        expl3 & 1.1 & 1.0 & $5.7 \times 10^3$\\ \hline
+      \end{tabular}
+    \end{center}
+    \begin{itemize}
+      \item It shows that LISP on \TeX{} is too slow... :-(
+      \begin{itemize}
+        \item It is caused by reading \TeX{} tokens repeatedly.
+        \item[$\Rightarrow$] We can make LISP on \TeX{} faster
+          with improving the code.
+      \end{itemize}
+    \end{itemize}
+  \end{frame}
+
+
+  \section{Conclusion}
+  \begin{frame}{Conclusion}
+    \begin{itemize}
+      \item We implemented LISP on \TeX{}, a LISP interpreter
+        written only with \TeX{} macros.
+      \item It works well, but the product has
+          problems about memory usage and speed.
+    \end{itemize}
+  \end{frame}
+
+  \begin{frame}{Why LISP is Selected?}
+    There are two reasons why we select LISP.
+      \begin{enumerate}
+      \item LISP is Turing complete, so it contains all essence of
+             programming languages.
+      \item Because LISP has simple syntax and semantics, we can
+             implement LISP easily.
+    \end{enumerate}
+  \end{frame}
+
+\end{document}

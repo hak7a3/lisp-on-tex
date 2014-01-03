@@ -6,7 +6,7 @@
 %%
 
 ===== LISP on TeX --- A LISP interpreter on TeX ======
-Version 1.1
+Version 1.2
 Author : HAKUTA Shizuya <hak7a3@live.jp>
 
 ==== Introduction ====
@@ -43,6 +43,8 @@ lisp-mod-fpnum.sty : The module which enables us to use fixed point numbers.
 --------------------------------------------------------------------------------------
 examples/*         : Example files. See the "Examples" section.
 --------------------------------------------------------------------------------------
+tug2013/*          : The slide and examples used on TUG2013. 
+--------------------------------------------------------------------------------------
 ==== Usage ====
 To use LISP on TeX, write
 
@@ -75,6 +77,11 @@ It is the better way to know about LISP on TeX.
   * fpnum-mandelbrot.tex
     -- Calculate the mandelbrot set.
     -- It takes a long long time to typeset.
+  * showfont.tex
+    -- Show glyphs of selected font.
+    -- It works on XeLaTeX.
+  * repl.tex
+    -- The Read-Eval-Print Loop interpretor of lisp-on-tex.
 
 ==== Syntax ====
 The syntax of LISP on TeX is the following;
@@ -235,7 +242,11 @@ The syntax of LISP on TeX is the following;
          If n < m, it returns /t. Otherwise, it returns /f.
 
 ==== CHANGELOG ====
-  * Mar. 04, 2013 : 1.0
+  * Jan. 03, 2014 : 1.2
+     -- Added TUG2013's examples.
+     -- Improved the performance.
   * Aug. 10, 2013 : 1.1
-     -- add \letrec. \macroexpand, and \expand
-     -- debug  
+     -- Added \letrec and \expand.
+     -- debug
+  * Mar. 04, 2013 : 1.0
+  

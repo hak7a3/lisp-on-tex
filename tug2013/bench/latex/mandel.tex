@@ -1,0 +1,90 @@
+\documentclass{article}
+\usepackage[pdftex,a3paper,margin=1pt,landscape]{geometry}
+%% draw macros
+\newcount\mlength
+\newcount\cstate
+\newdimen\mandelunit
+\mandelunit=0.5pt
+\def\wp{%
+  \ifnum\cstate=1 \global\advance\mlength1
+  \else\ifnum\cstate=-1 \vrule width \mlength\mandelunit height \mandelunit depth 0pt \global\mlength1 \fi\fi
+  \global\cstate1}
+\def\bp{%
+  \ifnum\cstate=-1 \global\advance\mlength1
+  \else\ifnum\cstate=1 \hspace*{\mlength\mandelunit}\global\mlength1 \fi\fi
+  \global\cstate-1}
+\def\r{%
+  \ifnum\cstate=1\hspace*{\mlength\mandelunit}\else\vrule width \mlength\mandelunit height \mandelunit depth 0pt \fi
+  \global\cstate0 \global\mlength0}
+
+% Mandelbrot
+\newskip\x
+\newskip\y
+\newskip\a
+\newskip\b
+\newskip\xx
+\newskip\yy
+\newskip\tmp
+\newcount\k
+\def\maxloop{20}
+\def\scale{0.002}
+
+\def\loopMandel{%
+  \ifdim\b<-1.0pt\relax
+    \let\next\relax
+  \else
+    \drawMandel
+    \let\next\loopMandel
+    \ifdim\a>0.5pt\relax
+      \r\\
+      \a=-1.5pt\relax
+      \advance\b-\scale pt\relax
+    \else
+      \advance\a\scale pt\relax
+    \fi
+  \fi
+  \next}
+\def\drawMandel{%
+  \x=0pt\relax
+  \y=0pt\relax
+  \k=0\relax
+  \checkMandel
+  \ifnum\k>\maxloop\relax
+    \bp
+  \else
+    \wp
+  \fi
+}
+\makeatletter
+\def\checkMandel{%
+  \ifnum\k>\maxloop
+    \let\checkNext\relax
+  \else
+    \xx=\strip@pt\x\x
+    \yy=\strip@pt\y\y
+    \tmp\xx \advance\tmp\yy
+    \ifdim\tmp>4.0pt\relax
+      \let\checkNext\relax
+    \else
+      \let\checkNext\checkMandel
+      \advance\k1\relax
+      \tmp=\strip@pt\x\y
+      \multiply\tmp2\relax
+      \advance\tmp\b
+      \y\tmp
+      \x\a
+      \advance\x\xx
+      \advance\x-\yy
+    \fi
+  \fi
+  \checkNext
+}
+\makeatother
+
+\begin{document}
+\thispagestyle{empty}\noindent
+\leavevmode\baselineskip=\mandelunit
+\a=-1.5pt\relax
+\b=1.0pt\relax
+\loopMandel
+\end{document}

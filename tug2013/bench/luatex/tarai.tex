@@ -1,0 +1,14 @@
+\documentclass{article}
+\directlua{
+  function tarai(x,y,z)
+    if(x<=y) then
+      return y
+    else
+      return tarai(tarai(x-1, y, z), tarai(y-1, z, x), tarai(z-1, x, y))
+    end
+  end
+}
+\newcommand\tarai[3]{\directlua{tex.print(tarai(#1, #2, #3))}}
+\begin{document}
+$\mathrm{Tarai}(14,10,6) = \tarai{14}{10}{6}$
+\end{document}

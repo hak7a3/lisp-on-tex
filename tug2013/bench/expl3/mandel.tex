@@ -1,0 +1,79 @@
+\documentclass{article}
+\usepackage[pdftex,a3paper,margin=1pt,landscape]{geometry}
+\usepackage{expl3}
+
+%% draw macros
+\newcount\mlength
+\mlength0
+\newcount\cstate
+\newdimen\mandelunit
+\mandelunit=0.5pt
+
+\def\wp{%
+  \ifnum\cstate=1 \global\advance\mlength1
+  \else\ifnum\cstate=-1 \vrule width \mlength\mandelunit height \mandelunit depth 0pt \global\mlength1 \fi\fi
+  \global\cstate1}
+\def\bp{%
+  \ifnum\cstate=-1 \global\advance\mlength1
+  \else\ifnum\cstate=1 \hspace*{\mlength\mandelunit}\global\mlength1 \fi\fi
+  \global\cstate-1}
+\def\r{%
+  \ifnum\cstate=1\hspace*{\mlength\mandelunit}\else\vrule width \mlength\mandelunit height \mandelunit depth 0pt \fi
+  \global\cstate0 \global\mlength0}
+
+\ExplSyntaxOn
+  \int_const:Nn \l_hakviiaiii_maxloop {20}
+  \fp_const:Nn \l_hakviiaiii_scale {0.002}
+  \int_new:N \l_hakviiaiii_loopismandel
+  \fp_new:N \l_hakviiaiii_x
+  \fp_new:N \l_hakviiaiii_xx
+  \fp_new:N \l_hakviiaiii_y
+  \fp_new:N \l_hakviiaiii_yy
+  \fp_new:N \l_hakviiaiii_a
+  \fp_new:N \l_hakviiaiii_b
+  \bool_new:N \l_hakviiaiii_check_mandel
+  \cs_new:Npn \hakviiaiii_ismandel:nn #1#2{%
+    \int_zero:N \l_hakviiaiii_loopismandel
+    \fp_zero:N \l_hakviiaiii_x
+    \fp_zero:N \l_hakviiaiii_y
+    \fp_set:Nn \l_hakviiaiii_xx {\l_hakviiaiii_x * \l_hakviiaiii_x}%
+    \fp_set:Nn \l_hakviiaiii_yy {\l_hakviiaiii_y * \l_hakviiaiii_y}%
+    \bool_set_false:N\l_hakviiaiii_check_mandel
+    \bool_while_do:nn {%
+      \int_compare_p:nNn 
+        {\l_hakviiaiii_loopismandel}% 
+          < {\l_hakviiaiii_maxloop + 1}%
+      && \fp_compare_p:nNn
+        {\l_hakviiaiii_xx + \l_hakviiaiii_yy}< {4.0}%
+      } {%
+      \fp_set:Nn \l_hakviiaiii_y {%
+        2.0 * \l_hakviiaiii_x *\l_hakviiaiii_y + #2}%
+      \fp_set:Nn \l_hakviiaiii_x {\l_hakviiaiii_xx - \l_hakviiaiii_yy + #1}%
+      \fp_set:Nn \l_hakviiaiii_xx {\l_hakviiaiii_x * \l_hakviiaiii_x}%
+      \fp_set:Nn \l_hakviiaiii_yy {\l_hakviiaiii_y * \l_hakviiaiii_y}%
+      \int_set:Nn \l_hakviiaiii_loopismandel 
+        {\l_hakviiaiii_loopismandel + 1}%
+      }%
+    \bool_set:Nn \l_hakviiaiii_check_mandel
+      {\int_compare_p:nNn
+        {\l_hakviiaiii_loopismandel} > {\l_hakviiaiii_maxloop}}}
+  \cs_new:Nn \hakviiaiii_loopmandel: {%
+    \fp_set:Nn \l_hakviiaiii_b {1.0}%
+    \fp_while_do:nNnn {\l_hakviiaiii_b} > {-1.0 - \l_hakviiaiii_scale} {%
+      \fp_set:Nn \l_hakviiaiii_a {-1.5}%
+      \fp_while_do:nNnn{\l_hakviiaiii_a} < {0.5 + \l_hakviiaiii_scale} {%
+        \hakviiaiii_ismandel:nn{\l_hakviiaiii_a}{\l_hakviiaiii_b}%
+        \bool_if:nTF
+          {\l_hakviiaiii_check_mandel}%
+          {\bp}{\wp}%
+        \fp_set:Nn \l_hakviiaiii_a {\l_hakviiaiii_a + \l_hakviiaiii_scale}%
+      } \r\\%
+      \fp_set:Nn \l_hakviiaiii_b {\l_hakviiaiii_b - \l_hakviiaiii_scale}% 
+    }}
+  \cs_new_eq:NN \mandel \hakviiaiii_loopmandel:
+\ExplSyntaxOff
+\begin{document}
+  \thispagestyle{empty}\noindent
+  \leavevmode\baselineskip=\mandelunit
+  \mandel
+\end{document}

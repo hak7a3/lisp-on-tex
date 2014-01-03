@@ -1,0 +1,15 @@
+\documentclass{article}
+\usepackage{lisp-on-tex}
+\lispinterp{
+  (\define \foldl (\lambda (\func \init \list)
+    (\lispif (\= \list ()) 
+      \init 
+      (\foldl \func (\func \init (\car \list)) (\cdr \list)))))
+  (\define \astsLoTInner (\lambda (\n \ret)
+    (\lispif (\< :0 \n) (\astsLoTInner (\- \n :1) (\concat \ret '*'))
+    \ret)))
+  (\define \astsLoT (\lambda (\n) (\texprint (\concat '\def\asts' (\group (\astsLoTInner \n ''))))))
+}
+\begin{document}
+\lispinterp{(\astsLoT :10000)}
+\end{document}

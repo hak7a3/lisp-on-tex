@@ -1,0 +1,12 @@
+\documentclass{article}
+\newcount\n
+\newcommand{\astsfast}[1]{%
+\n=#1
+\begingroup
+\aftergroup\edef\aftergroup\asts\aftergroup{%
+\loop \ifnum\n>0 \aftergroup*\advance\n-1
+\repeat
+\aftergroup}\endgroup}
+\begin{document}
+ \astsfast{10000} 
+\end{document}

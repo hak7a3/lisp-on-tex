@@ -1,0 +1,27 @@
+\documentclass{article}
+\newcount\d
+\def\tarai#1#2#3#4{%
+  \begingroup
+    \aftergroup\next
+    \ifnum#1<#2%
+      \gdef\next{\def#4{#2}}%
+    \else\ifnum#1=#2%
+      \gdef\next{\def#4{#2}}%
+    \else
+      \d#1%
+      \advance\d-1
+      \expandafter\tarai\expandafter{\the\d}{#2}{#3}\tx
+      \d#2%
+      \advance\d-1
+      \expandafter\tarai\expandafter{\the\d}{#3}{#1}\ty
+      \d#3%
+      \advance\d-1
+      \expandafter\tarai\expandafter{\the\d}{#1}{#2}\tz
+      \xdef\next{\noexpand\tarai{\tx}{\ty}{\tz}\noexpand#4}%
+    \fi\fi
+  \endgroup}
+\begin{document}
+  \tarai{14}{10}{6}\tmp
+  $\mathrm{Tarai}(14,10,6) = \tmp$
+\end{document}
+

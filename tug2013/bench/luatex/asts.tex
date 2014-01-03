@@ -1,0 +1,15 @@
+\documentclass{article}
+\usepackage[pdftex,a3paper,margin=1pt,landscape]{geometry}
+\newcommand\astsLua[1]{%
+  \directlua{
+    ret = ""
+    for  i=1,#1 do
+      ret = ret .. "*"
+    end
+    tex.print("\noexpand\\def\noexpand\\asts{"..ret.."}")
+  }
+}
+
+\begin{document}
+  \astsLua{10000}
+\end{document}

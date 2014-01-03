@@ -1,0 +1,58 @@
+\documentclass{article}
+\usepackage[pdftex,a3paper,margin=1pt,landscape]{geometry}
+%% draw macros
+\newcount\mlength
+\mlength0
+\newcount\cstate
+\newdimen\mandelunit
+\mandelunit=0.5pt
+
+
+\def\wp{%
+  \ifnum\cstate=1 \global\advance\mlength1
+  \else\ifnum\cstate=-1 \vrule width \mlength\mandelunit height \mandelunit depth 0pt \global\mlength1 \fi\fi
+  \global\cstate1}
+\def\bp{%
+  \ifnum\cstate=-1 \global\advance\mlength1
+  \else\ifnum\cstate=1 \hspace*{\mlength\mandelunit}\global\mlength1 \fi\fi
+  \global\cstate-1}
+\def\r{%
+  \ifnum\cstate=1\hspace*{\mlength\mandelunit}\else\vrule width \mlength\mandelunit height \mandelunit depth 0pt \fi
+  \global\cstate0 \global\mlength0}
+
+
+\begin{document}
+  \thispagestyle{empty}\noindent
+  \leavevmode\baselineskip=\mandelunit
+  \directlua{
+    maxloop=20
+    scale=0.002
+    function isMandel(a,b)
+      x=0
+      y=0
+      xx=0
+      yy=0
+      for k=0,maxloop do
+        xx=x*x
+        yy=y*y
+        if (xx + yy) > 4.0 then 
+          return false
+        else
+          y=2*x*y+b
+          x=xx-yy+a
+        end 
+      end
+      return true
+    end
+    for b=1.0,-1.0,-scale do
+      for a=-1.5,0.5,scale do
+        if isMandel(a,b) then
+          tex.print("\noexpand\\bp")
+        else
+          tex.print("\noexpand\\wp")
+        end
+      end
+      tex.print("\noexpand\\r\noexpand\\\noexpand\\")
+    end
+  }
+\end{document}

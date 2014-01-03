@@ -1,0 +1,64 @@
+\documentclass{article}
+\usepackage[pdftex,a3paper,margin=1pt,landscape]{geometry}
+\usepackage{perltex}
+\newcount\mlength
+\newcount\cstate
+\newdimen\mandelunit
+\mandelunit=0.5pt
+
+\def\w{%
+  \ifnum\cstate=1 \global\advance\mlength1
+  \else\ifnum\cstate=-1 \vrule width \mlength\mandelunit height \mandelunit depth 0pt \global\mlength1 \fi\fi
+  \global\cstate1}
+\def\b{%
+  \ifnum\cstate=-1 \global\advance\mlength1
+  \else\ifnum\cstate=1 \hspace*{\mlength\mandelunit}\global\mlength1 \fi\fi
+  \global\cstate-1}
+\def\r{%
+  \ifnum\cstate=1\hspace*{\mlength\mandelunit}\else\vrule width \mlength\mandelunit height \mandelunit depth 0pt \fi
+  \global\cstate0 \global\mlength0}
+
+\perlnewcommand{\isMandel}[2]{
+  my $maxloop=20;
+  my $x = 0;
+  my $y = 0;
+  my $xx = 0;
+  my $yy = 0;
+  for(my $k=0; $k<=$maxloop; $k++){
+    $xx = $x ** 2;
+    $yy = $y ** 2;
+    if($xx + $yy > 4.0) { return 0; }
+    $y = 2*$x*$y + $_[1];
+    $x = $xx - $yy + $_[0];
+  }
+  return 1;
+}
+\perlnewcommand{\loopMandel}{
+  my $scale=0.002;
+  my $ret = "";
+  for(my $b=1.0; $b >=-1.0; $b-=$scale){
+    $ret = $ret . "\\loopMandelInner{" . $b . "}\\r\\\\";
+  }
+  return $ret;
+}
+\perlnewcommand{\loopMandelInner}[1]{
+  my $scale=0.002;
+  my $ret = "";
+  my $b = $_[0];
+  for(my $a=-1.5; $a<=0.5; $a+=$scale){
+    if(latex_isMandel($a, $b)){
+      $ret .= "\\b";
+    } else {
+      $ret .= "\\w";
+    }
+  }
+  return $ret;
+}
+
+
+\begin{document}
+  \thispagestyle{empty}
+  \noindent
+  \leavevmode\baselineskip=\mandelunit
+  \loopMandel
+\end{document}

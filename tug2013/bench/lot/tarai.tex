@@ -1,0 +1,12 @@
+\documentclass{article}
+\usepackage{lisp-on-tex}
+%\tracingmacros=1
+\lispinterp{
+  (\define \tarai (\lambda (\x \y \z)
+    (\lispif (\or (\< \x \y) (\= \x \y)) 
+      \y
+      (\tarai (\tarai (\- \x :1) \y \z) (\tarai (\- \y :1) \z \x) (\tarai (\- \z :1) \x \y)))))
+}
+\begin{document}
+  $\mathrm{Tarai}(14,10,6) = \lispinterp{(\texprint (\tarai :14 :10 :6))}$
+\end{document}

@@ -1,0 +1,9 @@
+\documentclass{article}
+\usepackage{expl3}
+\ExplSyntaxOn
+\cs_new:Npn \astsInner #1 {\prg_replicate:nn {#1} {*}}
+\ExplSyntaxOff
+\newcommand\astsExpliii[1]{\edef\asts{\astsInner{#1}}}
+\begin{document}
+  \astsExpliii{10000}
+\end{document}
