@@ -1,10 +1,16 @@
 #!/bin/sh
 # script for packaging...
-zip -r lisp-on-tex.zip \
-  ./lisp-on-tex/LICENSE \
-  ./lisp-on-tex/README \
-  ./lisp-on-tex/*.sty \
-  ./lisp-on-tex/examples/*.tex \
-  ./lisp-on-tex/examples/*.pdf \
-  ./lisp-on-tex/tug2013
+TARGET="lisp-on-tex.zip"
+zip $TARGET ./lisp-on-tex/LICENSE
+zip $TARGET ./lisp-on-tex/README
+zip $TARGET ./lisp-on-tex/*.sty
+PDF_EXAMPLES="fact fpnummodule-mandelbrot rocket"
+SOURCE_EXAMPLES="repl showfont"
+for i in $PDF_EXAMPLES $SOURCE_EXAMPLES; do
+  zip $TARGET ./lisp-on-tex/examples/$i.tex
+done
+for i in $PDF_EXAMPLES; do
+  zip $TARGET ./lisp-on-tex/examples/$i.pdf
+done
+zip $TARGET ./lisp-on-tex/tug2013
 

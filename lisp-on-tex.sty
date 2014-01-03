@@ -86,7 +86,7 @@
     \def\@reg@tmp{#1{#2}}%
     \def\@@next{%
       \lispeval\@reg@tmp\@reg@tmp
-      \@lispread\@lisp@read@eval@loop}
+      \@lispread\@lisp@read@eval@loop}%
   \fi\@@next}
 
 
@@ -168,11 +168,9 @@
   \fi
   \@@next}
 
-
-
 \def\lispeval#1#2{% #1 : \cs -> S-exp, #2 : target register
   \gdef\@temp@write@buffer{}%
-    \expandafter\@lisp@expand@environment\@globalenv\@lisp@expand@env@last\@lisp@expand@env@last % 
+    \expandafter\@lisp@expand@environment\@globalenv\@lisp@expand@env@last\@lisp@expand@env@last% 
     \expandafter\@eval#1{}#2%
   \@temp@write@buffer}
 
@@ -196,12 +194,10 @@
 \def\@eval@symbol#1#2#3{% #1 symbol #2 current env (ignored) #3 dist
   \expandafter\global\expandafter\let\expandafter#3\csname @lisp@env@\string#1\endcsname
   \ifx#3\relax % not found
-    %\errmessage{LISP on TeX [evaluation of a symbol]: The symbol \string#1 is not bound}%
     \errmessage{LISP on TeX [evaluation of a symbol]: unbound variable...}%
   \else
     \expandafter\@expand@if@mutable#3#3%
-  \fi
-}
+  \fi}
 \def\@expand@if@mutable#1#2#3{%
   \let\@@next\@expand@if@mutable@next@f
   \ifx#1\@tlabel@mutable\let\@@next\@expand@if@mutable@next@t\fi
