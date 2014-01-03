@@ -12,5 +12,5 @@ done
 for i in $PDF_EXAMPLES; do
   zip $TARGET ./lisp-on-tex/examples/$i.pdf
 done
-zip $TARGET ./lisp-on-tex/tug2013
+zip -r $TARGET ./lisp-on-tex/tug2013
 
