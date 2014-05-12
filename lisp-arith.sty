@@ -76,6 +76,65 @@
 \addassoc\@globalenv\<{\@tlabel@func{\@arith@lt}}
 \def\@arith@lt#1\@tlabel@int#2\@tlabel@int#3{%
   \ifnum#2<#3 \gdef#1{\@tlabel@bool{t}}\else\gdef#1{\@tlabel@bool{f}}\fi}
+
 \addassoc\@globalenv\>{\@tlabel@func{\@arith@gt}}
 \def\@arith@gt#1\@tlabel@int#2\@tlabel@int#3{%
   \ifnum#2>#3 \gdef#1{\@tlabel@bool{t}}\else\gdef#1{\@tlabel@bool{f}}\fi}
+
+\addassoc\@globalenv\leq{\@tlabel@func{\@arith@leq}}
+\def\@arith@leq#1\@tlabel@int#2\@tlabel@int#3{%
+  \ifnum#2<#3 \gdef#1{\@tlabel@bool{t}}\else\gdef#1{\@tlabel@bool{f}}\fi
+  \ifnum#2=#3 \gdef#1{\@tlabel@bool{t}}\fi}
+
+\addassoc\@globalenv\geq{\@tlabel@func{\@arith@geq}}
+\def\@arith@geq#1\@tlabel@int#2\@tlabel@int#3{%
+  \ifnum#2>#3 \gdef#1{\@tlabel@bool{t}}\else\gdef#1{\@tlabel@bool{f}}\fi
+  \ifnum#2=#3 \gdef#1{\@tlabel@bool{t}}\fi}
+
+\addassoc\@globalenv\isZeroQ{\@tlabel@func{\@arith@is@zero}}
+\def\@arith@is@zero#1\@tlabel@int#2{%
+  \ifnum#2=0 \gdef#1{\@tlabel@bool{t}}\else\gdef#1{\@tlabel@bool{f}}\fi}
+
+\addassoc\@globalenv\positiveQ{\@tlabel@func{\@arith@is@positive}}
+\def\@arith@is@positive#1\@tlabel@int#2{%
+  \ifnum#2>0 \gdef#1{\@tlabel@bool{t}}\else\gdef#1{\@tlabel@bool{f}}\fi}
+
+\addassoc\@globalenv\negativeQ{\@tlabel@func{\@arith@is@negative}}
+\def\@arith@is@positive#1\@tlabel@int#2{%
+  \ifnum#2<0 \gdef#1{\@tlabel@bool{t}}\else\gdef#1{\@tlabel@bool{f}}\fi}
+
+\addassoc\@globalenv\max{\@tlabel@func{\@arith@max}}
+\def\@arith@max#1#2#3{%
+  \ifx#2\@tlabel@int
+    \@temp@inti#3\relax
+    \let\@next@max\@@arith@max
+  \else
+    \errmessage{LISP on TeX [integer max]: Invalid argument or Too few arguments}%
+  \fi\@next@max#1}
+\def\@@arith@max#1#2#3{%
+  \ifx#2\relax
+    \let\@next@max\@@arith@pm@fin
+  \else\ifx#2\@tlabel@int
+    \ifnum#3>\@temp@inti\@temp@inti#3\relax\fi
+    \let\@next@max\@@arith@max
+  \else
+    \errmessage{LISP on TeX [integer max]: Invalid argument}%
+  \fi\fi\@next@max#1}
+
+\addassoc\@globalenv\min{\@tlabel@func{\@arith@min}}
+\def\@arith@min#1#2#3{%
+  \ifx#2\@tlabel@int
+    \@temp@inti#3\relax
+    \let\@next@min\@@arith@min
+  \else
+    \errmessage{LISP on TeX [integer min]: Invalid argument or Too few arguments}%
+  \fi\@next@min#1}
+\def\@@arith@min#1#2#3{%
+  \ifx#2\relax
+    \let\@next@min\@@arith@pm@fin
+  \else\ifx#2\@tlabel@int
+    \ifnum#3<\@temp@inti\@temp@inti#3\relax\fi
+    \let\@next@min\@@arith@min
+  \else
+    \errmessage{LISP on TeX [integer min]: Invalid argument}%
+  \fi\fi\@next@min#1}

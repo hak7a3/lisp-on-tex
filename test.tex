@@ -1,0 +1,12 @@
+\documentclass{article}
+\usepackage{lisp-on-tex}
+\usepackage{qstest}
+\begin{document}
+  \makeatletter
+  \begin{qstest}{Parser Test}{integer}
+    \def\parserTestCallBack#1#2{\gdef\parsedResult{#1{#2}}}
+    \setbox0=\hbox{\@lispread\parserTestCallBack:42}
+    \expandafter\Expect\expandafter{\parsedResult}{\@tlabel@int{42}}
+    \Expect*{\the\wd0}{0.0pt}
+  \end{qstest}
+\end{document}
