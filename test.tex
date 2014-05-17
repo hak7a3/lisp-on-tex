@@ -1,12 +1,80 @@
 \documentclass{article}
 \usepackage{lisp-on-tex}
 \usepackage{qstest}
+\IncludeTests{*}
 \begin{document}
+  \LogTests{lgout}{*}{*}
   \makeatletter
-  \begin{qstest}{Parser Test}{integer}
+  \begin{qstest}{Parser Test}{\@lispread}
     \def\parserTestCallBack#1#2{\gdef\parsedResult{#1{#2}}}
-    \setbox0=\hbox{\@lispread\parserTestCallBack:42}
-    \expandafter\Expect\expandafter{\parsedResult}{\@tlabel@int{42}}
-    \Expect*{\the\wd0}{0.0pt}
+    \begin{qstest}{cons and list}{\@lispread,\@tlabel@cons}
+      % dot pair
+      \def\subtestDot#1#2{\Expect{#1}{\@tlabel@cons}\subtestDotValue#2\relax\relax}%
+      \def\subtestDotValue#1#2{%
+        \expandafter\Expect\expandafter{#1}{\@tlabel@int{0}}%
+        \expandafter\Expect\expandafter{#2}{\@tlabel@int{1}}}%
+      \setbox0=\hbox{\@lispread\parserTestCallBack(:0.:1)}%
+      \expandafter\subtestDot\parsedResult
+      \Expect*{\the\wd0}{0.0pt}%
+      % list
+      \def\subtestListI#1#2{\Expect{#1}{\@tlabel@cons}\subtestListValueI#2\relax\relax}%
+      \def\subtestListValueI#1#2{%
+        \expandafter\Expect\expandafter{#1}{\@tlabel@int{1}}%
+        \expandafter\subtestListII#2\relax\relax}%
+      \def\subtestListII#1#2{\Expect{#1}{\@tlabel@cons}\subtestListValueII#2\relax\relax}%
+      \def\subtestListValueII#1#2{%
+        \expandafter\Expect\expandafter{#1}{\@tlabel@int{2}}%
+        \expandafter\Expect\expandafter{#2}{\@tlabel@nil{}}}%
+      \setbox0=\hbox{\@lispread\parserTestCallBack(:1 :2)}%
+      \expandafter\subtestListI\parsedResult
+      \Expect*{\the\wd0}{0.0pt}%
+      % list with dot
+      \def\subtestListDotI#1#2{\Expect{#1}{\@tlabel@cons}\subtestListDotValueI#2\relax\relax}%
+      \def\subtestListDotValueI#1#2{%
+        \expandafter\Expect\expandafter{#1}{\@tlabel@int{1}}%
+        \expandafter\subtestListDotII#2\relax\relax}%
+      \def\subtestListDotII#1#2{\Expect{#1}{\@tlabel@cons}\subtestListDotValueII#2\relax\relax}%
+      \def\subtestListDotValueII#1#2{%
+        \expandafter\Expect\expandafter{#1}{\@tlabel@int{2}}%
+        \expandafter\Expect\expandafter{#2}{\@tlabel@int{3}}}%
+      \setbox0=\hbox{\@lispread\parserTestCallBack(:1 :2.:3)}%
+      \expandafter\subtestListDotI\parsedResult
+      \Expect*{\the\wd0}{0.0pt}%
+    \end{qstest}
+    \def\parserTest#1#2{%
+      \setbox0=\hbox{\@lispread\parserTestCallBack#1}%
+      \expandafter\Expect\expandafter{\parsedResult}{#2}%
+      \Expect*{\the\wd0}{0.0pt}%
+    }
+    \begin{qstest}{integer}{\@lispread,\@tlabel@int}
+      \parserTest{:42}{\@tlabel@int{42}}
+      \parserTest{:-42}{\@tlabel@int{-42}}
+    \end{qstest}
+    \begin{qstest}{string}{\@lispread,\@tlabel@string}
+      \parserTest{'This is a {{example}} of \TeX : $f^{2x}_s(y)$'}
+        {\@tlabel@string{This is a {{example}} of \TeX : $f^{2x}_s(y)$}}
+    \end{qstest}
+    \begin{qstest}{symbol}{\@lispread,\@tlabel@symbol}
+      \parserTest{\symbol}{\@tlabel@symbol{\symbol}}
+    \end{qstest}
+    \begin{qstest}{bool}{\@lispread,\@tlabel@bool}
+      \parserTest{/t}{\@tlabel@bool{t}}
+      \parserTest{/f}{\@tlabel@bool{f}}
+    \end{qstest}
+    \begin{qstest}{nil}{\@lispread,\@tlabel@nil}
+      \parserTest{()}{\@tlabel@nil{}}
+    \end{qstest}
+    \begin{qstest}{parser-module}{\@lispread}
+      \def\@mod@read@dummy#1#2{\gdef#1{\@tlabel@testdummy{#2}}}
+      \parserTest{+{dummy::testValue}}{\@tlabel@testdummy{testValue}}
+    \end{qstest}
+    \begin{qstest}{dimen}{\@lispread,\@tlabel@dimen}
+      \parserTest{!123.45pt}{\@tlabel@dimen{123.45pt}}
+    \end{qstest}
+    \begin{qstest}{skip}{\@lispread,\@tlabel@skip}
+      \parserTest{@123.45pt plus 1fil minus 0.5pt}
+        {\@tlabel@skip{123.45pt plus 1.0fil minus 0.5pt}}
+    \end{qstest}
   \end{qstest}
+  \LogClose{lgout}
 \end{document}
