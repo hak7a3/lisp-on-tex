@@ -186,11 +186,7 @@
   \expandafter\expandafter\expandafter#2%
   \expandafter\expandafter\expandafter{\expandafter#2\@globalenv}}
 
-% \def\@eval@symbol#1#2#3{%
-%   \@append@env@global{#2}\@temp@env
-%   %% \@temp@env = #2(local environment) ++ global environment
-%   \getassoc\@temp@env#1#3%
-%   \expandafter\@expand@if@mutable#3#3}
+
 \def\@eval@symbol#1#2#3{% #1 symbol #2 current env (ignored) #3 dist
   \expandafter\global\expandafter\let\expandafter#3\csname @lisp@env@\string#1\endcsname
   \ifx#3\relax % not found
