@@ -118,6 +118,11 @@
       \setbox0=\hbox{\expandafter\@eval\selfEvalTarget{\dummy{\@tlabel@int{42}}}\selfEvalResult}%
       \Expect*{\the\wd0}{0.0pt}%
       \expandafter\Expect\expandafter{\selfEvalResult}{\@tlabel@int{42}}%
+      % mutable
+      \def\dummyMutable{\@tlabel@symbol{\dummy}}
+      \setbox0=\hbox{\expandafter\@eval\selfEvalTarget{\dummy{\@tlabel@mutable{\dummyMutable}}}\selfEvalResult}%
+      \Expect*{\the\wd0}{0.0pt}%
+      expandafter\Expect\expandafter{\selfEvalResult}{\@tlabel@symbol{\dummy}}%
     \end{qstest}
     \begin{qstest}{cons cell and embeded function call}{\@lispeval}
       \@lispread\parserTestCallBack(\+ :1 :2)

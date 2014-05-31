@@ -3,3 +3,5 @@ syntax: glob
 test.*
 *.png
 *.save
+lisp-on-tex.zip
+
