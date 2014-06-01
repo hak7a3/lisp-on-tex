@@ -413,9 +413,15 @@
 
 \def\@apply@func#1#2\@#3#4{%
   \def\@temp@i{}%
+  \def\@@dummy@temp@i{}%
   \@apply@eval@args\@temp@i{#3}#2\relax\relax
+  \ifx\@@dummy@temp@i\@temp@i%
+    \def\@@test@temp@i{\@tlabel@dummy{}}%
+  \else
+    \let\@@test@temp@i\@temp@i
+  \fi
   \expandafter\expandafter\expandafter\ifx
-    \expandafter\@apply@get@args@head@typelabel\@temp@i\relax\@tlabel@exception
+    \expandafter\@apply@get@args@head@typelabel\@@test@temp@i\relax\@tlabel@exception
       \let\@@next\@apply@func@exception
     \else
       \let\@@next\@apply@func@normal
@@ -431,9 +437,15 @@
 
 \def\@apply@envfunc#1#2\@#3#4{%
   \def\@temp@i{}%
+  \def\@@dummy@temp@i{}%
   \@apply@eval@args\@temp@i{#3}#2\relax\relax
+  \ifx\@temp@i\@@dummy@temp@i%
+    \def\@@test@temp@i{\@tlabel@dummy{}}%
+  \else
+    \let\@@test@temp@i\@temp@i
+  \fi
   \expandafter\expandafter\expandafter\ifx
-    \expandafter\@apply@get@args@head@typelabel\@temp@i\relax\@tlabel@exception
+    \expandafter\@apply@get@args@head@typelabel\@@test@temp@i\relax\@tlabel@exception
       \let\@@next\@apply@func@exception
     \else
       \let\@@next\@apply@envfunc@normal
@@ -448,9 +460,15 @@
 
 \def\@apply@closure#1#2\@#3#4{%
   \def\@temp@i{}%
+  \def\@@dummy@temp@i{}%
   \@apply@eval@args\@temp@i{#3}#2\relax\relax
+  \ifx\@temp@i\@@dummy@temp@i%
+    \def\@@test@temp@i{\@tlabel@dummy{}}%
+  \else
+    \let\@@test@temp@i\@temp@i
+  \fi
   \expandafter\expandafter\expandafter\ifx
-    \expandafter\@apply@get@args@head@typelabel\@temp@i\relax\@tlabel@exception
+    \expandafter\@apply@get@args@head@typelabel\@@test@temp@i\relax\@tlabel@exception
       \let\@@next\@apply@func@exception
     \else
       \let\@@next\@apply@closure@normal
