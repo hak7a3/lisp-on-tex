@@ -10,15 +10,16 @@
 \addassoc\@globalenv\@let{\@tlabel@@let{}}
 \addassoc\@globalenv\@mlet{\@tlabel@@mlet{}}
 \addassoc\@globalenv\macroexpand{\@tlabel@macroexpand{}}
-
+\addassoc\@globalenv\callOCC{\@tlabel@callocc{}}
 
 \addassoc\@globalenv\car{\@tlabel@func{\@get@car}}
 \addassoc\@globalenv\cdr{\@tlabel@func{\@get@cdr}}
 \addassoc\@globalenv\cons{\@tlabel@func{\@make@cons}}
 
 \newcount\@temp@count
-\addassoc\@globalenv\length{\@temp@count0\relax\@tlabel@func{\@lisp@length}}
-\def\@lisp@length#1#2#3{%
+\addassoc\@globalenv\length{\@tlabel@func{\@lisp@length}}
+\def\@lisp@length{\@temp@count0\relax\@lisp@length@}
+\def\@lisp@length@#1#2#3{%
   \ifx#2\@tlabel@nil
     \expandafter\gdef\expandafter#1%
     \expandafter{\expandafter\@tlabel@int\expandafter{\the\@temp@count}}%
@@ -28,9 +29,9 @@
     \let\@length@next\@@lisp@length
   \else
     \errmessage{LISP on TeX [function--length]: The Argument must be a LIST}%
-  \fi\fi\@length@next#3}
+  \fi\fi\@length@next#3#1}
 \def\@length@gobble#1{}
-\def\@@lisp@length#1#2#3{\expandafter\@lisp@length#3}
+\def\@@lisp@length#1#2#3{\expandafter\@lisp@length@\expandafter#3#2}
 
 %equality
 \addassoc\@globalenv\={\@tlabel@func{\@lisp@equal}}

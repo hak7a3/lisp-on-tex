@@ -1,0 +1,47 @@
+\documentclass{article}
+\usepackage{lisp-on-tex}
+\makeatletter
+\lispinterp{
+  (\define \nqueen (\lambda (\n)
+    (\callOCC (\lambda (\c) (\nqinner \n () \c)))))
+  (\define \nqinner (\lambda (\n \acc \c)
+    (\lispif (\= (\length \acc) \n)
+      (\lispif (\nqcheck \acc) (\c \acc) ())
+        (\nqinnernext \n \acc \c :1))))
+  (\define \nqinnernext (\lambda (\n \acc \c \k)
+    (\lispif (\< \n \k) ()
+      (\begin
+        (\nqinner \n (\cons \k \acc) \c)
+        (\nqinnernext \n \acc \c (\+ \k :1))))))
+  (\define \seq (\lambda (\n)
+    (\lispif (\= \n :1) (\quote (:1)) (\cons \n (\seq (\- \n :1))))))
+  (\define \nqcheck (\lambda (\lst)
+    (\and (\uniqueQ \lst) (\nqcheckdiag \lst))))
+  (\define \nqcheckdiag (\lambda (\lst) (\nqcheckdiaginner \lst :1)))
+  (\define \nqcheckdiaginner (\lambda (\lst \k)
+    (\lispif (\< (\length \lst) \k) /t
+      (\lispif (\nqcheckdiagK \lst \k :1)
+        (\nqcheckdiaginner \lst (\+ \k :1)) /f))))
+  (\define \nqcheckdiagK (\lambda (\lst \k \n)
+    (\lispif (\> \n (\length \lst)) /t
+      (\let ((\t (\nth \lst (\- \k :1)))
+              (\tt (\nth \lst (\- \n :1)))
+              (\d (\- \n \k)))
+          (\lispif (\and 
+            (\not (\= \n \k)) 
+            (\or (\= \t (\+ \tt \d)) (\= \t (\- \tt \d)) ))
+            /f (\nqcheckdiagK \lst \k (\+ \n :1)))))))
+  (\define \uniqueQ (\lambda (\list)
+    (\lispif (\= \list ()) /t
+      (\and (\not (\existQ (\car \list) (\cdr \list))) (\uniqueQ (\cdr \list))))))
+  (\define \existQ (\lambda (\v \list)
+    (\lispif (\= \list ()) /f
+      (\or (\= \v (\car \list)) (\existQ \v (\cdr \list))))))
+  (\define \reverse (\lambda (\l)
+    (\lispif (\= \l ()) () (\append (\reverse (\cdr \l)) (\car \l)))))
+  (\define \append (\lambda (\l \v)
+    (\lispif (\= \l ()) (\cons \v ()) (\cons (\car \l) (\append (\cdr \l) \v)))))
+}
+\begin{document}
+hoge\lispinterp{(\print (\nqueen :6))}fuga
+\end{document}

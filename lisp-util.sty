@@ -12,12 +12,7 @@
   (\lispif  (\= () (\car \args)) () 
     (\let ((\cars (\@inner@map \car \args)) (\cdrs (\@inner@map \cdr \args))) 
       (\cons (\apply \f \cars) 
-        (\apply \map (\cons \f \cdrs))
-      )
-      )
-    )
-  )
-)
+        (\apply \map (\cons \f \cdrs)))))))
 %% @inner@map : ('a -> 'b) -> 'a list -> 'b list 
 (\define \@inner@map 
     (\lambda (\f \l)
@@ -35,7 +30,7 @@
    (\lambda \l 
      (\lispif (\= () \l) 
               /f
-              (\lispif (\car \l) /t (\apply \and (\cdr \l))))))
+              (\lispif (\car \l) /t (\apply \or (\cdr \l))))))
 %% list
 (\define \list (\lambda \x \x))
 %% let bindings

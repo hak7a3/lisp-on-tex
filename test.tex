@@ -106,6 +106,9 @@
         \selfEvalTest{\@tlabel@@let{}}
         \selfEvalTest{\@tlabel@@mlet{}}
         \selfEvalTest{\@tlabel@macroexpand{}}
+        \selfEvalTest{\@tlabel@callocc{}}
+        \selfEvalTest{\@tlabel@exception{{-1}{\@tlabel@string{dummy}}}}
+        \selfEvalTest{\@tlabel@continuation{1}}
     \end{qstest}
     \begin{qstest}{symbol}{\@lispeval}
       %global env
@@ -229,6 +232,28 @@
         \expandafter\Expect\expandafter{#2}{\@tlabel@nil{}}}
       \specialFormEval{(\macroexpand (\quote (\mac (\quote :1))))}%
       \expandafter\testMacroExpand\spEvalResult
+    \end{qstest}
+    \begin{qstest}{one-shot continuation}{\@lispeval}
+      \def\occEval#1{%
+        \@lispread\parserTestCallBack#1%
+        \setbox0=\hbox{\lispeval\parsedResult\occEvalResult}%
+        \Expect*{\the\wd0}{0.0pt}}
+      \occEval{(\callOCC (\lambda (\c) :1))}
+      \expandafter\Expect\expandafter{\occEvalResult}{\@tlabel@int{1}}
+      \occEval{(\callOCC (\lambda (\c) \c))}
+      \expandafter\Expect\expandafter{\occEvalResult}{\@tlabel@continuation{1}}
+      \occEval{(\callOCC (\lambda (\c) (\c :42)))}
+      \expandafter\Expect\expandafter{\occEvalResult}{\@tlabel@int{42}}
+      \occEval{(\callOCC (\lambda (\c) (\callOCC (\lambda (\d) \d))))}
+      \expandafter\Expect\expandafter{\occEvalResult}{\@tlabel@continuation{2}}
+    \end{qstest}
+    \begin{qstest}{mutiple map}{\@lispeval}
+      \def\occEval#1{%
+        \@lispread\parserTestCallBack#1%
+        \setbox0=\hbox{\lispeval\parsedResult\occEvalResult}%
+        \Expect*{\the\wd0}{0.0pt}}
+      \occEval{(\map (\lambda (\k) (\+ \k :1)) (\map (\lambda (\k) (\* \k :2)) (\quote (:1 :2))))}
+      
     \end{qstest}
   \end{qstest}
   \LogClose{lgout}

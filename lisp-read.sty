@@ -21,7 +21,8 @@
     \def\@@next{\@lispread@cell#1}%
   \else\ifcat\noexpand#2\relax% [Branch 2] A control sequence or a control symbol 
     \ifx#2\@end@lispread % [Branch 2-1] EOI
-      \def\@@next{\endgroup#1\@tlabel@exception{!Found End of Input!}}%
+      \def\@@next{\endgroup#1%
+        \@tlabel@exception{{-1}{\@tlabel@string{!Found End of Input!}}}}%
     \else
       \def\@@next{\@lispread@symbol#1#2}% [Branch 2-2] Symbol
     \fi

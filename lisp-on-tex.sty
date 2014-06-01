@@ -118,8 +118,8 @@
 \def\@@@@make@cons#1#2#3{\gdef#1{\@tlabel@cons{#2#3}}}
 
 
-\def\@defined@datatype{symbol,string,int,bool,dimen,skip,cons,nil,func,closure,macro,envfunc,mutable,exception}
-\def\@defined@specialform{lambda,quote,define,if,defmacro,begin,mdefine,setb,@let,@mlet,macroexpand}
+\def\@defined@datatype{symbol,string,int,bool,dimen,skip,cons,nil,func,closure,macro,envfunc,mutable,exception,continuation}
+\def\@defined@specialform{lambda,quote,define,if,defmacro,begin,mdefine,setb,@let,@mlet,macroexpand,callocc}
 \edef\@defined@lisp@on@tex{\@defined@datatype,\@defined@specialform}
 
 
@@ -186,7 +186,6 @@
   \expandafter\expandafter\expandafter#2%
   \expandafter\expandafter\expandafter{\expandafter#2\@globalenv}}
 
-
 \def\@eval@symbol#1#2#3{% #1 symbol #2 current env (ignored) #3 dist
   \expandafter\global\expandafter\let\expandafter#3\csname @lisp@env@\string#1\endcsname
   \ifx#3\relax % not found
@@ -201,6 +200,7 @@
 \def\@expand@if@mutable@next@f#1#2{}
 \def\@expand@if@mutable@next@t#1#2{\global\let#2#1}
 
+\def\@@eval@get@typelabel#1#2{#1}
 
 \def\@eval@envcs#1#2#3#4{\expandafter\@@eval@envcs\expandafter{#1}#2{#3}#4}
 \def\@@eval@envcs#1#2#3#4{\@eval#2{#3}{#1}#4}
@@ -208,10 +208,17 @@
 \def\@eval@cons#1#2#3{\@@eval@cons#1{#2}#3}
 \def\@@eval@cons#1#2#3#4{%
   \expandafter\@eval#1{#3}\@temp@i
+  \expandafter\expandafter\expandafter\ifx
+    \expandafter\@@eval@get@typelabel\@temp@i\@tlabel@exception
+    \let\@@next\@@eval@cons@exception\else\let\@@next\@@eval@cons@normal\fi
+  \@@next{#2}{#3}{#4}}
+\def\@@eval@cons@normal#1#2#3{%
   \def\@temp@ii{}% init
-  \expandafter\@flatten@args#2\@temp@ii
-  \expandafter\expandafter\expandafter\@@select@apply@pre\expandafter\@temp@i\@temp@ii\@{#3}#4}
+  \expandafter\@flatten@args#1\@temp@ii
+  \expandafter\expandafter\expandafter\@@select@apply@pre
+  \expandafter\@temp@i\@temp@ii\@{#2}#3}
 \def\@@select@apply@pre{\expandafter\@@select@apply}
+\def\@@eval@cons@exception#1#2#3{\global\let#3\@temp@i}
 
 \def\@flatten@args#1#2#3{%
   \ifx#1\@tlabel@cons
@@ -258,63 +265,109 @@
 
 \def\@apply@define#1\@tlabel@symbol#2#3#4\@#5#6{%
   \@eval#3{#4}{#5}#6% define does NOT use local environment
-  \expandafter\addassoc\expandafter\@globalenv\expandafter#2\expandafter{#6}%
-  \gdef#6{\@tlabel@nil{}}}
+  \expandafter\expandafter\expandafter\ifx
+    \expandafter\@@eval@get@typelabel#6\@tlabel@exception
+    \let\@@next\@apply@define@exception
+    \else\let\@@next\@apply@define@normal\fi
+  \@@next{#2}{#6}}
+
+\def\@apply@define@exception#1#2{}
+\def\@apply@define@normal#1#2{%
+  \expandafter\addassoc\expandafter\@globalenv\expandafter#1\expandafter{#2}%
+  \gdef#2{\@tlabel@nil{}}}
 
 \def\@apply@mdefine#1\@tlabel@symbol#2#3#4\@#5#6{%
   \@eval#3{#4}{#5}#6% mdefine does NOT use local environment
-  \expandafter\@mutable@allocate#6%
+  \expandafter\expandafter\expandafter\ifx
+    \expandafter\@@eval@get@typelabel#6\@tlabel@exception
+    \let\@@next\@apply@define@exception
+    \else\let\@@next\@apply@mdefine@normal\fi
+  \@@next{#2}{#6}}
+
+\def\@apply@mdefine@normal#1#2{%
+  \expandafter\@mutable@allocate#2%
   \expandafter\addassoc
   \expandafter\@globalenv
-  \expandafter#2%
+  \expandafter#1%
   \expandafter{\expandafter\@tlabel@mutable
   \expandafter{\csname mutable\the\@malloc\endcsname}}%
   \global\advance\@malloc1\relax
-  \gdef#6{\@tlabel@nil{}}}
+  \gdef#2{\@tlabel@nil{}}}
 \def\@mutable@allocate#1#2{\expandafter\gdef\csname mutable\the\@malloc\endcsname{#1{#2}}}
 
 
 \def\@apply@setb#1\@tlabel@symbol#2#3#4\@#5#6{%
   \@eval#3{#4}{#5}#6%
-  \let\@@save#6%
-  \@append@env@global{#5}\@temp@env
-  \getassoc\@temp@env#2\@temp@i
-  \let#6\@@save%
-  \expandafter\@set@mutable\@temp@i#6%
-  \gdef#6{\@tlabel@nil{}}}
+  \expandafter\expandafter\expandafter\ifx
+    \expandafter\@@eval@get@typelabel#6\@tlabel@exception
+    \let\@@next\@apply@setb@exception
+    \else\let\@@next\@apply@setb@normal\fi
+  \@@next{#2}{#5}{#6}}
+\def\@apply@setb@normal#1#2#3{%
+  \let\@@save#3%
+  \@append@env@global{#2}\@temp@env
+  \getassoc\@temp@env#1\@temp@i
+  \let#3\@@save%
+  \expandafter\@set@mutable\@temp@i#3%
+  \gdef#3{\@tlabel@nil{}}}
 \def\@set@mutable\@tlabel@mutable#1#2{\global\let#1#2}
-
+\def\@apply@setb@exception#1#2#3{}
 
 \def\@apply@@let#1\@tlabel@symbol#2#3#4#5#6\@#7#8{%
   \@eval#3{#4}{#7}#8%
-  \expandafter\def\expandafter\@temp@env\expandafter{\expandafter#2\expandafter{#8}#7}%
+  \expandafter\expandafter\expandafter\ifx
+    \expandafter\@@eval@get@typelabel#8\@tlabel@exception
+    \let\@@next\@apply@@let@exception
+    \else\let\@@next\@apply@@let@normal\fi
+  \@@next{#2}{#5}{#6}{#7}{#8}}
+\def\@apply@@let@normal#1#2#3#4#5{%
+  \expandafter\def\expandafter\@temp@env\expandafter{\expandafter#1\expandafter{#5}#4}%
   \expandafter\gdef\expandafter\@@tco
-    \expandafter{\expandafter\@@eval@envcs\expandafter{\@temp@env}#5{#6}#8}%
+    \expandafter{\expandafter\@@eval@envcs\expandafter{\@temp@env}#2{#3}#5}%
   \aftergroup\@@tco}
+\def\@apply@@let@exception#1#2#3#4#5{}
 
 \def\@apply@@mlet#1\@tlabel@symbol#2#3#4#5#6\@#7#8{%
   \@eval#3{#4}{#7}#8%
-  \expandafter\global\expandafter\let\csname mutable\the\@malloc\endcsname#8%
-  \expandafter\def\expandafter#8\expandafter{\expandafter\@tlabel@mutable
+  \expandafter\expandafter\expandafter\ifx
+    \expandafter\@@eval@get@typelabel#8\@tlabel@exception
+    \let\@@next\@apply@@let@exception
+    \else\let\@@next\@apply@@mlet@normal\fi
+  \@@next{#2}{#5}{#6}{#7}{#8}}
+\def\@apply@@mlet@normal#1#2#3#4#5{%
+  \expandafter\global\expandafter\let\csname mutable\the\@malloc\endcsname#5%
+  \expandafter\def\expandafter#5\expandafter{\expandafter\@tlabel@mutable
     \expandafter{\csname mutable\the\@malloc\endcsname}}%
   \global\advance\@malloc1\relax
-  \expandafter\def\expandafter\@temp@env\expandafter{\expandafter#2\expandafter{#8}#7}%
+  \expandafter\def\expandafter\@temp@env\expandafter{\expandafter#1\expandafter{#5}#4}%
   \expandafter\gdef\expandafter\@@tco
-    \expandafter{\expandafter\@@eval@envcs\expandafter{\@temp@env}#5{#6}#8}%
+    \expandafter{\expandafter\@@eval@envcs\expandafter{\@temp@env}#2{#3}#5}%
   \aftergroup\@@tco}
-
 
 \def\@apply@defmacro#1\@tlabel@symbol#2#3#4\@#5#6{%
   \@eval#3{#4}{#5}#6% NOT use local env!
-  \expandafter\@apply@defmacro@next\expandafter#2#6%
-  \gdef#6{\@tlabel@nil{}}}
+  \expandafter\expandafter\expandafter\ifx
+    \expandafter\@@eval@get@typelabel#6\@tlabel@exception
+    \let\@@next\@apply@define@exception
+    \else\let\@@next\@apply@defmacro@normal\fi
+  \@@next{#2}{#6}}
+\def\@apply@defmacro@normal#1#2{%
+  \expandafter\@apply@defmacro@next\expandafter#1#2%
+  \gdef#2{\@tlabel@nil{}}}
 \def\@apply@defmacro@next#1\@tlabel@closure#2{\addassoc\@globalenv#1{\@tlabel@macro{#2}}}
 
 \def\@apply@if#1#2#3#4#5#6#7\@#8#9{%
   \@eval#2{#3}{#8}#9%
-  \expandafter\@apply@if@next#9#4{#5}#6{#7}{#8}#9%
-  \aftergroup\@@tco
-  }
+  \expandafter\expandafter\expandafter\ifx
+    \expandafter\@@eval@get@typelabel#9\@tlabel@exception
+    \let\@@next\@apply@if@exception
+    \else\let\@@next\@apply@if@normal\fi
+  \@@next{#4}{#5}{#6}{#7}{#8}{#9}}
+\def\@apply@if@normal#1#2#3#4#5#6{%
+  \expandafter\@apply@if@next#6#1{#2}#3{#4}{#5}#6%
+  \aftergroup\@@tco}
+\def\@apply@if@exception#1#2#3#4#5#6{}
+
 \def\@apply@if@next\@tlabel@bool#1#2#3#4#5#6#7{%
   \let\@@next\relax
   \ifx#1t%
@@ -341,26 +394,53 @@
 \def\@apply@eval@args@pre@i#1#2#3#4{%
   \let\@@save#1%
   \@eval#3{#4}{#2}#1%
+  \expandafter\expandafter\expandafter\ifx
+    \expandafter\@@eval@get@typelabel#1\@tlabel@exception
+      \let\@@next\@apply@eval@args@exception
+    \else\let\@@next\@apply@eval@args@normal\fi
+  \@@next{#1}}
+\def\@apply@eval@args@normal#1{%
   \expandafter\expandafter\expandafter\def
   \expandafter\expandafter\expandafter#1\expandafter\expandafter\expandafter{%
   \expandafter\@@save#1}%
   \let\@@next\@apply@eval@args}
+\def\@apply@eval@args@exception#1{\let\@@next\@apply@eval@args@ignore}
 
 \def\@@next@fin#1#2{}
+\def\@apply@eval@args@ignore#1#2#3\relax#4{}
+
+\def\@apply@get@args@head@typelabel#1#2\relax{#1}
 
 \def\@apply@func#1#2\@#3#4{%
   \def\@temp@i{}%
   \@apply@eval@args\@temp@i{#3}#2\relax\relax
-  \expandafter\@apply@func@next\expandafter{\@temp@i}{#1}{#3}#4}
+  \expandafter\expandafter\expandafter\ifx
+    \expandafter\@apply@get@args@head@typelabel\@temp@i\relax\@tlabel@exception
+      \let\@@next\@apply@func@exception
+    \else
+      \let\@@next\@apply@func@normal
+    \fi
+    \@@next{#1}{#3}{#4}}
+\def\@apply@func@normal#1#2#3{%
+  \expandafter\@apply@func@next\expandafter{\@temp@i}{#1}{#2}#3}
 \def\@apply@func@next#1#2#3#4{\@@apply@func{#2}#1\@{#3}#4}
+\def\@apply@func@exception#1#2#3{%
+  \expandafter\gdef\expandafter#3\expandafter{\@temp@i}}
 
 \def\@@apply@func#1#2\@#3#4{\gdef\@@tco{#1#4#2\relax\relax}\aftergroup\@@tco}
-
 
 \def\@apply@envfunc#1#2\@#3#4{%
   \def\@temp@i{}%
   \@apply@eval@args\@temp@i{#3}#2\relax\relax
-  \expandafter\@apply@envfunc@next\expandafter{\@temp@i}{#1}{#3}#4}
+  \expandafter\expandafter\expandafter\ifx
+    \expandafter\@apply@get@args@head@typelabel\@temp@i\relax\@tlabel@exception
+      \let\@@next\@apply@func@exception
+    \else
+      \let\@@next\@apply@envfunc@normal
+    \fi
+    \@@next{#1}{#3}{#4}}
+\def\@apply@envfunc@normal#1#2#3{%
+  \expandafter\@apply@envfunc@next\expandafter{\@temp@i}{#1}{#2}#3}
 \def\@apply@envfunc@next#1#2#3#4{\@@apply@envfunc{#2}#1\@{#3}#4}
 
 \def\@@apply@envfunc#1#2\@#3#4{\gdef\@@tco{#1#4{#3}#2\relax\relax}\aftergroup\@@tco}
@@ -369,7 +449,15 @@
 \def\@apply@closure#1#2\@#3#4{%
   \def\@temp@i{}%
   \@apply@eval@args\@temp@i{#3}#2\relax\relax
-  \expandafter\@apply@closure@next\expandafter{\@temp@i}{#1}{#3}#4}
+  \expandafter\expandafter\expandafter\ifx
+    \expandafter\@apply@get@args@head@typelabel\@temp@i\relax\@tlabel@exception
+      \let\@@next\@apply@func@exception
+    \else
+      \let\@@next\@apply@closure@normal
+    \fi
+    \@@next{#1}{#3}{#4}}
+\def\@apply@closure@normal#1#2#3{%
+  \expandafter\@apply@closure@next\expandafter{\@temp@i}{#1}{#2}#3}
 \def\@apply@closure@next#1#2#3#4{\@@apply@closure{#2}#1\@{#3}#4}
 
 \def\@@apply@closure#1#2\@#3#4{\@@apply@closure@next#1#2\@#4}
@@ -475,13 +563,75 @@
   \@apply@begin@next#4{#3}#2\relax\relax}
 \def\@apply@begin@next#1#2#3#4#5#6{%
   \ifx#5\relax
-    \gdef\@@tco{\@eval#3{#4}{#2}#1}%
-    \aftergroup\@@tco
-    \let\@@next\relax
+    \let\@@next\@apply@begin@final
   \else
-    \@eval#3{#4}{#2}#1%
-    \def\@@next{\@apply@begin@next#1{#2}#5{#6}}%
-  \fi\@@next}
+    \let\@@next\@apply@begin@cont
+  \fi\@@next{#1}{#2}{#3}{#4}{#5}{#6}}
+\def\@apply@begin@final#1#2#3#4#5#6{%
+  \gdef\@@tco{\@eval#3{#4}{#2}#1}\aftergroup\@@tco}
+\def\@apply@begin@cont#1#2#3#4#5#6{%
+  \@eval#3{#4}{#2}#1%
+  \expandafter\expandafter\expandafter\ifx
+    \expandafter\@@eval@get@typelabel#1\@tlabel@exception
+    \let\@@next\@apply@begin@exception
+  \else
+    \let\@@next\@apply@begin@normal
+  \fi
+    \@@next{#1}{#2}{#5}{#6}}
+\def\@apply@begin@normal#1#2#3#4{%
+  \@apply@begin@next#1{#2}#3{#4}}
+\def\@apply@begin@exception#1#2#3#4{}
+
+\newcount\c@lisp@continuation@label
+\def\@apply@callocc#1#2#3\@#4#5{%
+  \advance\c@lisp@continuation@label 1
+  \@eval#2{#3}{#4}#5%
+  \expandafter\expandafter\expandafter\ifx
+    \expandafter\@@eval@get@typelabel#5\@tlabel@exception
+    \let\@@next\@apply@callocc@exception
+  \else
+    \let\@@next\@apply@callocc@normal
+  \fi
+  \@@next{#1}{#2}{#3}{#4}{#5}}
+\def\@apply@callocc@exception#1#2#3#4#5{}
+\def\@apply@callocc@normal#1#2#3#4#5{%
+  \toks0\expandafter{#5}%
+  \edef\@@next{\noexpand\begingroup
+    \noexpand\expandafter\noexpand\@@select@apply\the\toks0
+    \noexpand\@tlabel@continuation{\the\c@lisp@continuation@label}}%
+  \@@next\@{#4}#5\endgroup
+  \expandafter\@apply@callocc@check#5#5}
+\def\@apply@callocc@check#1#2#3{%
+  \ifx#1\@tlabel@exception
+    \let\@@next\@apply@callocc@check@contlabel
+  \else
+    \let\@@next\@apply@callocc@gobble
+  \fi
+  \@@next#2\@#3}
+\def\@apply@callocc@gobble#1\@#2{}
+\def\@apply@callocc@check@contlabel#1#2\@#3{%
+  \ifnum#1=\c@lisp@continuation@label
+    \let\@@next\@apply@callocc@hook
+  \else
+    \let\@@next\@apply@callocc@gobble@after@check
+  \fi
+  \@@next#3{#2}}
+\def\@apply@callocc@gobble@after@check#1#2{}
+\def\@apply@callocc@hook#1#2{\gdef#1{#2}}
+
+\def\@apply@continuation#1#2#3\@#4#5{%
+  \@eval#2{#3}{#4}#5%
+  \expandafter\expandafter\expandafter\ifx
+    \expandafter\@@eval@get@typelabel#5\@tlabel@exception
+    \let\@@next\@apply@continuation@exception
+  \else
+    \let\@@next\@apply@continuation@normal
+  \fi
+  \@@next{#1}{#2}{#3}{#4}{#5}}
+\def\@apply@continuation@normal#1#2#3#4#5{%
+  \toks0\expandafter{#5}%
+  \xdef#5{\noexpand\@tlabel@exception{{#1}{\the\toks0}}}}
+
 
 % reader
 \input{lisp-read.sty}
