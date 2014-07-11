@@ -159,24 +159,29 @@
 
 \def\@lisp@expand@env@last{\@lisp@expand@env@last}
 
-\def\@lisp@expand@environment#1#2{%
-  \ifx#1\@lisp@expand@env@last
+\def\@lisp@expand@environment#1#2#3\@lisp@expand@env@last{%
+  \def\@@tmp@lisp@env{#3}%
+  \def\@@tmp{\expandafter\def\csname @lisp@env@\string#1\endcsname{#2}}%
+  \ifx\@empty\@@tmp@lisp@env
     \let\@@next\relax
   \else
-    \expandafter\def\csname @lisp@env@\string#1\endcsname{#2}%
-    \let\@@next\@lisp@expand@environment
+    \def\@@next{\@lisp@expand@environment#3\@lisp@expand@env@last}%
   \fi
-  \@@next}
+  \expandafter\@@next\@@tmp}
 
 \def\lispeval#1#2{% #1 : \cs -> S-exp, #2 : target register
   \gdef\@temp@write@buffer{}%
-    \expandafter\@lisp@expand@environment\@globalenv\@lisp@expand@env@last\@lisp@expand@env@last% 
+    \expandafter\def\expandafter\@@tmp@lisp@env\expandafter{\@globalenv}%
+    \ifx\@empty\@globalenv\else
+      \expandafter\@lisp@expand@environment\@globalenv\@lisp@expand@env@last\fi 
     \expandafter\@eval#1{}#2%
   \@temp@write@buffer}
 
 \def\@eval#1#2#3#4{%
   \begingroup
-    \@lisp@expand@environment#3\@lisp@expand@env@last\@lisp@expand@env@last
+    \def\@@tmp@lisp@env{#3}%
+    \ifx\@empty\@@tmp@lisp@env\else
+      \@lisp@expand@environment#3\@lisp@expand@env@last\fi
     \expandafter\@@select@eval#1{#2}{#3}#4%
   \endgroup}
 
