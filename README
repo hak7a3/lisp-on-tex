@@ -41,6 +41,8 @@ lisp-util.sty      : Utility functions written with LISP on TeX.
 lisp-mod-fpnum.sty : The module which enables us to use fixed point numbers.
                    : See the "Fixed Point Numbers" section in this document.
 --------------------------------------------------------------------------------------
+test.tex           : test code (using qstest.sty).
+--------------------------------------------------------------------------------------
 examples/*         : Example files. See the "Examples" section.
 --------------------------------------------------------------------------------------
 tug2013/*          : The slide and examples used on TUG2013. 
@@ -82,6 +84,8 @@ It is the better way to know about LISP on TeX.
     -- It works on XeLaTeX.
   * repl.tex
     -- The Read-Eval-Print Loop interpretor of lisp-on-tex.
+  * nqueen.tex
+    -- Calculate 5-queens problem.
 
 ==== Syntax ====
 The syntax of LISP on TeX is the following;
@@ -240,8 +244,15 @@ The syntax of LISP on TeX is the following;
   * (\fplt <S-exp 1> <S-exp 2>)
      -- Let n be the evaluation result of <S-exp 1> and m be that of <S-exp 2>.
          If n < m, it returns /t. Otherwise, it returns /f.
+==== Continuations ====
+  * (\callOCC <closure>)
+     -- One shot continuations.
+     -- It calls (<closure> c) where c is the current continuation.
 
 ==== CHANGELOG ====
+  * Jul. 12, 2014 : 1.3
+     --  Added one shot continuation's feature.
+     -- Debug environment.
   * Jan. 03, 2014 : 1.2
      -- Added TUG2013's examples.
      -- Improved the performance.
