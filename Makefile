@@ -1,4 +1,4 @@
-TMPDIR=/tmp/lisp-on-tex
+TMPDIR=/tmp
 STYLEFILES=$(wildcard ./*.sty)
 EXAMPLE=$(wildcard ./examples/*.tex) $(wildcard ./examples/*.pdf)
 TUG2013=./tug2013/slide.tex ./tug2013/slide.pdf \
