@@ -173,6 +173,20 @@ The syntax of LISP on TeX is the following;
   * (\> <S-exp 1> <S-exp 2>)
      -- Let n be the evaluation result of <S-exp 1> and m be that of <S-exp 2>.
          If n > m, it returns /t. Otherwise, it returns /f.
+  * (\leq <int 1> <int 2>)
+     -- Return (<int 1> <= <int 2>)
+  * (\geq <int 1> <int 2>)
+     -- Return (<int 1> >= <int 2>)
+  * (\isZeroQ <int>)
+     -- Return (<int> == 0)
+  * (\positiveQ <int>)
+     -- Return (<int> > 0)
+  * (\negativeQ <int>)
+     -- Return (<int> < 0)
+  * (\max <int 1> <int 2> ... )
+     -- Return the max value of the arguments
+  * (\min <int 1> <int 2> ... )
+     -- Return the minimal value of the arguments
 
 === Manipulation of Strings ===
   * (\concat <string 1> <string 2>)
@@ -251,7 +265,8 @@ The syntax of LISP on TeX is the following;
 
 ==== CHANGELOG ====
   * Jul. 12, 2014 : 1.3
-     --  Added one shot continuation's feature.
+     -- Add one shot continuations.
+     -- Add some arithmetical functions.
      -- Debug environment.
   * Jan. 03, 2014 : 1.2
      -- Added TUG2013's examples.
