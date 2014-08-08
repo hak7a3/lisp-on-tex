@@ -254,8 +254,15 @@
         \setbox0=\hbox{\lispeval\parsedResult\occEvalResult}%
         \Expect*{\the\wd0}{0.0pt}}
       \occEval{(\map (\lambda (\k) (\+ \k :1)) (\map (\lambda (\k) (\* \k :2)) (\quote (:1 :2))))}
-      
     \end{qstest}
+   \begin{qstest}{closure}{\@lispeval}
+    \def\occEval#1{%
+      \@lispread\parserTestCallBack#1%
+      \setbox0=\hbox{\lispeval\parsedResult\occEvalResult}%
+      \Expect*{\the\wd0}{0.0pt}}
+    \occEval{((\lambda (\n) ((\lambda (\n) \n) 'hoge')) :1)}
+    \expandafter\Expect\expandafter{\occEvalResult}{\@tlabel@string{hoge}}
+   \end{qstest}
   \end{qstest}
   \LogClose{lgout}
 \end{document}
