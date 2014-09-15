@@ -1,7 +1,8 @@
 syntax: glob
 *.orig
 test.*
+parsetest.*
+fundamentalevaltest.*
 *.png
 *.save
 lisp-on-tex.zip
-
