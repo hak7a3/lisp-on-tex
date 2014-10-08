@@ -1,0 +1,82 @@
+\documentclass{article}
+\usepackage{lisp-on-tex}
+\usepackage{qstest}
+\IncludeTests{*}
+\makeatletter
+% parser test macro
+\def\testParse#1#2{%
+  \setbox0=\hbox{\@lispread\parserTestCallBack#1}%
+  \Expect*{\the\wd0}{0.0pt}% no side effect space
+  \expandafter\checkObjectEquality\expandafter{\parsedResult}{#2}}
+% set parsed result to \parsedResult
+\def\parserTestCallBack#1#2{\gdef\parsedResult{#1{#2}}}
+% test equality of two object  
+\def\checkObjectEquality#1#2{\@check@equal#1#2}
+\def\@check@equal#1#2#3#4{%
+  \ifx#1#3%
+    \def\@check@next{%
+      \ifx#1\@tlabel@cons
+        \def\@check@next{\@check@equal@cons#2#4}%
+      \else
+        \def\@check@next{\Expect{#2}{#4}}%
+      \fi
+        \@check@next}%
+  \else
+    \def\@check@next{\Expect{#1}{#3}}%
+  \fi
+  \@check@next}
+\def\@check@equal@cons#1#2#3#4{%
+  \expandafter\expandafter\expandafter\@check@equal\expandafter#1#3%
+  \expandafter\expandafter\expandafter\@check@equal\expandafter#2#4}
+\makeatother
+\begin{document}
+  \LogTests{lgout}{*}{*}
+  \makeatletter
+  \begin{qstest}{Parser Test}{\@lispread}
+    \begin{qstest}{cons cells}{\@lispread,\@tlabel@cons}
+      \def\dummyCarI{\@tlabel@int{0}}
+      \def\dummyCdrI{\@tlabel@int{1}}
+      \testParse{(:0 . :1)}{\@tlabel@cons{\dummyCarI\dummyCdrI}}
+      \def\dummyCarI{\@tlabel@int{0}}
+      \def\dummyCdrI{\@tlabel@cons{\dummyCarII\dummyCdrII}}
+      \def\dummyCarII{\@tlabel@int{1}}
+      \def\dummyCdrII{\@tlabel@nil{}}
+      \testParse{(:0 :1)}{\@tlabel@cons{\dummyCarI\dummyCdrI}}
+      \def\dummyCarI{\@tlabel@int{0}}
+      \def\dummyCdrI{\@tlabel@cons{\dummyCarII\dummyCdrII}}
+      \def\dummyCarII{\@tlabel@int{1}}
+      \def\dummyCdrII{\@tlabel@int{2}}
+      \testParse{(:0 :1 . :2)}{\@tlabel@cons{\dummyCarI\dummyCdrI}}
+    \end{qstest}
+    \begin{qstest}{integer}{\@lispread,\@tlabel@integer}
+      \testParse{:42}{\@tlabel@int{42}}
+      \testParse{:-42}{\@tlabel@int{-42}}
+    \end{qstest}
+    \begin{qstest}{string}{\@lispread,\@tlabel@string}
+      \testParse{'This is a {{example}} of \TeX : $f^{2x}_s(y)$'}
+        {\@tlabel@string{This is a {{example}} of \TeX : $f^{2x}_s(y)$}}
+    \end{qstest}
+    \begin{qstest}{symbol}{\@lispread,\@tlabel@symbol}
+      \testParse{\symbol}{\@tlabel@symbol{\symbol}}
+    \end{qstest}
+    \begin{qstest}{bool}{\@lispread,\@tlabel@bool}
+      \testParse{/t}{\@tlabel@bool{t}}
+      \testParse{/f}{\@tlabel@bool{f}}
+    \end{qstest}
+    \begin{qstest}{nil}{\@lispread,\@tlabel@nil}
+      \testParse{()}{\@tlabel@nil{}}
+    \end{qstest}
+    \begin{qstest}{parser-module}{\@lispread}
+      \def\@mod@read@dummy#1#2{\gdef#1{\@tlabel@testdummy{#2}}}
+      \testParse{+{dummy::testValue}}{\@tlabel@testdummy{testValue}}
+    \end{qstest}
+    \begin{qstest}{dimen}{\@lispread,\@tlabel@dimen}
+      \testParse{!123.45pt}{\@tlabel@dimen{123.45pt}}
+    \end{qstest}
+    \begin{qstest}{skip}{\@lispread,\@tlabel@skip}
+      \testParse{@123.45pt plus 1fil minus 0.5pt}
+        {\@tlabel@skip{123.45pt plus 1.0fil minus 0.5pt}}
+    \end{qstest}
+  \end{qstest}
+  \LogClose{lgout}
+\end{document}

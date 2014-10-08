@@ -1,0 +1,228 @@
+\documentclass{article}
+\usepackage{lisp-on-tex}
+\usepackage{qstest}
+\IncludeTests{*}
+\makeatletter
+% test evaluation result
+% #1 -> tevaluation target (LISP on TeX object form)
+% #2 -> hoped result (LISP on TeX object form)
+\def\testEval#1#2{%
+  \def\@evaltarget{#1}%
+  \setbox0=\hbox{\lispeval\@evaltarget\@evalresult}%
+  \Expect*{\the\wd0}{0.0pt}% no side effect space
+  \expandafter\checkObjectEquality\expandafter{\@evalresult}{#2}}
+\def\testEvalSelf#1{\testEval{#1}{#1}}
+% test evaluation result with local variables
+% #1 -> tevaluation target (LISP on TeX object form)
+% #2 -> hoped result (LISP on TeX object form)
+% #3 -> environment (LISP on TeX environment form)
+% NOTICE : this macro does NOT use \lispeval,
+% so it ignores environment changing.
+\def\testEvalWithEnv#1#2#3{%
+  \setbox0=\hbox{\@eval#1{#3}\@evalresult}%
+  \Expect*{\the\wd0}{0.0pt}% no side effect space
+  \expandafter\checkObjectEquality\expandafter{\@evalresult}{#2}}
+% test evaluation result with S-exp form
+% #1 -> evaluation target (S-exp)
+% #2 -> hoped result (LISP on TeX object form)
+% NOTICE : this macro does NOT use \lispeval,
+% so it ignores environment changing.
+\def\testEvalWithSExp#1#2{%
+  \@lispread\testEvalWithSExp@ReaderCallBack#1%
+  \Expect*{\the\wd0}{0.0pt}% no side effect space
+  \expandafter\checkObjectEquality\expandafter{\@evalresult}{#2}}
+\def\testEvalWithSExp@ReaderCallBack#1#2{%
+  \def\@eval@target{#1{#2}}%
+  \setbox0=\hbox{\lispeval\@eval@target\@evalresult}}
+% test equality of two object  
+\def\checkObjectEquality#1#2{\@check@equal#1#2}
+\def\@check@equal#1#2#3#4{%
+  \ifx#1#3%
+    \def\@check@next{%
+      \ifx#1\@tlabel@cons
+        \def\@check@next{\@check@equal@cons#2#4}%
+      \else
+        \def\@check@next{\Expect{#2}{#4}}%
+      \fi
+        \@check@next}%
+  \else
+    \def\@check@next{\Expect{#1}{#3}}%
+  \fi
+  \@check@next}
+\def\@check@equal@cons#1#2#3#4{%
+  \expandafter\expandafter\expandafter\@check@equal\expandafter#1#3%
+  \expandafter\expandafter\expandafter\@check@equal\expandafter#2#4}
+\makeatother
+\begin{document}
+  \LogTests{lgout}{*}{*}
+  \makeatletter
+  \begin{qstest}{Fundamental Eval Test}{\@lispeval}
+   \begin{qstest}{self-evaluating forms}{\@lispeval}
+    \testEvalSelf{\@tlabel@string{foo}} %string
+    \testEvalSelf{\@tlabel@int{42}}     %integer
+    \testEvalSelf{\@tlabel@bool{t}}     %boolean
+    \testEvalSelf{\@tlabel@dimen{12.3pt}} %dimen
+    \testEvalSelf{\@tlabel@skip{12.3pt plus 1.0 fil minus 0.5pt}} %skip
+    \testEvalSelf{\@tlabel@nil{}}                                 % ()
+    \testEvalSelf{\@tlabel@func{\dummy}}                          % function
+    \testEvalSelf{%
+       \@tlabel@closure{{\x:\@@unused}
+         {\y{\@ylabel@int{1}}}\@tlabel@int{0}}}                    % closure
+    \testEvalSelf{\@tlabel@macro{{\x:\@@unused}{}\@tlabel@int{0}}} % macro
+    \testEvalSelf{\@tlabel@envfunc{\dummy}}                        % function form for apply and eval
+    \testEvalSelf{\@tlabel@mutable{\dummy}}                        % mutable (used in deffileM and letM)
+    \testEvalSelf{\@tlabel@lambda{}}                               % lambda special form 
+    \testEvalSelf{\@tlabel@define{}}                               % define special form
+    \testEvalSelf{\@tlabel@if{}}                                   % if special form
+    \testEvalSelf{\@tlabel@defmacro{}}                             % defmacro special form
+    \testEvalSelf{\@tlabel@begin{}}                                % begin special form
+    \testEvalSelf{\@tlabel@mdefine{}}                              % defineM special form 
+    \testEvalSelf{\@tlabel@setb{}}                                 % setB
+    \testEvalSelf{\@tlabel@@let{}}                                 % @let special form (main function of let)
+    \testEvalSelf{\@tlabel@@mlet{}}                                % @mlet special form (main function of letM)
+    \testEvalSelf{\@tlabel@macroexpand{}}                          % macroexpand special form
+    \testEvalSelf{\@tlabel@callocc{}}                              % callOCC special form
+    \testEvalSelf{\@tlabel@exception{{-1}{\@tlabel@string{dummy}}}} % exception object 
+    \testEvalSelf{\@tlabel@continuation{1}}                         % continuation object
+   \end{qstest}
+   \begin{qstest}{symbol}{\@lispeval,\@tlabel@symbol}
+    \testEval{\@tlabel@symbol{\=}}
+      {\@tlabel@func{\@lisp@equal}} % global binding
+    \testEvalWithEnv{\@tlabel@symbol{\foo}}{\@tlabel@int{42}}
+      {\hoge{\@tlabel@int{23}}\foo{\@tlabel@int{42}}} % local binding
+    \def\dummyRef{\@tlabel@string{hoge}}
+    \testEvalWithEnv{\@tlabel@symbol{\foo}}{\@tlabel@string{hoge}}
+      {\foo{\@tlabel@mutable{\dummyRef}}} % mutable expansion
+    \testEvalWithEnv{\@tlabel@symbol{\=}}{\@tlabel@string{hoge}}
+      {\={\@tlabel@string{hoge}}} % global variable hiding
+    \testEvalWithEnv{\@tlabel@symbol{\=}}{\@tlabel@int{42}}
+      {\={\@tlabel@int{42}}\={\@tlabel@string{hoge}}} % local variable hiding
+   \end{qstest}
+   \begin{qstest}{cons cell (function call)}{\@lispeval,\@tlabel@cons}
+    \testEvalWithSExp{(\+ :1 :2)}{\@tlabel@int{3}}
+   \end{qstest}
+   \begin{qstest}{special forms}{\@lispeval}
+    % define
+    \toks0\expandafter{\@globalenv}
+    \edef\@hopedEnv{\noexpand\@foo{\noexpand\@tlabel@int{42}}\the\toks0}
+    \testEvalWithSExp{(\define \@foo :42)}{\@tlabel@nil{}}
+    \toks0\expandafter{\@globalenv}
+    \expandafter\Expect\expandafter{\@hopedEnv}*{\the\toks0}
+    %defineM
+    \toks0\expandafter{\@globalenv}
+    \def\checkDefineMutableCheckEnv#1#2#3\@@end{%
+      \Expect{#1}{\@bar}
+      \checkDefineMutableCheckEnv@value#2
+      \Expect{#3}*{\the\toks0}}
+    \def\checkDefineMutableCheckEnv@value#1#2{%
+      \Expect{#1}{\@tlabel@mutable}
+      \expandafter\Expect\expandafter{#2}{\@tlabel@int{23}}}
+    \testEvalWithSExp{(\defineM \@bar :23)}{\@tlabel@nil{}}
+    \expandafter\checkDefineMutableCheckEnv\@globalenv\@@end
+    %setB
+    \lispinterp{
+      (\defineM \@setB@target 'invalid')
+      (\setB \@setB@target 'valid')
+    }
+    \testEval{\@tlabel@symbol{\@setB@target}}{\@tlabel@string{valid}}
+    % if
+    \testEvalWithSExp{(\lispif /t 'hoge' :42)}{\@tlabel@string{hoge}}
+    \testEvalWithSExp{(\lispif /f 'hoge' :42)}{\@tlabel@int{42}}
+    \lispinterp{(\defineM \@if@target 'valid')}
+    \testEvalWithSExp{(\lispif /t 'hoge' (\setB \@if@target 'invalid'))}{\@tlabel@string{hoge}}
+    \testEval{\@tlabel@symbol{\@if@target}}{\@tlabel@string{valid}}
+    \testEvalWithSExp{(\lispif /f (\setB \@if@target 'invalid') :42)}{\@tlabel@int{42}}
+    \testEval{\@tlabel@symbol{\@if@target}}{\@tlabel@string{valid}}
+    % quote
+    \def\@dummy@car{\@tlabel@int{1}}
+    \def\@dummy@cdr{\@tlabel@nil{}}
+    \testEvalWithSExp{(\quote (:1))}{\@tlabel@cons{\@dummy@car\@dummy@cdr}}
+    % begin
+    \lispinterp{(\defineM \beginSideEffect ())}
+    \testEvalWithSExp{(\begin (\setB \beginSideEffect :1) 'hoge')}{\@tlabel@string{hoge}}
+    \testEval{\@tlabel@symbol{\beginSideEffect}}{\@tlabel@int{1}}
+    % lambda
+    \testEvalWithSExp{(\lambda (\x \y) :42)}
+      {\@tlabel@closure{{\x\y:\@@unused}{}\@tlabel@int{42}}} % argument list
+    \testEvalWithSExp{(\lambda (\x.\y) :42)}
+      {\@tlabel@closure{{\x:\y}{}\@tlabel@int{42}}} % argument pair
+    \testEvalWithSExp{(\lambda \x :42)}
+      {\@tlabel@closure{{:\x}{}\@tlabel@int{42}}} %argument variable
+    \testEvalWithSExp{((\lambda (\x) (\lambda (\y) :42)) :1)}
+      {\@tlabel@closure{{\y:\@@unused}{\x{\@tlabel@int{1}}}\@tlabel@int{42}}} %environment
+    %@let
+    \lispinterp{(\define \@letTarget 'invalid')}
+    \testEvalWithSExp{(\@let \@letTarget 'valid' \@letTarget)}{\@tlabel@string{valid}}
+    \testEval{\@tlabel@symbol{\@letTarget}}{\@tlabel@string{invalid}}
+    %@mlet
+    \lispinterp{
+      (\defineM \@mletTarget 'invalid')
+      (\defineM \@mletTemp 'hoge')
+    }
+    \testEvalWithSExp{(\@mlet \@mletTarget 'valid' 
+      (\begin (\setB \@mletTemp \@mletTarget) (\setB \@mletTarget 'modified') \@mletTarget))}
+      {\@tlabel@string{modified}}
+    \testEval{\@tlabel@symbol{\@mletTemp}}{\@tlabel@string{valid}}
+    \testEval{\@tlabel@symbol{\@mletTarget}}{\@tlabel@string{invalid}}
+    % defmacro
+    \lispinterp{(\defmacro \defmacroTarget (\lambda (\c) \c))}
+    \testEval{\@tlabel@symbol{\defmacroTarget}}
+      {\@tlabel@macro{{\c:\@@unused}{}\@tlabel@symbol{\c}}}
+   \end{qstest}
+   \begin{qstest}{one-shot continuation}{\@lispeval}
+    \testEvalWithSExp{(\callOCC (\lambda (\c) :42))}{\@tlabel@int{42}} % normal end
+    \testEvalWithSExp{(\callOCC (\lambda (\c) (\callOCC (\lambda (\d) \d))))}
+      {\@tlabel@continuation{2}} %return continuation itself
+    \testEvalWithSExp{(\callOCC (\lambda (\c) (\callOCC (\lambda (\d) \d))))}
+      {\@tlabel@continuation{2}} %return continuation itself (renumber check)
+    % works on \begin
+    \lispinterp{(\defineM \@tmp 'invalid')}
+    \testEvalWithSExp{(\callOCC (\lambda (\c) 
+      (\begin (\setB \@tmp :1) (\c :2) (\setB \@tmp :-1))))}{\@tlabel@int{2}}
+    \testEval{\@tlabel@symbol{\@tmp}}{\@tlabel@int{1}}
+    % works on argument evaluation (function)
+    \lispinterp{(\setB \@tmp 'valid')}
+    \testEvalWithSExp{(\callOCC (\lambda (\c) (\setB \@tmp (\c :42))))}
+      {\@tlabel@int{42}}
+    \testEval{\@tlabel@symbol{\@tmp}}{\@tlabel@string{valid}}
+    % works on argument evaluation (environment function)
+    \def\@dummy@car{\@tlabel@int{1}}
+    \def\@dummy@cdr{\@tlabel@int{2}}
+    \testEvalWithSExp{(\callOCC (\lambda (\c) (\eval (\c (\quote (:1.:2))))))}
+      {\@tlabel@cons{\@dummy@car\@dummy@cdr}}
+    % works on argument evaluation (closure)
+    \testEvalWithSExp{(\callOCC (\lambda (\c) ((\lambda (\arg) 'invalid') (\c 'valid'))))}
+      {\@tlabel@string{valid}}
+   \end{qstest}
+   \begin{qstest}{closure evaluation}{\@lispeval}
+    % non remain argument
+    \testEvalWithSExp{((\lambda (\x \y) (\+ \x \y)) :1 :2)}{\@tlabel@int{3}}
+    % remain argument
+    \def\@dummy@car{\@tlabel@int{2}}
+    \def\@dummy@cdr{\@tlabel@nil{}}
+    \testEvalWithSExp{((\lambda (\x . \y) \y) :1 :2)}{\@tlabel@cons{\@dummy@car\@dummy@cdr}}
+    % all argument list
+    \def\@dummy@car{\@tlabel@int{1}}
+    \def\@dummy@cdr{\@tlabel@nil{}}
+    \testEvalWithSExp{((\lambda \x \x) :1)}{\@tlabel@cons{\@dummy@car\@dummy@cdr}}
+   \end{qstest}
+   \begin{qstest}{macro evaluation and macroexpand}{\@lispeval}
+    \lispinterp{(\defmacro \mac (\lambda (\x) ((\lambda \y \y) (\quote \+) \x \x)))}
+    \testEvalWithSExp{(\mac :1)}{\@tlabel@int{2}}
+    \def\@dummy@car{\@tlabel@symbol{\+}}
+    \def\@dummy@cdr{\@tlabel@cons{\@dummy@car@ii\@dummy@cdr@ii}}
+    \def\@dummy@car@ii{\@tlabel@int{1}}
+    \def\@dummy@cdr@ii{\@tlabel@cons{\@dummy@car@iii\@dummy@cdr@iii}}
+    \let\@dummy@car@iii\@dummy@car@ii
+    \def\@dummy@cdr@iii{\@tlabel@nil{}}
+    \testEvalWithSExp{(\macroexpand (\quote (\mac :1)))}{\@tlabel@cons{\@dummy@car\@dummy@cdr}}
+   \end{qstest}
+   \begin{qstest}{(environment) function evaluation}{\@lispeval}
+    \testEvalWithSExp{(\+ :1 :2)}{\@tlabel@int{3}} % function
+    \testEvalWithSExp{(\apply \+ (\quote (:1 :2)))}{\@tlabel@int{3}} % apply (env func)
+    \lispinterp{(\define \@tmp 'valid')}
+    \testEvalWithSExp{(\eval (\quote \@tmp))}{\@tlabel@string{valid}} % eval (env func)
+   \end{qstest}
+  \end{qstest}
+  \LogClose{lgout}
+\end{document}
