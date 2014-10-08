@@ -38,6 +38,53 @@
   \LogTests{lgout}{*}{*}
   \makeatletter
   \begin{qstest}{Arithmetical Function Eval Test}{\@lispeval}
+   % addition
+   \testEvalWithSExp{(\+)}{\@tlabel@int{0}}
+   \testEvalWithSExp{(\+ :1)}{\@tlabel@int{1}}
+   \testEvalWithSExp{(\+ :1 :2)}{\@tlabel@int{3}}
+   % subtraction
+   \testEvalWithSExp{(\- :1)}{\@tlabel@int{-1}}
+   \testEvalWithSExp{(\- :3 :2 :1)}{\@tlabel@int{0}}
+   % multiply
+   \testEvalWithSExp{(\*)}{\@tlabel@int{1}}
+   \testEvalWithSExp{(\* :2)}{\@tlabel@int{2}}
+   \testEvalWithSExp{(\* :2 :3)}{\@tlabel@int{6}}
+   % division
+   \testEvalWithSExp{(\/ :2)}{\@tlabel@int{0}} % 1/2
+   \testEvalWithSExp{(\/ :1)}{\@tlabel@int{1}} % 1/1
+   \testEvalWithSExp{(\/ :10 :5)}{\@tlabel@int{2}}
+   \testEvalWithSExp{(\/ :11 :5 :2)}{\@tlabel@int{1}} % (11/5)/2
+   % modulo
+   \testEvalWithSExp{(\mod :3 :2)}{\@tlabel@int{1}}
+   \testEvalWithSExp{(\mod :3 :-2)}{\@tlabel@int{1}}
+   \testEvalWithSExp{(\mod :-3 :2)}{\@tlabel@int{-1}}
+   \testEvalWithSExp{(\mod :-3 :-2)}{\@tlabel@int{-1}}
+   % comparition
+   \testEvalWithSExp{(\> :3 :2)}{\@tlabel@bool{t}}
+   \testEvalWithSExp{(\> :2 :3)}{\@tlabel@bool{f}}
+   \testEvalWithSExp{(\> :1 :1)}{\@tlabel@bool{f}}
+   \testEvalWithSExp{(\< :3 :2)}{\@tlabel@bool{f}}
+   \testEvalWithSExp{(\< :2 :3)}{\@tlabel@bool{t}}
+   \testEvalWithSExp{(\< :1 :1)}{\@tlabel@bool{f}}
+   \testEvalWithSExp{(\geq :3 :2)}{\@tlabel@bool{t}}
+   \testEvalWithSExp{(\geq :2 :3)}{\@tlabel@bool{f}}
+   \testEvalWithSExp{(\geq :1 :1)}{\@tlabel@bool{t}}
+   \testEvalWithSExp{(\leq :3 :2)}{\@tlabel@bool{f}}
+   \testEvalWithSExp{(\leq :2 :3)}{\@tlabel@bool{t}}
+   \testEvalWithSExp{(\leq :1 :1)}{\@tlabel@bool{t}}
+   % predicates
+   \testEvalWithSExp{(\isZeroQ :-1)}{\@tlabel@bool{f}}
+   \testEvalWithSExp{(\isZeroQ :0)}{\@tlabel@bool{t}}
+   \testEvalWithSExp{(\isZeroQ :1)}{\@tlabel@bool{f}}
+   \testEvalWithSExp{(\positiveQ :-1)}{\@tlabel@bool{f}}
+   \testEvalWithSExp{(\positiveQ :0)}{\@tlabel@bool{f}}
+   \testEvalWithSExp{(\positiveQ :1)}{\@tlabel@bool{t}}
+   \testEvalWithSExp{(\negativeQ :-1)}{\@tlabel@bool{t}}
+   \testEvalWithSExp{(\negativeQ :0)}{\@tlabel@bool{f}}
+   \testEvalWithSExp{(\negativeQ :1)}{\@tlabel@bool{f}}
+   % max, min
+   \testEvalWithSExp{(\max :-10 :-5 :0 :5 :10)}{\@tlabel@int{10}}
+   \testEvalWithSExp{(\min :-10 :-5 :0 :5 :10)}{\@tlabel@int{-10}}
    % TODO
   \end{qstest}
   \LogClose{lgout}

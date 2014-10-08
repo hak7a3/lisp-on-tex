@@ -100,7 +100,7 @@
   \ifnum#2>0 \gdef#1{\@tlabel@bool{t}}\else\gdef#1{\@tlabel@bool{f}}\fi}
 
 \addassoc\@globalenv\negativeQ{\@tlabel@func{\@arith@is@negative}}
-\def\@arith@is@positive#1\@tlabel@int#2{%
+\def\@arith@is@negative#1\@tlabel@int#2{%
   \ifnum#2<0 \gdef#1{\@tlabel@bool{t}}\else\gdef#1{\@tlabel@bool{f}}\fi}
 
 \addassoc\@globalenv\max{\@tlabel@func{\@arith@max}}
