@@ -1,0 +1,84 @@
+\documentclass{article}
+\usepackage{lisp-on-tex}
+\usepackage{lisp-mod-fpnum}
+\usepackage{qstest}
+\IncludeTests{*}
+\makeatletter
+% parser test macro
+\def\testParse#1#2{%
+  \setbox0=\hbox{\@lispread\parserTestCallBack#1}%
+  \Expect*{\the\wd0}{0.0pt}% no side effect space
+  \expandafter\checkObjectEquality\expandafter{\parsedResult}{#2}}
+% set parsed result to \parsedResult
+\def\parserTestCallBack#1#2{\gdef\parsedResult{#1{#2}}}
+% test evaluation result
+% #1 -> tevaluation target (LISP on TeX object form)
+% #2 -> hoped result (LISP on TeX object form)
+\def\testEval#1#2{%
+  \def\@evaltarget{#1}%
+  \setbox0=\hbox{\lispeval\@evaltarget\@evalresult}%
+  \Expect*{\the\wd0}{0.0pt}% no side effect space
+  \expandafter\checkObjectEquality\expandafter{\@evalresult}{#2}}
+\def\testEvalSelf#1{\testEval{#1}{#1}}
+% test evaluation result with S-exp form
+% #1 -> evaluation target (S-exp)
+% #2 -> hoped result (LISP on TeX object form)
+% NOTICE : this macro does NOT use \lispeval,
+% so it ignores environment changing.
+\def\testEvalWithSExp#1#2{%
+  \@lispread\testEvalWithSExp@ReaderCallBack#1%
+  \Expect*{\the\wd0}{0.0pt}% no side effect space
+  \expandafter\checkObjectEquality\expandafter{\@evalresult}{#2}}
+\def\testEvalWithSExp@ReaderCallBack#1#2{%
+  \def\@eval@target{#1{#2}}%
+  \setbox0=\hbox{\lispeval\@eval@target\@evalresult}}
+% test equality of two object  
+\def\checkObjectEquality#1#2{\@check@equal#1#2}
+\def\@check@equal#1#2#3#4{%
+  \ifx#1#3%
+    \def\@check@next{%
+      \ifx#1\@tlabel@cons
+        \def\@check@next{\@check@equal@cons#2#4}%
+      \else
+        \def\@check@next{\Expect{#2}{#4}}%
+      \fi
+        \@check@next}%
+  \else
+    \def\@check@next{\Expect{#1}{#3}}%
+  \fi
+  \@check@next}
+\def\@check@equal@cons#1#2#3#4{%
+  \expandafter\expandafter\expandafter\@check@equal\expandafter#1#3%
+  \expandafter\expandafter\expandafter\@check@equal\expandafter#2#4}
+\makeatother
+\begin{document}
+  \LogTests{lgout}{*}{*}
+  \makeatletter
+  \begin{qstest}{fpnum module}{}
+   % parser
+   \testParse{+{fpnum::1.23}}{\@tlabel@fpnum{1.23}}
+   % self evaluation form
+   \testEval{\@tlabel@fpnum{1.23}}{\@tlabel@fpnum{1.23}}
+   % functions
+   %% toString
+   \testEvalWithSExp{(\fpnumTOstring +{fpnum::1.23})}{\@tlabel@string{1.23}}
+   %% addition
+   \testEvalWithSExp{(\fpplus)}{\@tlabel@fpnum{0}}
+   \testEvalWithSExp{(\fpplus +{fpnum::1.2})}{\@tlabel@fpnum{1.2}}
+   \testEvalWithSExp{(\fpplus +{fpnum::1.2} +{fpnum::1.4})}
+     {\@tlabel@fpnum{2.59999}} % arithmetical error
+   %% subtraction
+   \testEvalWithSExp{(\fpminus +{fpnum::1.2})}{\@tlabel@fpnum{-1.2}}
+   \testEvalWithSExp{(\fpminus +{fpnum::4.2} +{fpnum::2.3})}{\@tlabel@fpnum{1.9}}
+   %% multiply
+   \testEvalWithSExp{(\fpmul)}{\@tlabel@fpnum{1}}
+   \testEvalWithSExp{(\fpmul +{fpnum::1.2})}{\@tlabel@fpnum{1.2}}
+   \testEvalWithSExp{(\fpmul +{fpnum::1.2} +{fpnum::1.4})}
+     {\@tlabel@fpnum{1.67998}} % arithmetical error
+   %% comparition
+   \testEvalWithSExp{(\fplt +{fpnum::1.2} +{fpnum::2.3})}{\@tlabel@bool{t}}
+   \testEvalWithSExp{(\fplt +{fpnum::2.3} +{fpnum::1.2})}{\@tlabel@bool{f}}
+   \testEvalWithSExp{(\fplt +{fpnum::1.2} +{fpnum::1.2})}{\@tlabel@bool{f}}
+  \end{qstest}
+  \LogClose{lgout}
+\end{document}
