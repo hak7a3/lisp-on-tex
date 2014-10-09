@@ -1,0 +1,54 @@
+\documentclass{article}
+\usepackage{lisp-on-tex}
+\usepackage{qstest}
+\IncludeTests{*}
+\makeatletter
+% test evaluation result with S-exp form
+% #1 -> evaluation target (S-exp)
+% #2 -> hoped result (LISP on TeX object form)
+% NOTICE : this macro does NOT use \lispeval,
+% so it ignores environment changing.
+\def\testEvalWithSExp#1#2{%
+  \@lispread\testEvalWithSExp@ReaderCallBack#1%
+  \Expect*{\the\wd0}{0.0pt}% no side effect space
+  \expandafter\checkObjectEquality\expandafter{\@evalresult}{#2}}
+\def\testEvalWithSExp@ReaderCallBack#1#2{%
+  \def\@eval@target{#1{#2}}%
+  \setbox0=\hbox{\lispeval\@eval@target\@evalresult}}
+% test equality of two object  
+\def\checkObjectEquality#1#2{\@check@equal#1#2}
+\def\@check@equal#1#2#3#4{%
+  \ifx#1#3%
+    \def\@check@next{%
+      \ifx#1\@tlabel@cons
+        \def\@check@next{\@check@equal@cons#2#4}%
+      \else
+        \def\@check@next{\Expect{#2}{#4}}%
+      \fi
+        \@check@next}%
+  \else
+    \def\@check@next{\Expect{#1}{#3}}%
+  \fi
+  \@check@next}
+\def\@check@equal@cons#1#2#3#4{%
+  \expandafter\expandafter\expandafter\@check@equal\expandafter#1#3%
+  \expandafter\expandafter\expandafter\@check@equal\expandafter#2#4}
+\makeatother
+\begin{document}
+  \LogTests{lgout}{*}{*}
+  \makeatletter
+  \begin{qstest}{LaTeX utility function}{}
+   % readLaTeXCounter
+   \newcounter{hoge}
+   \setcounter{hoge}{42}
+   \testEvalWithSExp{(\readLaTeXCounter 'hoge')}{\@tlabel@int{42}}
+   % message
+   %% hook \message
+   \begingroup
+     \def\message#1{\gdef\@message@result{#1}}
+   \testEvalWithSExp{(\message 'foo')}{\@tlabel@nil{}}
+   \Expect*{\@message@result}{^^Jfoo^^J}
+   \endgroup
+  \end{qstest}
+  \LogClose{lgout}
+\end{document}
