@@ -55,6 +55,8 @@
     \begin{qstest}{string}{\@lispread,\@tlabel@string}
       \testParse{'This is a {{example}} of \TeX : $f^{2x}_s(y)$'}
         {\@tlabel@string{This is a {{example}} of \TeX : $f^{2x}_s(y)$}}
+     \testParse{'{foo}'}{\@tlabel@string{{foo}}}
+     \testParse{'  '}{\@tlabel@string{  }}
     \end{qstest}
     \begin{qstest}{symbol}{\@lispread,\@tlabel@symbol}
       \testParse{\symbol}{\@tlabel@symbol{\symbol}}

@@ -13,3 +13,5 @@ lisp-on-tex.zip: $(TARGETS)
 	cp --parents $^ $(TMPDIR)/lisp-on-tex/
 	cd $(TMPDIR); zip -r $@ ./lisp-on-tex
 	cp $(TMPDIR)/$@ .
+test: ./*.sty ./test-*.tex
+	for x in `ls -1 --color=never ./test-*.tex`; do latex $$x; done

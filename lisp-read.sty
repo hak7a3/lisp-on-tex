@@ -27,7 +27,7 @@
       \def\@@next{\@lispread@symbol#1#2}% [Branch 2-2] Symbol
     \fi
   \else\if\noexpand#2'% [Branch 3] String
-      \def\@@next{\@lispread@string#1}%
+      \def\@@next{\@lispread@string#1\@lispread@string@dummy}% 
   \else\if\noexpand#2/% [Branch 4] Boolean
     \def\@@next{\@lispread@bool#1}%
   \else\if\noexpand#2:% [Branch 5] Integer
@@ -46,8 +46,9 @@
 \def\@lispread@symbol#1#2{%
   \endgroup#1\@tlabel@symbol{#2}}
 %% String
+\def\@lispread@string@dummy{}   % to avoid consuming group
 \def\@lispread@string#1#2'{%
-  \endgroup#1\@tlabel@string{#2}}
+  \endgroup\expandafter#1\expandafter\@tlabel@string\expandafter{#2}}
 %% Boolean
 \def\@lispread@bool#1#2{%
   \endgroup#1\@tlabel@bool{#2}}
