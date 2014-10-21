@@ -1,0 +1,98 @@
+\documentclass{article}
+\usepackage{lisp-on-tex}
+\usepackage{qstest}
+\IncludeTests{*}
+\makeatletter
+% test evaluation result with S-exp form
+% #1 -> evaluation target (S-exp)
+% #2 -> hoped result (LISP on TeX object form)
+% NOTICE : this macro does NOT use \lispeval,
+% so it ignores environment changing.
+\def\testEvalWithSExp#1#2{%
+  \@lispread\testEvalWithSExp@ReaderCallBack#1%
+  \Expect*{\the\wd0}{0.0pt}% no side effect space
+  \expandafter\checkObjectEquality\expandafter{\@evalresult}{#2}}
+\def\testEvalWithSExp@ReaderCallBack#1#2{%
+  \def\@eval@target{#1{#2}}%
+  \setbox0=\hbox{\lispeval\@eval@target\@evalresult}}
+% test equality of two object  
+\def\checkObjectEquality#1#2{\@check@equal#1#2}
+\def\@check@equal#1#2#3#4{%
+  \ifx#1#3%
+    \def\@check@next{%
+      \ifx#1\@tlabel@cons
+        \def\@check@next{\@check@equal@cons#2#4}%
+      \else
+        \def\@check@next{\Expect{#2}{#4}}%
+      \fi
+        \@check@next}%
+  \else
+    \def\@check@next{\Expect{#1}{#3}}%
+  \fi
+  \@check@next}
+\def\@check@equal@cons#1#2#3#4{%
+  \expandafter\expandafter\expandafter\@check@equal\expandafter#1#3%
+  \expandafter\expandafter\expandafter\@check@equal\expandafter#2#4}
+\makeatother
+\begin{document}
+  \LogTests{lgout}{*}{*}
+  \makeatletter
+  \begin{qstest}{test for function implemented with LISP code}{}
+   % listQ -- a cons cell or nil
+   \testEvalWithSExp{(\listQ ())}{\@tlabel@bool{t}}
+   \testEvalWithSExp{(\listQ (\quote (:1 :2)))}{\@tlabel@bool{t}}
+   \testEvalWithSExp{(\listQ 'hoge')}{\@tlabel@bool{f}}
+   % atomQ -- a object expect a cons cell and nil
+   \testEvalWithSExp{(\atomQ 'hoge')}{\@tlabel@bool{t}}
+   \testEvalWithSExp{(\atomQ ())}{\@tlabel@bool{f}}
+   \testEvalWithSExp{(\atomQ (\quote (:1 :2)))}{\@tlabel@bool{f}}
+   % procedureQ -- a function or a closure or a macro
+   \lispinterp{(\defmacro \mac (\lambda (\x) \x))}
+   \testEvalWithSExp{(\procedureQ \+)}{\@tlabel@bool{t}}
+   \testEvalWithSExp{(\procedureQ \eval)}{\@tlabel@bool{t}}
+   \testEvalWithSExp{(\procedureQ (\lambda (\y) (\* \y :1)))}{\@tlabel@bool{t}}
+   \testEvalWithSExp{(\procedureQ \mac)}{\@tlabel@bool{t}}
+   \testEvalWithSExp{(\procedureQ :42)}{\@tlabel@bool{f}}
+   % map
+   %% get (:3 :4 :5)
+   \def\@read@to@@tmp\@tlabel@cons#1{\@read@to@@tmp@#1}
+   \def\@read@to@@tmp@#1#2{\let\@@tmp@car#1\let\@@tmp@cdr#2}
+   \@lispread\@read@to@@tmp(:3 :4 :5)
+   \testEvalWithSExp{
+     (\map (\lambda (\x \y) (\+ \x \y))
+       (\quote (:1 :2 :3)) (\quote (:2 :2 :2)))}
+     {\@tlabel@cons{\@@tmp@car\@@tmp@cdr}}
+   % and, or, not
+   \testEvalWithSExp{(\and /t /t)}{\@tlabel@bool{t}}
+   \testEvalWithSExp{(\and /t /f)}{\@tlabel@bool{f}}
+   \testEvalWithSExp{(\and /f /t)}{\@tlabel@bool{f}}
+   \testEvalWithSExp{(\and /f /f)}{\@tlabel@bool{f}}
+   \testEvalWithSExp{(\or /t /t)}{\@tlabel@bool{t}}
+   \testEvalWithSExp{(\or /t /f)}{\@tlabel@bool{t}}
+   \testEvalWithSExp{(\or /f /t)}{\@tlabel@bool{t}}
+   \testEvalWithSExp{(\or /f /f)}{\@tlabel@bool{f}}
+   \testEvalWithSExp{(\not /t)}{\@tlabel@bool{f}}
+   \testEvalWithSExp{(\not /f)}{\@tlabel@bool{t}}
+   % list
+   \def\@read@to@@tmp\@tlabel@cons#1{\@read@to@@tmp@#1}
+   \def\@read@to@@tmp@#1#2{\let\@@tmp@car#1\let\@@tmp@cdr#2}
+   \@lispread\@read@to@@tmp(:1 :2 :3)
+   \testEvalWithSExp{(\list :1 :2 :3)}{\@tlabel@cons{\@@tmp@car\@@tmp@cdr}}
+   % let
+   \testEvalWithSExp{(\let ((\foo :1) (\bar :2)) (\+ :1 :2))}{\@tlabel@int{3}}
+   % letM
+   \testEvalWithSExp{
+     (\letM ((\foo 'invalid')) 
+       (\begin (\setB \foo 'valid') \foo))}
+     {\@tlabel@string{valid}}
+   % letrec
+   \testEvalWithSExp{
+     (\letrec ((\fact 
+       (\lambda (\x) (\lispif (\= \x :1) :1 (\* \x (\fact (\- \x:1)))))))
+       (\fact :5))}
+     {\@tlabel@int{120}}
+   % nth
+   \testEvalWithSExp{(\nth (\list :1 :2 :3) :1)}{\@tlabel@int{2}}
+  \end{qstest}
+  \LogClose{lgout}
+\end{document}

@@ -1,0 +1,120 @@
+\documentclass{article}
+\usepackage{lisp-on-tex}
+\usepackage{qstest}
+\IncludeTests{*}
+\makeatletter
+% test evaluation result with S-exp form
+% #1 -> evaluation target (S-exp)
+% #2 -> hoped result (LISP on TeX object form)
+% NOTICE : this macro does NOT use \lispeval,
+% so it ignores environment changing.
+\def\testEvalWithSExp#1#2{%
+  \@lispread\testEvalWithSExp@ReaderCallBack#1%
+  \Expect*{\the\wd0}{0.0pt}% no side effect space
+  \expandafter\checkObjectEquality\expandafter{\@evalresult}{#2}}
+\def\testEvalWithSExp@ReaderCallBack#1#2{%
+  \def\@eval@target{#1{#2}}%
+  \setbox0=\hbox{\lispeval\@eval@target\@evalresult}}
+% test equality of two object  
+\def\checkObjectEquality#1#2{\@check@equal#1#2}
+\def\@check@equal#1#2#3#4{%
+  \ifx#1#3%
+    \def\@check@next{%
+      \ifx#1\@tlabel@cons
+        \def\@check@next{\@check@equal@cons#2#4}%
+      \else
+        \def\@check@next{\Expect{#2}{#4}}%
+      \fi
+        \@check@next}%
+  \else
+    \def\@check@next{\Expect{#1}{#3}}%
+  \fi
+  \@check@next}
+\def\@check@equal@cons#1#2#3#4{%
+  \expandafter\expandafter\expandafter\@check@equal\expandafter#1#3%
+  \expandafter\expandafter\expandafter\@check@equal\expandafter#2#4}
+\newcommand\testTypeQuery[3]{%
+  \begin{qstest}{type query of #1}{}
+  \expandafter\@@testTypeQuery\csname#1Q\endcsname{#2}{#3}
+  \end{qstest}}
+\newcommand\@@testTypeQuery[3]{%
+  \testEvalWithSExp{(#1 #2)}{\@tlabel@bool{t}}
+  \testEvalWithSExp{(#1 #3)}{\@tlabel@bool{f}}}
+\makeatother
+\begin{document}
+  \LogTests{lgout}{*}{*}
+  \makeatletter
+  \begin{qstest}{primitive functions}{}
+   % cons cell manipulation
+   \testEvalWithSExp{(\car (\quote (:1.:2)))}{\@tlabel@int{1}}
+   \testEvalWithSExp{(\cdr (\quote (:1.:2)))}{\@tlabel@int{2}}
+   \def\dummy@car{\@tlabel@int{1}}
+   \def\dummy@cdr{\@tlabel@int{2}}
+   \testEvalWithSExp{(\cons :1 :2)}{\@tlabel@cons{\dummy@car\dummy@cdr}}
+   \testEvalWithSExp{(\length ())}{\@tlabel@int{0}}
+   \testEvalWithSExp{(\length (\quote (:1 :2 :3)))}{\@tlabel@int{3}}
+   % equality
+   \testEvalWithSExp{(\= '1' :1)}{\@tlabel@bool{f}}     % same content
+   \testEvalWithSExp{(\= '1' 'hoge')}{\@tlabel@bool{f}} % same label
+   \testEvalWithSExp{(\= 'hoge' :1)}{\@tlabel@bool{f}}  % different
+   \testEvalWithSExp{(\= :1 :1)}{\@tlabel@bool{t}}      %same
+   % printer
+   \begingroup
+   % hook \@add@to@write@buffer
+   \def\@add@to@write@buffer#1#2{%
+     \expandafter\gdef
+     \expandafter\@test@print@target\expandafter{%
+       \@test@print@target#2}}
+   \def\testPrint#1#2{%
+     \def\@test@print@target{}%
+     \testEvalWithSExp{#1}{\@tlabel@nil{}}%
+     \expandafter\Expect\expandafter{\@test@print@target}{#2}}
+   % print for debug
+   \testPrint{(\print :1)}{:1}
+   \testPrint{(\print (\quote \symbol))}{\string\symbol}
+   \testPrint{(\print 'hoge\dummy{1}{2}')}{'hoge\dummy{1}{2}'}
+   \testPrint{(\print /t)}{/t}
+   \testPrint{(\print !12pt)}{!12.0pt}
+   \testPrint{(\print @12pt plus 1pt minus 1pt)}{@12.0pt plus 1.0pt minus 1.0pt}
+   \testPrint{(\print ())}{()}
+   \testPrint{(\print (\cons :1 :2))}{(:1.:2)}
+   \testPrint{(\print (\quote (:1 :2 'hoge')))}{(:1 :2 'hoge')}
+   \testPrint{(\print (\lambda () \foo))}{[INNER]}
+   % \texprint
+   \testPrint{(\texprint '\hoge{1}')}{\hoge{1}}
+   \testPrint{(\texprint :42)}{42}
+   \testPrint{(\texprint (\lambda () \foo))}{INNER TOKEN}
+   \endgroup
+   % type predicates
+   \testTypeQuery{symbol}{(\quote \symbol)}{'hoge'}
+   \testTypeQuery{string}{'valid'}{:1}
+   \testTypeQuery{int}{:12}{'hoge'}
+   \testTypeQuery{bool}{/t}{'hoge'}
+   \testTypeQuery{dimen}{!12pt}{'hoge'}
+   \testTypeQuery{skip}{@12pt plus 1in minus 3cm}{'hoge'}
+   \testTypeQuery{cons}{(\cons :1 :2)}{'hoge'}
+   \testTypeQuery{nil}{()}{'hoge'}
+   \testTypeQuery{func}{\+}{'hoge'}
+   \testTypeQuery{closure}{(\lambda () ())}{'hoge'}
+   \lispinterp{(\defmacro \mac (\lambda () ()))}
+   \testTypeQuery{macro}{\mac}{'hoge'}
+   \testTypeQuery{envfunc}{\eval}{'hoge'}
+   \testEvalWithSExp{(\pairQ (\cons :1 :2))}{\@tlabel@bool{t}}
+   \testEvalWithSExp{(\pairQ ())}{\@tlabel@bool{f}}
+   \testEvalWithSExp{(\booleanQ /f)}{\@tlabel@bool{t}}
+   \testEvalWithSExp{(\pairQ 'hoge')}{\@tlabel@bool{f}}
+   % \stdprint prints the print result to stdout. So, I omit the test...
+   % read from stdin
+   \begingroup
+   %% hook \read
+   \def\read#1to#2{\expandafter\def\expandafter#2\expandafter{\@read@target}}
+   \def\testRead#1#2{%
+     \def\@read@target{#1}%
+     \testEvalWithSExp{(\read)}{#2}}
+   \def\@dummy@car{\@tlabel@string{\hoge{1}}}
+   \def\@dummy@cdr{\@tlabel@int{1}}
+   \testRead{('\hoge{1}' . :1)}{\@tlabel@cons{\@dummy@car\@dummy@cdr}}
+   \endgroup
+  \end{qstest}
+  \LogClose{lgout}
+\end{document}
