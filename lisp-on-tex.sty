@@ -143,12 +143,12 @@
   \def#3{\errmessage{LISP on teX [function --- apply]: cannot apply}}%
   \def#4{#1#2#3}}
 
-\@for\@type:=\@defined@lisp@on@tex\do{%
+\@for\@lisp@on@tex@type:=\@defined@lisp@on@tex\do{%
   \expandafter\@type@define@filed%
-  \csname @eval@\@type\endcsname%
-  \csname @apply@\@type\endcsname%
-  \csname @@apply@\@type\endcsname%
-  \csname @tlabel@\@type\endcsname}
+  \csname @eval@\@lisp@on@tex@type\endcsname%
+  \csname @apply@\@lisp@on@tex@type\endcsname%
+  \csname @@apply@\@lisp@on@tex@type\endcsname%
+  \csname @tlabel@\@lisp@on@tex@type\endcsname}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
