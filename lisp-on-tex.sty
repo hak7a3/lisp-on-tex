@@ -64,9 +64,13 @@
 \ifx#1#2\endgroup\let\@next\@iftrue\else\endgroup\def\@next{\@ifmemassoc#1#4\relax}\fi\@next}
 \def\@iffalse{\iffalse}
 \def\@iftrue{\iftrue}
-% get It cause error if there is no member
-\def\getassoc#1#2#3{%
-\def\@getassoc##1#2##2##3\relax{\gdef#3{##2}\relax}\expandafter\@getassoc#1\relax}
+% get value of the symbol. If it is not bounded, return \relax
+\def\getassoc#1#2#3{% #1 env (a control secuence), #2 symbol, #3 reg
+  \def\@getassoc##1#2##2##3\relax{\gdef#3{##2}\relax}%
+  \expandafter\@getassoc#1#2{\relax}\relax}
+\def\@naive@getassoc#1#2#3{% #1 env (tokens), #2 symbol, #3 reg
+  \def\@getassoc##1#2##2##3\relax{\gdef#3{##2}\relax}%
+  \@getassoc#1#2{\relax}\relax}
 % show
 \def\showassoc#1{\expandafter\@showassoc#1\relax}
 \def\@showassoc#1\relax{\ifx\@dummy#1\@dummy
@@ -179,9 +183,6 @@
 
 \def\@eval#1#2#3#4{%
   \begingroup
-    \def\@@tmp@lisp@env{#3}%
-    \ifx\@empty\@@tmp@lisp@env\else
-      \@lisp@expand@environment#3\@lisp@expand@env@last\fi
     \expandafter\@@select@eval#1{#2}{#3}#4%
   \endgroup}
 
@@ -192,18 +193,27 @@
   \expandafter\expandafter\expandafter{\expandafter#2\@globalenv}}
 
 \def\@eval@symbol#1#2#3{% #1 symbol #2 current env (ignored) #3 dist
-  \expandafter\global\expandafter\let\expandafter#3\csname @lisp@env@\string#1\endcsname
+  % search local environment
+  \@naive@getassoc{#2}#1#3%
+  % search global environment
+  \expandafter\ifx#3\relax
+    \expandafter\global\expandafter\let\expandafter#3\csname @lisp@env@\string#1\endcsname
+  \fi
   \ifx#3\relax % not found
-    \errmessage{LISP on TeX [evaluation of a symbol]: unbound variable...}%
+    \let\@@next\@eval@symbol@unbound
   \else
-    \expandafter\@expand@if@mutable#3#3%
-  \fi}
+    \let\@@next\@eval@symbol@expand@mutable
+  \fi\@@next#1{#2}#3}
 \def\@expand@if@mutable#1#2#3{%
   \let\@@next\@expand@if@mutable@next@f
   \ifx#1\@tlabel@mutable\let\@@next\@expand@if@mutable@next@t\fi
   \@@next{#2}{#3}}
 \def\@expand@if@mutable@next@f#1#2{}
 \def\@expand@if@mutable@next@t#1#2{\global\let#2#1}
+
+\def\@eval@symbol@unbound#1#2#3{% #1 symbol, #2 env, #3 dist
+  \gdef#3{\@tlabel@exception{{-1}{unbound variable \string#1}}}}
+\def\@eval@symbol@expand@mutable#1#2#3{\expandafter\@expand@if@mutable#3#3}
 
 \def\@@eval@get@typelabel#1#2{#1}
 

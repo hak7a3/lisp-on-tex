@@ -5,3 +5,5 @@ test.*
 *.png
 *.save
 lisp-on-tex.zip
+tmp/*
+

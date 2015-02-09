@@ -97,6 +97,7 @@
       {\={\@tlabel@string{hoge}}} % global variable hiding
     \testEvalWithEnv{\@tlabel@symbol{\=}}{\@tlabel@int{42}}
       {\={\@tlabel@int{42}}\={\@tlabel@string{hoge}}} % local variable hiding
+    % TODO unbound variable error test
    \end{qstest}
    \begin{qstest}{cons cell (function call)}{\@lispeval,\@tlabel@cons}
     \testEvalWithSExp{(\+ :1 :2)}{\@tlabel@int{3}}
@@ -150,6 +151,14 @@
       {\@tlabel@closure{{:\x}{}\@tlabel@int{42}}} %argument variable
     \testEvalWithSExp{((\lambda (\x) (\lambda (\y) :42)) :1)}
       {\@tlabel@closure{{\y:\@@unused}{\x{\@tlabel@int{1}}}\@tlabel@int{42}}} %environment
+    \lispinterp{ % free valiable's test. If the language takes lexical
+                 % scope, this code raise exception. 
+      (\define \testLocalness (\lambda () \unbound))
+      (\defineM \@valtest :42)
+      (\let ((\unbound 'invalid')) (\setB \@valtest (\testLocalness)))}    
+    \testEvalWithSExp{(\let ((\unbound 'invalid')) (\setB \@valtest (\testLocalness)))}
+      {\@tlabel@exception{{-1}{unbound variable \string\unbound}}}
+    \testEvalWithSExp{\@valtest}{\@tlabel@int{42}}
     %@let
     \lispinterp{(\define \@letTarget 'invalid')}
     \testEvalWithSExp{(\@let \@letTarget 'valid' \@letTarget)}{\@tlabel@string{valid}}
