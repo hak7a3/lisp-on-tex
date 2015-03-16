@@ -16,7 +16,7 @@ lisp-on-tex.zip: $(TARGETS)
 	cp $(TMPDIR)/$@ .
 
 $(EXAMPLE): %.pdf: %.tex
-	cd examples && TEXINPUTS='../;' pdflatex $<
+	cd examples && TEXINPUTS='../;' pdflatex $(notdir $<)
 
 test: $(wildcard test/test-*.tex)
 	cd test && for target in $(notdir $^); do \
