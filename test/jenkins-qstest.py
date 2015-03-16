@@ -104,10 +104,13 @@ def perform_qstest_jenkins(engine, source, option, suffix, output):
     out_raw, err_raw = proc.communicate()
     filename_body = re.sub(r'\.tex$', "", source)
     qstest_file = open(filename_body + '.' + suffix)
+    log_file = open(filename_body + '.log')
     xml = create_jenkins_xml(filename_body,
                              parse_qstest_result(qstest_file.read()),
-                             out_raw.decode(), err_raw.decode())
+                             out_raw.decode() + "\n===logfile===\n" + log_file.read(),
+                             err_raw.decode())
     qstest_file.close()
+    log_file.close()
     if not(output):
         output = filename_body + '.xml'
     output_file = open(output, mode='wb')
