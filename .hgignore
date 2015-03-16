@@ -6,4 +6,5 @@ test.*
 *.save
 lisp-on-tex.zip
 tmp/*
-
+test/*.xml
+test/*.dvi
