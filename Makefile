@@ -1,4 +1,4 @@
-.PHONY: test
+.PHONY: test clean
 
 TMPDIR=/tmp
 STYLEFILES=$(wildcard ./*.sty)
@@ -24,3 +24,6 @@ examples/showfont.pdf: %pdf: %tex
 test: $(wildcard test/test-*.tex)
 	cd test && for target in $(notdir $^); do \
       TEXINPUTS='../;' $(PYTHON) jenkins-qstest.py $$target; done
+
+clean:
+	rm -f test/*.xml test/*.lgout $(EXAMPLE)
