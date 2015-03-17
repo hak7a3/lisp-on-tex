@@ -15,8 +15,11 @@ lisp-on-tex.zip: $(TARGETS)
 	cd $(TMPDIR); zip -r $@ ./lisp-on-tex
 	cp $(TMPDIR)/$@ .
 
-$(EXAMPLE): %.pdf: %.tex
+$(subst examples/showfont.pdf,,$(EXAMPLE)): %.pdf: %.tex
 	cd examples && TEXINPUTS='../;' pdflatex $(notdir $<)
+
+examples/showfont.pdf: %pdf: %tex
+	cd examples && echo 'cmr10' | TEXINPUTS='../;' xelatex $(notdir $<)
 
 test: $(wildcard test/test-*.tex)
 	cd test && for target in $(notdir $^); do \
