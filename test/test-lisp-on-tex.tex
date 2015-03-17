@@ -109,6 +109,14 @@
     \testEvalWithSExp{(\define \@foo :42)}{\@tlabel@nil{}}
     \toks0\expandafter{\@globalenv}
     \expandafter\Expect\expandafter{\@hopedEnv}*{\the\toks0}
+    \testEvalWithSExp{(\begin (\define \@test@define@one :42) \@test@define@one)}
+      {\@tlabel@int{42}}
+    \testEvalWithSExp{\@test@define@one}
+      {\@tlabel@int{42}}
+    \testEvalWithSExp{(\@let \@foo :1 (\define \@test@fail 'invalid'))}
+      {\@tlabel@exception{{-1}{Sorry. Currently, \string\define cannot be used in local environment }}}
+    \testEvalWithSExp{((\lambda ()(\define \@test@fail 'invalid')))}
+      {\@tlabel@exception{{-1}{Sorry. Currently, \string\define cannot be used in local environment }}}
     %defineM
     \toks0\expandafter{\@globalenv}
     \def\checkDefineMutableCheckEnv#1#2#3\@@end{%
@@ -120,6 +128,14 @@
       \expandafter\Expect\expandafter{#2}{\@tlabel@int{23}}}
     \testEvalWithSExp{(\defineM \@bar :23)}{\@tlabel@nil{}}
     \expandafter\checkDefineMutableCheckEnv\@globalenv\@@end
+    \testEvalWithSExp{(\begin (\defineM \@test@define@one :42) \@test@defineM@one)}
+      {\@tlabel@int{42}}
+    \testEvalWithSExp{\@test@defineM@one}
+      {\@tlabel@int{42}}
+    \testEvalWithSExp{(\@let \@foo :1 (\defineM \@test@fail 'invalid'))}
+      {\@tlabel@exception{{-1}{Sorry. Currently, \string\defineM cannot be used in local environment }}}
+    \testEvalWithSExp{((\lambda ()(\define \@test@fail 'invalid')))}
+      {\@tlabel@exception{{-1}{Sorry. Currently, \string\defineM cannot be used in local environment }}}
     %setB
     \lispinterp{
       (\defineM \@setB@target 'invalid')
