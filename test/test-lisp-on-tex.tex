@@ -159,6 +159,7 @@
     \testEvalWithSExp{(\let ((\unbound 'invalid')) (\setB \@valtest (\testLocalness)))}
       {\@tlabel@exception{{-1}{unbound variable \string\unbound}}}
     \testEvalWithSExp{\@valtest}{\@tlabel@int{42}}
+    \testEvalWithSExp{((\lambda \x \x))}{\@tlabel@nil{}} % non argument remain test  
     %@let
     \lispinterp{(\define \@letTarget 'invalid')}
     \testEvalWithSExp{(\@let \@letTarget 'valid' \@letTarget)}{\@tlabel@string{valid}}
