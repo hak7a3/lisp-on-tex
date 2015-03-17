@@ -3,7 +3,7 @@
 TMPDIR=/tmp
 STYLEFILES=$(wildcard ./*.sty)
 EXAMPLE_SOURCE=$(wildcard examples/*.tex)
-EXAMPLE= $(EXAMPLE_SOURCE:.tex=.pdf)
+EXAMPLE= $(subst examples/repl.pdf,,$(EXAMPLE_SOURCE:.tex=.pdf))
 TUG2013= ./tug2013/slide.pdf
 TARGETS= LICENSE README $(STYLEFILES) $(EXAMPLE) $(EXAMPLE_SOURCE) $(TUG2013)
 
