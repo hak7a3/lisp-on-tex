@@ -7,13 +7,12 @@ import argparse
 import subprocess
 import os
 
-_parse_result_pattern = re.compile(r'(?P<type>.*?): (?P<name>.*?)$')
-
 
 # class Qstest(Enum):
 class Qstest:
     passed = 1
     failed = 2
+    no_message_failed = 3
 
 
 class QstestParseException(Exception):
@@ -30,40 +29,48 @@ def parse_qstest_result(txt):
     >>> parse_qstest_result("") == \
         []
     True
-    >>> parse_qstest_result("Passed: hogehoge") == \
+    >>> parse_qstest_result("Passed: hogehoge\\n")  == \
         [{'type': Qstest.passed, 'name': "hogehoge"}]
     True
     >>> parse_qstest_result(\
-        "Failed: fugafuga\\n Except hogehoge\\n <hoge\\n >fuga") == \
+        "Failed: fugafuga\\n Except hogehoge\\n <hoge\\n >fuga\\n") == \
         [{'type': Qstest.failed, 'name': "fugafuga",\
           'message': "Except hogehoge", \
           'left': "hoge", 'right': "fuga"}]
     True
+    >>> parse_qstest_result("Failed: fugafuga\\n") == \
+        [{'type': Qstest.no_message_failed, 'name': "fugafuga", 'message': "", \
+          'left': "", 'right': ""}]
+    True
     """
     result = []
-    iter_line = iter(txt.splitlines())
-    line = next(iter_line, None)
-    while line:
-        matched_result = _parse_result_pattern.match(line)
-        if matched_result:
-            if matched_result.group('type') == "Passed":
-                result.append({'type': Qstest.passed,
-                               'name': matched_result.group('name')})
-                line = next(iter_line, None)
-            elif matched_result.group('type') == "Failed":
-                message_raw = next(iter_line, None)
-                left_raw = next(iter_line, None)
-                right_raw = next(iter_line, None)
-                result.append({'type': Qstest.failed,
-                               'name': matched_result.group('name'),
-                               'message': message_raw[1:],
-                               'left': left_raw[2:],
-                               'right': right_raw[2:]})
-                line = next(iter_line, None)
-            else:
-                raise QstestParseException(line)
+    parse_regexp = r'|'.join(
+        [r'(?P<{0}>{1}\n)'.format(*x) for x in [
+             ('Passed', r'Passed: (?P<name_p>.*)'),
+             ('Failed', r'Failed: (?P<name_f>.*)\n (?P<message_f>.*)\n' +
+              r' <(?P<left_f>.*)\n >(?P<right_f>.*)'),
+             ('NoMessageFailed', r'Failed: (?P<name_nf>.*)'),
+             ('Error', r'.*')]])
+    parse_compiled = re.compile(parse_regexp, re.M)
+    for token in re.finditer(parse_compiled, txt):
+        typ = token.lastgroup
+        if typ == 'Passed':
+            result.append({'type': Qstest.passed,
+                           'name': token.group('name_p')})
+        elif typ == 'Failed':
+            result.append({'type': Qstest.failed,
+                           'name': token.group('name_f'),
+                           'message': token.group('message_f'),
+                           'left': token.group('left_f'),
+                           'right': token.group('right_f')})
+        elif typ == 'NoMessageFailed':
+            result.append({'type': Qstest.no_message_failed,
+                           'name': token.group('name_nf'),
+                           'message': '',
+                           'left': '',
+                           'right': ''})
         else:
-            raise QstestParseException(line)
+            raise QstestParseException(token.group('Error'))
     return result
 
 
@@ -88,6 +95,12 @@ def create_jenkins_xml(test_name, qstest_result, stdout_txt, stderr_txt):
                                        'message': result['message']})
             fail_node.text = "expected:" + result['left'] + "\n" + \
                              "got:" + result['right'] + "\n"
+        elif result['type'] == Qstest.no_message_failed:
+            fail_node = ET.SubElement(add_node,
+                                      "failure",
+                                      {'type': "LaTeX qstest failure",
+                                       'message': '--NO MESSAGE--'})
+            fail_node.text = "###no test####"
     # add stdout and stderr
     stdout_node = ET.SubElement(xml_root, "system-out")
     stdout_node.text = stdout_txt
@@ -131,7 +144,7 @@ def main():
     parser.add_argument('--option', default="-interaction=batchmode",
                         help='options of TeX engine')
     parser.add_argument('-o, --output', dest='output', default=None,
-                        help='output XML file name (default:source file name + .xml)')
+                        help='output XML file (default:source file + .xml)')
     args = parser.parse_args()
     perform_qstest_jenkins(args.engine, args.source,
                            args.option.split(), args.suffix, args.output)
