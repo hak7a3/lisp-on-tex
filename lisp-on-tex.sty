@@ -305,6 +305,7 @@
 \def\@apply@define@exception#1#2{}
 \def\@apply@define@normal#1#2{%
   \expandafter\addassoc\expandafter\@globalenv\expandafter#1\expandafter{#2}%
+  \expandafter\@lisp@expand@environment\expandafter#1\expandafter{#2}\@lisp@expand@env@last
   \gdef#2{\@tlabel@nil{}}}
 
 \def\@apply@mdefine#1\@tlabel@symbol#2#3#4\@#5#6{%
@@ -322,6 +323,8 @@
   \expandafter#1%
   \expandafter{\expandafter\@tlabel@mutable
   \expandafter{\csname mutable\the\@malloc\endcsname}}%
+  \expandafter\@lisp@expand@environment\expandafter#1\expandafter{%
+    \csname mutable\the\@malloc\endcsname}\@lisp@expand@env@last
   \global\advance\@malloc1\relax
   \gdef#2{\@tlabel@nil{}}}
 \def\@mutable@allocate#1#2{\expandafter\gdef\csname mutable\the\@malloc\endcsname{#1{#2}}}
