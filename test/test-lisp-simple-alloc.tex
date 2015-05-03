@@ -10,11 +10,12 @@
    \@lisp@gc@alloc\hoge
    \expandafter\def\expandafter\hoge@expect\expandafter{%
      \csname @lisp@gc@memory0\endcsname}
-   \Expect{\hoge}{\hoge@expect}
+   % NOTICE this test works on e-TeX or more over. 
+   \Expect*{\expandonce\hoge}*{\expandonce\hoge@expect}
    \@lisp@gc@alloc\hoge
    \expandafter\def\expandafter\hoge@expect\expandafter{%
      \csname @lisp@gc@memory1\endcsname}
-   \Expect{\hoge}{\hoge@expect}
+   \Expect*{\expandonce\hoge}*{\expandonce\hoge@expect}
   \end{qstest}
   \LogClose{lgout}
 \end{document}
