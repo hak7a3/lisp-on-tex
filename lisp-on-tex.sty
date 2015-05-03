@@ -3,7 +3,6 @@
 %%
 %%  License: Modified BSD - see LICENSE file
 %%
-%% input buffer and read function
 
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesPackage{lisp-on-tex}[2015/05/03 v1.3]
@@ -21,42 +20,10 @@
   \message{not implemented...} \fi
 \@lisp@gc@init
 
-
-%%===========================================
-%%  Macros for Input Programs
-%%===========================================
-
-%%===========================================
-%% Public Field
-%%===========================================
-%% \setinputbuffer : Set the input
-\def\setinputbuffer#1{\gdef\@read@buffer{#1}}
-%% \readchar : Read a letter from the input
-\def\readchar{%
-  \ifx\@eof\@read@buffer
-    \gdef\@currentread{\@@eof}%
-  \else
-    \expandafter\@car@buffer\@read@buffer\relax
-  \fi}
-%% \unreadchar : Unread a letter from the input
-\def\unreadchar{%
-  \ifx\@eof\@currentread\else
-       \expandafter\@unreadchar\@currentread
-       \gdef\@currentread{}\fi}
-
-%%===========================================
-%% Private Field
-%%===========================================
+% dummy macro (like @empty)
 \def\@dummy{\@@dummy}
-\def\@read@buffer{} % The input
-\def\@currentread{} % The front letter
-\def\@eof{\@@eof}   % EOF
 
-\def\@car@buffer#1#2\relax{\gdef\@currentread{#1}\gdef\@read@buffer{#2}}
-\def\@unreadchar#1{%
-   \expandafter\gdef
-   \expandafter\@read@buffer
-   \expandafter{\expandafter#1\@read@buffer}}
+
 
 %% assoc \cs -> value
 % constructor

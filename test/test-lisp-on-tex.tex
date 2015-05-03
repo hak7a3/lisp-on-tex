@@ -128,10 +128,8 @@
       \expandafter\Expect\expandafter{#2}{\@tlabel@int{23}}}
     \testEvalWithSExp{(\defineM \@bar :23)}{\@tlabel@nil{}}
     \expandafter\checkDefineMutableCheckEnv\@globalenv\@@end
-    \tracingmacros=1
     \testEvalWithSExp{(\begin (\defineM \@test@defineM@one :42) \@test@defineM@one)}
       {\@tlabel@int{42}}
-    \tracingmacros=0
     \testEvalWithSExp{\@test@defineM@one}
       {\@tlabel@int{42}}
     \lispinterp{(\@let \@foo :1 (\defineM \@test@define@local 'local'))}
