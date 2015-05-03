@@ -8,7 +8,7 @@
 \def\@lisp@gc@alloc#1{%
   \expandafter\def\expandafter#1\expandafter{%
   \csname @lisp@gc@memory\the\@lisp@gc@simple@count\endcsname}%
-  \advance\@lisp@gc@sinmple@count1\relax}
+  \global\advance\@lisp@gc@simple@count1\relax}
 
 % GC main routine. The routine is called by the allocator.
 % If you want to call GC manually, you can do it.
