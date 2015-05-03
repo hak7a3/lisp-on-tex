@@ -1,0 +1,16 @@
+\newcount\@lisp@gc@simple@count
+
+% gc initializer (called by lisp-on-tex.sty)
+\def\@lisp@gc@init{\@lisp@gc@simple@count=0\relax}
+
+% allocator
+% The allocator define #1 to allocated the control sequence
+\def\@lisp@gc@alloc#1{%
+  \expandafter\def\expandafter#1\expandafter{%
+  \csname @lisp@gc@memory\the\@lisp@gc@simple@count\endcsname}%
+  \advance\@lisp@gc@sinmple@count1\relax}
+
+% GC main routine. The routine is called by the allocator.
+% If you want to call GC manually, you can do it.
+% In simple mode, this does not affects.
+\def\@lisp@gc@perform{}

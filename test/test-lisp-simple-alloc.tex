@@ -1,0 +1,20 @@
+\documentclass{article}
+\usepackage{lisp-on-tex}
+\usepackage{qstest}
+\IncludeTests{*}
+\begin{document}
+  \LogTests{lgout}{*}{*}
+  \makeatletter
+  \begin{qstest}{Simple Allocator Test}{\@lispeval}
+   \@lisp@gc@init
+   \@lisp@gc@alloc\hoge
+   \expandafter\def\expandafter\hoge@expect\expandafter{%
+     \csname @lisp@gc@memory0\endcsname}
+   \Expect{\hoge}{\hoge@expect}
+   \@lisp@gc@alloc\hoge
+   \expandafter\def\expandafter\hoge@expect\expandafter{%
+     \csname @lisp@gc@memory1\endcsname}
+   \Expect{\hoge}{\hoge@expect}
+  \end{qstest}
+  \LogClose{lgout}
+\end{document}
