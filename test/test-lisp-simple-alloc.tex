@@ -1,5 +1,5 @@
 \documentclass{article}
-\usepackage{lisp-on-tex}
+\usepackage{lisp-simple-alloc}
 \usepackage{qstest}
 \IncludeTests{*}
 \begin{document}
@@ -8,6 +8,7 @@
   \begin{qstest}{Simple Allocator Test}{\@lispeval}
    \@lisp@gc@init
    \@lisp@gc@alloc\hoge
+   \show\hoge
    \expandafter\def\expandafter\hoge@expect\expandafter{%
      \csname @lisp@gc@memory0\endcsname}
    % NOTICE this test works on e-TeX or more over. 

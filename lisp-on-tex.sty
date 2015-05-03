@@ -5,6 +5,22 @@
 %%
 %% input buffer and read function
 
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{lisp-on-tex}[2015/05/03 v1.3]
+
+\newcount\@lisp@gc@style
+% I use bad magic number...
+\DeclareOption{noGC}{\@lisp@gc@style0\relax}
+\DeclareOption{markGC}{\@lisp@gc@style1\relax}
+\ExecuteOptions{noGC}
+\ProcessOptions
+
+% select GC engine
+\ifcase\@lisp@gc@style
+  \input{lisp-simple-alloc.sty} \or
+  \message{not implemented...} \fi
+\@lisp@gc@init
+
 
 %%===========================================
 %%  Macros for Input Programs
@@ -103,7 +119,7 @@
 %% global environment
 \makeassoc\@globalenv
 
-% implemeted functions
+% implemented functions
 
 
 % CONS CAR CDR
