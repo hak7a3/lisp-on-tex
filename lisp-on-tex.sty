@@ -181,7 +181,7 @@
 
 \def\@lisp@expand@environment#1#2#3\@lisp@expand@env@last{%
   \def\@@tmp@lisp@env{#3}%
-  \def\@@tmp{\expandafter\def\csname @lisp@env@\string#1\endcsname{#2}}%
+  \def\@@tmp{\expandafter\gdef\csname @lisp@env@\string#1\endcsname{#2}}%
   \ifx\@empty\@@tmp@lisp@env
     \let\@@next\relax
   \else
