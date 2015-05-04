@@ -1,23 +1,23 @@
 %% Syntax functions
-\addassoc\@globalenv\quote{\@tlabel@quote{}}%
-\addassoc\@globalenv\lambda{\@tlabel@lambda{}}
-\addassoc\@globalenv\define{\@tlabel@define{}}
-\addassoc\@globalenv\lispif{\@tlabel@if{}}
-\addassoc\@globalenv\defmacro{\@tlabel@defmacro{}}
-\addassoc\@globalenv\begin{\@tlabel@begin{}}
-\addassoc\@globalenv\defineM{\@tlabel@mdefine{}}
-\addassoc\@globalenv\setB{\@tlabel@setb{}}
-\addassoc\@globalenv\@let{\@tlabel@@let{}}
-\addassoc\@globalenv\@mlet{\@tlabel@@mlet{}}
-\addassoc\@globalenv\macroexpand{\@tlabel@macroexpand{}}
-\addassoc\@globalenv\callOCC{\@tlabel@callocc{}}
+\@lisp@env@add@global\quote{\@tlabel@quote{}}%
+\@lisp@env@add@global\lambda{\@tlabel@lambda{}}
+\@lisp@env@add@global\define{\@tlabel@define{}}
+\@lisp@env@add@global\lispif{\@tlabel@if{}}
+\@lisp@env@add@global\defmacro{\@tlabel@defmacro{}}
+\@lisp@env@add@global\begin{\@tlabel@begin{}}
+\@lisp@env@add@global\defineM{\@tlabel@mdefine{}}
+\@lisp@env@add@global\setB{\@tlabel@setb{}}
+\@lisp@env@add@global\@let{\@tlabel@@let{}}
+\@lisp@env@add@global\@mlet{\@tlabel@@mlet{}}
+\@lisp@env@add@global\macroexpand{\@tlabel@macroexpand{}}
+\@lisp@env@add@global\callOCC{\@tlabel@callocc{}}
 
-\addassoc\@globalenv\car{\@tlabel@func{\@get@car}}
-\addassoc\@globalenv\cdr{\@tlabel@func{\@get@cdr}}
-\addassoc\@globalenv\cons{\@tlabel@func{\@make@cons}}
+\@lisp@env@add@global\car{\@tlabel@func{\@get@car}}
+\@lisp@env@add@global\cdr{\@tlabel@func{\@get@cdr}}
+\@lisp@env@add@global\cons{\@tlabel@func{\@make@cons}}
 
 \newcount\@temp@count
-\addassoc\@globalenv\length{\@tlabel@func{\@lisp@length}}
+\@lisp@env@add@global\length{\@tlabel@func{\@lisp@length}}
 \def\@lisp@length{\@temp@count0\relax\@lisp@length@}
 \def\@lisp@length@#1#2#3{%
   \ifx#2\@tlabel@nil
@@ -34,7 +34,7 @@
 \def\@@lisp@length#1#2#3{\expandafter\@lisp@length@\expandafter#3#2}
 
 %equality
-\addassoc\@globalenv\={\@tlabel@func{\@lisp@equal}}
+\@lisp@env@add@global\={\@tlabel@func{\@lisp@equal}}
 \def\@lisp@equal#1#2#3#4#5{%
   \gdef#1{\@tlabel@bool{f}}%
   \ifx#2#4%
@@ -44,7 +44,7 @@
   \fi}
 
 % printing function
-\addassoc\@globalenv\print{\@tlabel@func{\@tex@print}}
+\@lisp@env@add@global\print{\@tlabel@func{\@tex@print}}
 \def\@tex@print#1{\gdef#1{\@tlabel@nil{}}\@tex@print@}
 \def\@tex@print@#1#2{%
   \ifx#1\@tlabel@int
@@ -84,7 +84,7 @@
 
 
 
-\addassoc\@globalenv\texprint{\@tlabel@func{\@tex@texprint}}
+\@lisp@env@add@global\texprint{\@tlabel@func{\@tex@texprint}}
 \def\@tex@texprint#1#2#3{%
    \gdef#1{\@tlabel@nil{}}\@@tex@texprint#2{#3}}
 \def\@@tex@texprint#1#2{%
@@ -96,7 +96,7 @@
     \@add@to@write@buffer\@temp@write@buffer{INNER TOKEN}%
   \fi\fi}
 
-\addassoc\@globalenv\stdprint{\@tlabel@func{\@tex@stdprint}}
+\@lisp@env@add@global\stdprint{\@tlabel@func{\@tex@stdprint}}
 \def\@tex@stdprint#1#2#3{%
   \gdef#1{\@tlabel@nil{}}%
   \let\@save@write@buffer\@temp@write@buffer
@@ -109,23 +109,23 @@
 
 % Type predicates
 \def\@type@pred@add#1{\expandafter\@@type@pred@add\expandafter#1}
-\def\@@type@pred@add#1#2{\addassoc\@globalenv#1{\@tlabel@func{#2}}}
+\def\@@type@pred@add#1#2{\@lisp@env@add@global#1{\@tlabel@func{#2}}}
 \def\@type@pred@define#1{\expandafter\@@type@pred@define\expandafter#1}
 \def\@@type@pred@define#1#2{%
 	\def#1##1##2##3{\ifx##2#2\gdef##1{\@tlabel@bool{t}}\else\gdef##1{\@tlabel@bool{f}}\fi}}
 
-\def\@type@addassoc{\addassoc\@globalenv}
+\def\@type@addassoc{\@lisp@env@add@global}
 \@for\@lisp@on@tex@type:=\@defined@datatype\do{%
   \expandafter\@type@pred@add\csname\@lisp@on@tex@type Q\endcsname\csname @type@\@lisp@on@tex@type\endcsname
   \expandafter\@type@pred@define\csname @type@\@lisp@on@tex@type\endcsname\csname @tlabel@\@lisp@on@tex@type\endcsname}
 
-\addassoc\@globalenv\pairQ{\@tlabel@func{\@type@cons}}
-\addassoc\@globalenv\booleanQ{\@tlabel@func{\@type@bool}}
+\@lisp@env@add@global\pairQ{\@tlabel@func{\@type@cons}}
+\@lisp@env@add@global\booleanQ{\@tlabel@func{\@type@bool}}
 
 % eval , apply
-\addassoc\@globalenv\eval{\@tlabel@envfunc{\@extern@eval}}
+\@lisp@env@add@global\eval{\@tlabel@envfunc{\@extern@eval}}
 \def\@extern@eval#1#2#3#4{\@eval#3{#4}{#2}#1}
-\addassoc\@globalenv\apply{\@tlabel@envfunc{\@extern@apply}}
+\@lisp@env@add@global\apply{\@tlabel@envfunc{\@extern@apply}}
 \def\@extern@apply#1#2#3#4#5#6{% reg, env, labelfun, contfun, labellist, contlist
   \def\@lisp@apply@temp{}% init
   \@flatten@args#5{#6}\@lisp@apply@temp
@@ -134,11 +134,11 @@
   {\expandafter\@@select@@apply#2{#3}#1\@{#4}#5}}
 
 % values
-%\addassoc\@globalenv\values{\@tlabel@func{\@lisp@multivalues}}
+%\@lisp@env@add@global\values{\@tlabel@func{\@lisp@multivalues}}
 %\def\@lisp@multivalues#1#2\relax{\gdef#1{#2}}
 
 % read
-\addassoc\@globalenv\read{\@tlabel@func{\@lisp@read@stdin}}
+\@lisp@env@add@global\read{\@tlabel@func{\@lisp@read@stdin}}
 \def\@lisp@read@stdin#1{%
   \read-1 to#1%
   \def\@lisp@read@stdin@callback##1##2{%

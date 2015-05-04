@@ -24,29 +24,20 @@
 \def\@dummy{\@@dummy}
 
 
+% lisp's global environment and some macros for it
+\def\@lisp@globalenv{}
 
-%% assoc \cs -> value
-% constructor
-\def\makeassoc#1{\def#1{}}
-% add member
-\def\addassoc#1#2#3{%#1(assoc),#2(\cs),#3(value)
-\gdef\@temp@add{#3}%
-\expandafter\expandafter\expandafter\gdef\expandafter\expandafter
-\expandafter#1\expandafter\expandafter\expandafter{%
-\expandafter\expandafter\expandafter#2\expandafter\expandafter\expandafter{\expandafter\@temp@add\expandafter}#1}}
-% remove member. It cause error if there is no member
-\def\rmassoc#1#2{% #1(assoc), #2(\cs)
-\def\@rmassoc##1#2##2##3\relax{##1##3}%
-\expandafter\expandafter\expandafter\gdef\expandafter\expandafter\expandafter#1\expandafter\expandafter\expandafter{\expandafter\@rmassoc#1\relax}}
-% exist?
-\def\ifmemassoc#1#2{%
-\expandafter\@ifmemassoc\expandafter#2#1\relax}
-\def\@ifmemassoc#1#2\relax{\ifx\@dummy#2\@dummy\let\@next\@iffalse\else\def\@next{\@@ifmemassoc#1#2\relax}\fi\@next}
-\def\@@ifmemassoc#1#2#3#4\relax{%
-\begingroup\def#1{\@@target}%
-\ifx#1#2\endgroup\let\@next\@iftrue\else\endgroup\def\@next{\@ifmemassoc#1#4\relax}\fi\@next}
-\def\@iffalse{\iffalse}
-\def\@iftrue{\iftrue}
+% Bind a variable (#1) to a value (#2) on global environment.
+% This macro also define [@lisp@env@#1] to #2.
+% REPLACE \addassoc to IT
+\def\@lisp@env@add@global#1#2{%
+  \begingroup
+    \toks0{#1{#2}}%
+    \toks2\expandafter{\@lisp@globalenv}%
+    \xdef\@lisp@globalenv{\the\toks0\the\toks2}%
+  \endgroup
+  \gdef\csname @lisp@env@\string#1\endcsname{#2}}
+
 % get value of the symbol. If it is not bounded, return \relax
 \def\getassoc#1#2#3{% #1 env (a control secuence), #2 symbol, #3 reg
   \def\@getassoc##1#2##2##3\relax{\gdef#3{##2}\relax}%
@@ -54,12 +45,6 @@
 \def\@naive@getassoc#1#2#3{% #1 env (tokens), #2 symbol, #3 reg
   \def\@getassoc##1#2##2##3\relax{\gdef#3{##2}\relax}%
   \@getassoc#1#2{\relax}\relax}
-% show
-\def\showassoc#1{\expandafter\@showassoc#1\relax}
-\def\@showassoc#1\relax{\ifx\@dummy#1\@dummy
-\let\@next\relax\else\def\@next{\@@showassoc#1\relax}\fi\@next}
-\def\@@showassoc#1#2#3\relax{\string#1:#2,\ifx\@dummy#3\@dummy\else
-\@showassoc#3\relax\fi}
 
 
 % interface
@@ -83,8 +68,6 @@
 \def\@add@to@write@buffer#1#2{%
  \expandafter\gdef\expandafter#1\expandafter{#1#2}}
 
-%% global environment
-\makeassoc\@globalenv
 
 % implemented functions
 
@@ -271,8 +254,7 @@
 
 \def\@apply@define@exception#1#2{}
 \def\@apply@define@normal#1#2{%
-  \expandafter\addassoc\expandafter\@globalenv\expandafter#1\expandafter{#2}%
-  \expandafter\@lisp@expand@environment\expandafter#1\expandafter{#2}\@lisp@expand@env@last
+  \expandafter\@lisp@env@add@global\expandafter#1\expandafter{#2}%
   \gdef#2{\@tlabel@nil{}}}
 
 \def\@apply@mdefine#1\@tlabel@symbol#2#3#4\@#5#6{%
@@ -285,14 +267,9 @@
 
 \def\@apply@mdefine@normal#1#2{%
   \expandafter\@mutable@allocate#2%
-  \expandafter\addassoc
-  \expandafter\@globalenv
-  \expandafter#1%
-  \expandafter{\expandafter\@tlabel@mutable
-  \expandafter{\csname mutable\the\@malloc\endcsname}}%
-  \expandafter\@lisp@expand@environment\expandafter#1\expandafter{%
-    \expandafter\@tlabel@mutable\expandafter{\csname mutable\the\@malloc\endcsname}}%
-    \@lisp@expand@env@last
+  \expandafter\@lisp@env@add@global\expandafter#1%
+    \expandafter{\expandafter\@tlabel@mutable\expandafter{%
+       \csname mutable\the\@malloc\endcsname}}%
   \global\advance\@malloc1\relax
   \gdef#2{\@tlabel@nil{}}}
 \def\@mutable@allocate#1#2{\expandafter\gdef\csname mutable\the\@malloc\endcsname{#1{#2}}}
@@ -356,7 +333,8 @@
 \def\@apply@defmacro@normal#1#2{%
   \expandafter\@apply@defmacro@next\expandafter#1#2%
   \gdef#2{\@tlabel@nil{}}}
-\def\@apply@defmacro@next#1\@tlabel@closure#2{\addassoc\@globalenv#1{\@tlabel@macro{#2}}}
+\def\@apply@defmacro@next#1\@tlabel@closure#2{%
+  \@lisp@env@add@global#1{\@tlabel@macro{#2}}}
 
 \def\@apply@if#1#2#3#4#5#6#7\@#8#9{%
   \@eval#2{#3}{#8}#9%

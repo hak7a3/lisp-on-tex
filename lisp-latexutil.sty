@@ -1,7 +1,7 @@
 %% READ_LaTeX_Counter : string -> int
 %% (\readLaTeXCounter str) -> i
 %% where i = \the\c@str
-\addassoc\@globalenv\readLaTeXCounter{\@tlabel@func{\@tex@read@latex@counter}}
+\@lisp@env@add@global\readLaTeXCounter{\@tlabel@func{\@tex@read@latex@counter}}
 \def\@tex@read@latex@counter#1#2#3{%
   \expandafter\expandafter\expandafter\gdef
   \expandafter\expandafter\expandafter#1%
@@ -10,6 +10,6 @@
   \expandafter\expandafter\expandafter{%
    \expandafter\the\csname c@#3\endcsname}}}
 
-\addassoc\@globalenv\message{\@tlabel@func{\@tex@lisp@message}}
+\@lisp@env@add@global\message{\@tlabel@func{\@tex@lisp@message}}
 \def\@tex@lisp@message#1\@tlabel@string#2{%
 	\gdef#1{\@tlabel@nil{}}\message{^^J#2^^J}}

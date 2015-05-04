@@ -1,6 +1,7 @@
 \newcount\@temp@inti
 \newcount\@temp@intii
-\addassoc\@globalenv\+{\@tlabel@func{\@temp@inti0\relax\@arith@plus}}
+
+\@lisp@env@add@global\+{\@tlabel@func{\@temp@inti0\relax\@arith@plus}}
 \def\@arith@plus#1#2#3{%
   \ifx#2\relax
     \let\@next@plus\@@arith@pm@fin
@@ -11,7 +12,7 @@
     \errmessage{LISP on TeX [integer plus]: Invalid argument}%
   \fi\fi\@next@plus#1}
 
-\addassoc\@globalenv\*{\@tlabel@func{\@temp@inti1\relax\@arith@mul}}
+\@lisp@env@add@global\*{\@tlabel@func{\@temp@inti1\relax\@arith@mul}}
 \def\@arith@mul#1#2#3{%
   \ifx#2\relax
     \let\@next@mul\@@arith@pm@fin
@@ -24,7 +25,7 @@
   \expandafter#1\expandafter{%
   \expandafter\@tlabel@int\expandafter{\the\@temp@inti}}}
 
-\addassoc\@globalenv\-{\@tlabel@func{\@arith@minus}}
+\@lisp@env@add@global\-{\@tlabel@func{\@arith@minus}}
 \def\@arith@minus#1#2#3#4#5{%
   \@temp@inti#3\relax
   \ifx#4\relax
@@ -44,7 +45,7 @@
   \fi\fi\@next@minus#1}
 
 
-\addassoc\@globalenv\/{\@tlabel@func{\@arith@div}}
+\@lisp@env@add@global\/{\@tlabel@func{\@arith@div}}
 \def\@arith@div#1#2#3#4#5{%
   \@temp@inti#3\relax
   \ifx#4\relax
@@ -64,7 +65,7 @@
     \let\@next@div\@@arith@div
   \fi\fi\@next@div#1}
 
-\addassoc\@globalenv\mod{\@tlabel@func{\@arith@mod}}
+\@lisp@env@add@global\mod{\@tlabel@func{\@arith@mod}}
 \def\@arith@mod#1\@tlabel@int#2\@tlabel@int#3{%
   \@temp@intii#2\relax
   \divide\@temp@intii#3\relax
@@ -73,37 +74,37 @@
   \advance\@temp@inti-\@temp@intii
   \@@arith@pm@fin#1}
 
-\addassoc\@globalenv\<{\@tlabel@func{\@arith@lt}}
+\@lisp@env@add@global\<{\@tlabel@func{\@arith@lt}}
 \def\@arith@lt#1\@tlabel@int#2\@tlabel@int#3{%
   \ifnum#2<#3 \gdef#1{\@tlabel@bool{t}}\else\gdef#1{\@tlabel@bool{f}}\fi}
 
-\addassoc\@globalenv\>{\@tlabel@func{\@arith@gt}}
+\@lisp@env@add@global\>{\@tlabel@func{\@arith@gt}}
 \def\@arith@gt#1\@tlabel@int#2\@tlabel@int#3{%
   \ifnum#2>#3 \gdef#1{\@tlabel@bool{t}}\else\gdef#1{\@tlabel@bool{f}}\fi}
 
-\addassoc\@globalenv\leq{\@tlabel@func{\@arith@leq}}
+\@lisp@env@add@global\leq{\@tlabel@func{\@arith@leq}}
 \def\@arith@leq#1\@tlabel@int#2\@tlabel@int#3{%
   \ifnum#2<#3 \gdef#1{\@tlabel@bool{t}}\else\gdef#1{\@tlabel@bool{f}}\fi
   \ifnum#2=#3 \gdef#1{\@tlabel@bool{t}}\fi}
 
-\addassoc\@globalenv\geq{\@tlabel@func{\@arith@geq}}
+\@lisp@env@add@global\geq{\@tlabel@func{\@arith@geq}}
 \def\@arith@geq#1\@tlabel@int#2\@tlabel@int#3{%
   \ifnum#2>#3 \gdef#1{\@tlabel@bool{t}}\else\gdef#1{\@tlabel@bool{f}}\fi
   \ifnum#2=#3 \gdef#1{\@tlabel@bool{t}}\fi}
 
-\addassoc\@globalenv\isZeroQ{\@tlabel@func{\@arith@is@zero}}
+\@lisp@env@add@global\isZeroQ{\@tlabel@func{\@arith@is@zero}}
 \def\@arith@is@zero#1\@tlabel@int#2{%
   \ifnum#2=0 \gdef#1{\@tlabel@bool{t}}\else\gdef#1{\@tlabel@bool{f}}\fi}
 
-\addassoc\@globalenv\positiveQ{\@tlabel@func{\@arith@is@positive}}
+\@lisp@env@add@global\positiveQ{\@tlabel@func{\@arith@is@positive}}
 \def\@arith@is@positive#1\@tlabel@int#2{%
   \ifnum#2>0 \gdef#1{\@tlabel@bool{t}}\else\gdef#1{\@tlabel@bool{f}}\fi}
 
-\addassoc\@globalenv\negativeQ{\@tlabel@func{\@arith@is@negative}}
+\@lisp@env@add@global\negativeQ{\@tlabel@func{\@arith@is@negative}}
 \def\@arith@is@negative#1\@tlabel@int#2{%
   \ifnum#2<0 \gdef#1{\@tlabel@bool{t}}\else\gdef#1{\@tlabel@bool{f}}\fi}
 
-\addassoc\@globalenv\max{\@tlabel@func{\@arith@max}}
+\@lisp@env@add@global\max{\@tlabel@func{\@arith@max}}
 \def\@arith@max#1#2#3{%
   \ifx#2\@tlabel@int
     \@temp@inti#3\relax
@@ -121,7 +122,7 @@
     \errmessage{LISP on TeX [integer max]: Invalid argument}%
   \fi\fi\@next@max#1}
 
-\addassoc\@globalenv\min{\@tlabel@func{\@arith@min}}
+\@lisp@env@add@global\min{\@tlabel@func{\@arith@min}}
 \def\@arith@min#1#2#3{%
   \ifx#2\@tlabel@int
     \@temp@inti#3\relax
