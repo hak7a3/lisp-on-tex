@@ -104,10 +104,10 @@
    \end{qstest}
    \begin{qstest}{special forms}{\@lispeval}
     % define
-    \toks0\expandafter{\@globalenv}
+    \toks0\expandafter{\@lisp@globalenv}
     \edef\@hopedEnv{\noexpand\@foo{\noexpand\@tlabel@int{42}}\the\toks0}
     \testEvalWithSExp{(\define \@foo :42)}{\@tlabel@nil{}}
-    \toks0\expandafter{\@globalenv}
+    \toks0\expandafter{\@lisp@globalenv}
     \expandafter\Expect\expandafter{\@hopedEnv}*{\the\toks0}
     \testEvalWithSExp{(\begin (\define \@test@define@one :42) \@test@define@one)}
       {\@tlabel@int{42}}
@@ -118,7 +118,7 @@
     \lispinterp{((\lambda ()(\define \@test@define@local 'local2')))}
     \testEvalWithSExp{\@test@define@local}{\@tlabel@string{local2}}
     %defineM
-    \toks0\expandafter{\@globalenv}
+    \toks0\expandafter{\@lisp@globalenv}
     \def\checkDefineMutableCheckEnv#1#2#3\@@end{%
       \Expect{#1}{\@bar}
       \checkDefineMutableCheckEnv@value#2
@@ -127,7 +127,7 @@
       \Expect{#1}{\@tlabel@mutable}
       \expandafter\Expect\expandafter{#2}{\@tlabel@int{23}}}
     \testEvalWithSExp{(\defineM \@bar :23)}{\@tlabel@nil{}}
-    \expandafter\checkDefineMutableCheckEnv\@globalenv\@@end
+    \expandafter\checkDefineMutableCheckEnv\@lisp@globalenv\@@end
     \testEvalWithSExp{(\begin (\defineM \@test@defineM@one :42) \@test@defineM@one)}
       {\@tlabel@int{42}}
     \testEvalWithSExp{\@test@defineM@one}

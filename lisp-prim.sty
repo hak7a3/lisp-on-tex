@@ -114,9 +114,9 @@
 \def\@@type@pred@define#1#2{%
 	\def#1##1##2##3{\ifx##2#2\gdef##1{\@tlabel@bool{t}}\else\gdef##1{\@tlabel@bool{f}}\fi}}
 
-\def\@type@addassoc{\@lisp@env@add@global}
 \@for\@lisp@on@tex@type:=\@defined@datatype\do{%
-  \expandafter\@type@pred@add\csname\@lisp@on@tex@type Q\endcsname\csname @type@\@lisp@on@tex@type\endcsname
+  \expandafter\@type@pred@add\csname\@lisp@on@tex@type Q\endcsname
+      \csname @type@\@lisp@on@tex@type\endcsname
   \expandafter\@type@pred@define\csname @type@\@lisp@on@tex@type\endcsname\csname @tlabel@\@lisp@on@tex@type\endcsname}
 
 \@lisp@env@add@global\pairQ{\@tlabel@func{\@type@cons}}

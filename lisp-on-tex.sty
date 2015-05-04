@@ -34,11 +34,9 @@
   \begingroup
     \toks0{#1{#2}}%
     \toks2\expandafter{\@lisp@globalenv}%
-    \showthe\toks0
-    \showthe\toks2
     \xdef\@lisp@globalenv{\the\toks0 \the\toks2}%
   \endgroup
-  \gdef\csname @lisp@env@\string#1\endcsname{#2}}
+  \expandafter\gdef\csname @lisp@env@\string#1\endcsname{#2}}
 
 % get value of the symbol. If it is not bounded, return \relax
 \def\getassoc#1#2#3{% #1 env (a control secuence), #2 symbol, #3 reg
@@ -123,29 +121,9 @@
   \csname @tlabel@\@lisp@on@tex@type\endcsname}
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% memo of fasteval branch
-% Each bound variables \var
-% is defined as TeX macro [[@lisp@env@\var]]
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\def\@lisp@expand@env@last{\@lisp@expand@env@last}
-
-\def\@lisp@expand@environment#1#2#3\@lisp@expand@env@last{%
-  \def\@@tmp@lisp@env{#3}%
-  \def\@@tmp{\expandafter\gdef\csname @lisp@env@\string#1\endcsname{#2}}%
-  \ifx\@empty\@@tmp@lisp@env
-    \let\@@next\relax
-  \else
-    \def\@@next{\@lisp@expand@environment#3\@lisp@expand@env@last}%
-  \fi
-  \expandafter\@@next\@@tmp}
 
 \def\lispeval#1#2{% #1 : \cs -> S-exp, #2 : target register
   \gdef\@temp@write@buffer{}%
-    \expandafter\def\expandafter\@@tmp@lisp@env\expandafter{\@globalenv}%
-    \ifx\@empty\@globalenv\else
-      \expandafter\@lisp@expand@environment\@globalenv\@lisp@expand@env@last\fi 
     \expandafter\@eval#1{}#2%
   \@temp@write@buffer}
 
@@ -158,7 +136,7 @@
   \def#2{#1}%
   \expandafter\expandafter\expandafter\def
   \expandafter\expandafter\expandafter#2%
-  \expandafter\expandafter\expandafter{\expandafter#2\@globalenv}}
+  \expandafter\expandafter\expandafter{\expandafter#2\@lisp@globalenv}}
 
 \def\@eval@symbol#1#2#3{% #1 symbol #2 current env (ignored) #3 dist
   % search local environment
