@@ -34,7 +34,9 @@
   \begingroup
     \toks0{#1{#2}}%
     \toks2\expandafter{\@lisp@globalenv}%
-    \xdef\@lisp@globalenv{\the\toks0\the\toks2}%
+    \showthe\toks0
+    \showthe\toks2
+    \xdef\@lisp@globalenv{\the\toks0 \the\toks2}%
   \endgroup
   \gdef\csname @lisp@env@\string#1\endcsname{#2}}
 
