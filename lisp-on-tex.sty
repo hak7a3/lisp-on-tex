@@ -5,7 +5,7 @@
 %%
 
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{lisp-on-tex}[2015/05/03 v1.3]
+\ProvidesPackage{lisp-on-tex}[2015/05/03 v2.0]
 
 \newcount\@lisp@gc@style
 % I use bad magic numbers...
@@ -94,12 +94,6 @@
 
 
 
-% implemented functions
-\def\@lisp@util@check@exceeded@arguments#1#2\relax{%
-  \if!#2!\else
-   \gdef#1{\@tlabel@exception{{-1}%
-     {\@tlabel@string{Too many arguments of .}}}}\fi}
-
 % CONS CAR CDR
 \newcount\@malloc %FIXME: After replacing allocator, remove it.
 % get CAR of a CONS cell (#2{#3}) and set it to a control sequence
@@ -132,14 +126,18 @@
     {\@tlabel@string{Argument of cdr must be a CONS cell.}}}}}
 
 
-\def\@make@cons#1#2#3#4#5{%
-   \expandafter\gdef\csname car\the\@malloc\endcsname{#2{#3}}%
-   \expandafter\gdef\csname cdr\the\@malloc\endcsname{#4{#5}}%
-   \@@make@cons#1\csname car\the\@malloc\endcsname\csname cdr\the\@malloc\endcsname
-   \global\advance\@malloc1\relax}
-\def\@@make@cons#1{\expandafter\@@@make@cons\expandafter#1}
-\def\@@@make@cons#1#2{\expandafter\@@@@make@cons\expandafter#1\expandafter#2}
-\def\@@@@make@cons#1#2#3{\gdef#1{\@tlabel@cons{#2#3}}}
+\def\@lisp@perform@cons#1#2#3#4#5{%
+  \@lisp@gc@alloc\@lisp@tmp@local@i
+  \@lisp@gc@alloc\@lisp@tmp@local@ii
+  \expandafter\gdef\@lisp@tmp@local@i{#2{#3}}%
+  \expandafter\gdef\@lisp@tmp@local@ii{#4{#5}}%
+  \expandafter\@lisp@perform@cons@\expandafter#1%
+    \@lisp@tmp@local@i\@lisp@tmp@local@ii}
+\def\@lisp@perform@cons@#1#2#3{%
+  \expandafter\@lisp@perform@cons@@\expandafter#1%
+    \expandafter#2#3}
+\def\@lisp@perform@cons@@#1#2#3{\gdef#1{\@tlabel@cons{#2#3}}}
+
 
 
 \def\@defined@datatype{symbol,string,int,bool,dimen,skip,cons,nil,func,closure,macro,envfunc,mutable,exception,continuation}
