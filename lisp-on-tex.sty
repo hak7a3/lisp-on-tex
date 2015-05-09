@@ -92,22 +92,46 @@
 % input.
 \def\@lisp@read@eval@loop@reader@error\@tlabel@exception#1{}
 
-% eval
-%% write buffer
-\gdef\@temp@write@buffer{}
-\def\@add@to@write@buffer#1#2{%
- \expandafter\gdef\expandafter#1\expandafter{#1#2}}
 
 
 % implemented functions
-
+\def\@lisp@util@check@exceeded@arguments#1#2\relax{%
+  \if!#2!\else
+   \gdef#1{\@tlabel@exception{{-1}%
+     {\@tlabel@string{Too many arguments of .}}}}\fi}
 
 % CONS CAR CDR
-\newcount\@malloc
-\def\@get@car#1\@tlabel@cons#2{\@@get@car#1#2}
-\def\@@get@car#1#2#3{\global\let#1#2}
-\def\@get@cdr#1\@tlabel@cons#2{\@@get@cdr#1#2}
-\def\@@get@cdr#1#2#3{\global\let#1#3}
+\newcount\@malloc %FIXME: After replacing allocator, remove it.
+% get CAR of a CONS cell (#2{#3}) and set it to a control sequence
+% (#1). If the argument is not a CONS cell, it raise an exception.
+\def\@lisp@perform@car#1#2#3{%
+  \ifx#2\@tlabel@cons
+    \let\@@next\@lisp@perform@car@normal
+  \else
+    \let\@@next\@lisp@perform@car@type@error
+  \fi
+  \@@next#1{#3}}
+\def\@lisp@perform@car@normal#1#2{\@lisp@perform@car@normal@#1#2}
+\def\@lisp@perform@car@normal@#1#2#3{\global\let#1#2}
+\def\@lisp@perform@car@type@error#1#2{%
+  \gdef#1{\@tlabel@exception{{-1}%
+    {\@tlabel@string{Argument of car must be a CONS cell.}}}}}
+% get CDR of a CONS cell (#2{#3}) and set it to a control sequence
+% (#1). If the argument is not a CONS cell, it raise an exception.
+\def\@lisp@perform@cdr#1#2#3{%
+  \ifx#2\@tlabel@cons
+    \let\@@next\@lisp@perform@cdr@normal
+  \else
+    \let\@@next\@lisp@perform@cdr@type@error
+  \fi
+  \@@next#1{#3}}
+\def\@lisp@perform@cdr@normal#1#2{\@lisp@perform@cdr@normal@#1#2}
+\def\@lisp@perform@cdr@normal@#1#2#3{\global\let#1#3}
+\def\@lisp@perform@cdr@type@error#1#2{%
+  \gdef#1{\@tlabel@exception{{-1}%
+    {\@tlabel@string{Argument of cdr must be a CONS cell.}}}}}
+
+
 \def\@make@cons#1#2#3#4#5{%
    \expandafter\gdef\csname car\the\@malloc\endcsname{#2{#3}}%
    \expandafter\gdef\csname cdr\the\@malloc\endcsname{#4{#5}}%
@@ -151,6 +175,11 @@
   \csname @tlabel@\@lisp@on@tex@type\endcsname}
 
 
+
+% write buffer. LISP on TeX's evaluator 
+\gdef\@temp@write@buffer{}
+\def\@add@to@write@buffer#1#2{%
+ \expandafter\gdef\expandafter#1\expandafter{#1#2}}
 
 \def\lispeval#1#2{% #1 : \cs -> S-exp, #2 : target register
   \gdef\@temp@write@buffer{}%
