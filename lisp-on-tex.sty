@@ -124,8 +124,8 @@
 \def\@lisp@perform@cdr@type@error#1#2{%
   \gdef#1{\@tlabel@exception{{-1}%
     {\@tlabel@string{Argument of cdr must be a CONS cell.}}}}}
-
-
+% create a CONS cell whose CAR is #2{#3} and CDR is #4{#5}.
+% It set a control sequence (#1) to the created cell.
 \def\@lisp@perform@cons#1#2#3#4#5{%
   \@lisp@gc@alloc\@lisp@tmp@local@i
   \@lisp@gc@alloc\@lisp@tmp@local@ii
@@ -139,9 +139,15 @@
 \def\@lisp@perform@cons@@#1#2#3{\gdef#1{\@tlabel@cons{#2#3}}}
 
 
-
-\def\@defined@datatype{symbol,string,int,bool,dimen,skip,cons,nil,func,closure,macro,envfunc,mutable,exception,continuation}
-\def\@defined@specialform{lambda,quote,define,if,defmacro,begin,mdefine,setb,@let,@mlet,macroexpand,callocc}
+% all primitive types of LISP on TeX. 
+\def\@defined@datatype{%
+  symbol,string,int,bool,dimen,skip,cons,nil,%
+  func,closure,macro,envfunc,mutable,%
+  exception,continuation}
+% all special forms of LISP on TeX
+\def\@defined@specialform{%
+  lambda,quote,define,if,defmacro,begin,%
+  mdefine,setb,@let,@mlet,macroexpand,callocc}
 \edef\@defined@lisp@on@tex{\@defined@datatype,\@defined@specialform}
 
 
@@ -282,13 +288,12 @@
   \@@next{#2}{#6}}
 
 \def\@apply@mdefine@normal#1#2{%
-  \expandafter\@mutable@allocate#2%
-  \expandafter\@lisp@env@add@global\expandafter#1%
-    \expandafter{\expandafter\@tlabel@mutable\expandafter{%
-       \csname mutable\the\@malloc\endcsname}}%
-  \global\advance\@malloc1\relax
+  \@lisp@gc@alloc\@lisp@tmp@local@i
+  \expandafter\global\expandafter\let\@lisp@tmp@local@i#2%
+  \expandafter\@apply@mdefine@normal@\@lisp@tmp@local@i#1%
   \gdef#2{\@tlabel@nil{}}}
-\def\@mutable@allocate#1#2{\expandafter\gdef\csname mutable\the\@malloc\endcsname{#1{#2}}}
+\def\@apply@mdefine@normal@#1#2{%
+  \@lisp@env@add@global#2{\@tlabel@mutable{#1}}}
 
 
 \def\@apply@setb#1#2#3#4#5\@#6#7{%
