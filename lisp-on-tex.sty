@@ -362,15 +362,19 @@
     \let\@@next\@apply@@let@exception
     \else\let\@@next\@apply@@mlet@normal\fi
   \@@next{#2}{#5}{#6}{#7}{#8}}
+
 \def\@apply@@mlet@normal#1#2#3#4#5{%
-  \expandafter\global\expandafter\let\csname mutable\the\@malloc\endcsname#5%
-  \expandafter\def\expandafter#5\expandafter{\expandafter\@tlabel@mutable
-    \expandafter{\csname mutable\the\@malloc\endcsname}}%
-  \global\advance\@malloc1\relax
-  \expandafter\def\expandafter\@temp@env\expandafter{\expandafter#1\expandafter{#5}#4}%
-  \expandafter\gdef\expandafter\@@tco
-    \expandafter{\expandafter\@@eval@envcs\expandafter{\@temp@env}#2{#3}#5}%
-  \aftergroup\@@tco}
+  \@lisp@gc@alloc\@lisp@tmp@local@i
+  \expandafter\global\expandafter\let\@lisp@tmp@local@i#5%
+  \expandafter\@apply@@mlet@normal@\@lisp@tmp@local@i#1{#4}%
+  \expandafter\gdef\expandafter\@@tco\expandafter{%
+    \expandafter\@@eval@envcs\expandafter{\@lisp@tmp@local@ii}#2{#3}#5}%
+  \aftergroup\@@tco
+}
+\def\@apply@@mlet@normal@#1#2#3{%
+  \def\@lisp@tmp@local@ii{#2{\@tlabel@mutable{#1}}#3}}
+
+
 
 \def\@apply@defmacro#1\@tlabel@symbol#2#3#4\@#5#6{%
   \@eval#3{#4}{#5}#6% NOT use local env!
