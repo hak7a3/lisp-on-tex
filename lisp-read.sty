@@ -107,24 +107,16 @@
   \fi\@@next}
 \def\@lispread@cell@cdr#1{%
   \def\@lispread@cdr@reg##1##2{%
-    \expandafter\@read@malloc\expandafter\@reg@tmp\@reg@lispread@car##1{##2}%
+    \expandafter\@lisp@perform@cons@local\expandafter\@reg@tmp\@reg@lispread@car##1{##2}%
     \expandafter\endgroup\expandafter#1\@reg@tmp}%
   \@lispread\@lispread@cdr@reg}
 \def\@lispread@fin#1#2{%
   \if\noexpand#2)%
     \def\@@next{%
-      \expandafter\expandafter\expandafter\@read@malloc
+      \expandafter\expandafter\expandafter\@lisp@perform@cons@local
       \expandafter\expandafter\expandafter\@reg@tmp
       \expandafter\@reg@lispread@car\@reg@lispread@cdr
       \expandafter\endgroup\expandafter#1\@reg@tmp}%
   \else
     \def\@@next{\errmessage{LISP on teX [read]: missing )}}%
   \fi\@@next}
-\def\@read@malloc#1#2#3#4#5{%
-  \expandafter\gdef\csname car\the\@malloc\endcsname{#2{#3}}%
-  \expandafter\gdef\csname cdr\the\@malloc\endcsname{#4{#5}}%
-  \expandafter\@@read@malloc\expandafter#1\csname car\the\@malloc\endcsname\csname cdr\the\@malloc\endcsname}
-\def\@@read@malloc#1#2{\expandafter\@@@read@malloc\expandafter#1\expandafter#2}
-\def\@@@read@malloc#1#2#3{%
-  \global\advance\@malloc1
-  \def#1{\@tlabel@cons{#2#3}}}

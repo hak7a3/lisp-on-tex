@@ -127,9 +127,9 @@
 % create a CONS cell whose CAR is #2{#3} and CDR is #4{#5}.
 % It set a control sequence (#1) to the created cell.
 \def\@lisp@perform@cons#1#2#3#4#5{%
-  \@lisp@perform@cons@#1#2{#3}#4{#5}%
+  \@lisp@perform@cons@local#1#2{#3}#4{#5}%
   \global\let#1#1}
-\def\@lisp@perform@cons@#1#2#3#4#5{%
+\def\@lisp@perform@cons@local#1#2#3#4#5{%
   \@lisp@gc@alloc\@lisp@tmp@local@i
   \@lisp@gc@alloc\@lisp@tmp@local@ii
   \expandafter\gdef\@lisp@tmp@local@i{#2{#3}}%
