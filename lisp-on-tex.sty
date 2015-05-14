@@ -519,65 +519,155 @@
     \expandafter\@@eval@envcs\expandafter{\@temp@env#2}#3{#4}#6}%
   \aftergroup\@@tco}
 
-\def\@@apply@create@env#1#2:#3#4#5{%
-  \let\@@next@pre\@@apply@create@env@pre@default
-  \ifx!#2!% if #2 is empty
-    \let\@@next@args@\@empty
+% create an environment using in evaluation of closure's body.
+% It set a control sequence (#1) to the created environment locally.
+% #2 is formal arguments and #3 is rest argument. If there is
+% no rest argument, #3 is \@@unused. If an error occurs, it set
+% #1 to \relax by \let.
+\def\@@apply@create@env#1#2:#3{\tracingmacros=1%
+  \def#1{}% initialize
+  \@@apply@create@env@#1{#2}{#3}}
+\def\@@apply@create@env@#1#2#3{%
+  \ifx!#2!% If #2 is empty
     \ifx#3\@@unused
-      \let\@@next\@@apply@create@env@fin
+      \let\@@next\@@apply@create@env@bind@fin
     \else
-      \ifx#4\relax
-        \let\@@next\@@apply@create@env@fin
-        \@@apply@modify@env#1\@tlabel@nil{}#3\@
-      \else
-        \let\@@next@pre\@@apply@create@env@pre@i
-      \fi
+      \let\@@next\@@apply@create@env@bind@rest
     \fi
   \else
-    \let\@@next@pre\@@apply@create@env@pre@ii
-  \fi\@@next@pre{#1}{#2}{#3}{#4}{#5}\expandafter\@@next\expandafter#1\@@next@args@:#3}
-
-\def\@@apply@create@env@pre@default#1#2#3#4#5{}
-\def\@@apply@create@env@pre@i#1#2#3#4#5{%
-  \@@apply@create@env@phantom
-  \expandafter\@@apply@modify@env\expandafter#1\@@@@ph#3\@
-  \expandafter\gdef\csname car\the\@malloc\endcsname{#4{#5}}%
-  \let\@@next\@@apply@create@env@cdr}
-\def\@@apply@create@env@pre@ii#1#2#3#4#5{%
-  \@@apply@modify@env#1#4{#5}#2\@
-  \@@next@args#2\@
-  \let\@@next\@@apply@create@env}
-
-
-\def\@@apply@create@env@cdr#1:#2{\@@@apply@create@env@cdr}
-\def\@@@apply@create@env@cdr#1#2{%
-  \ifx#1\relax
-    \expandafter\gdef\csname cdr\the\@malloc\endcsname{\@tlabel@nil{}}%
-    \global\advance\@malloc1\relax
-    \let\@@next\relax
-  \else
-    \global\advance\@malloc1\relax
-    \@@apply@create@env@phantom
-    \global\advance\@malloc-1\relax
-    \expandafter\@@set@cdr\@@@@ph
-    \global\advance\@malloc1\relax
-    \expandafter\gdef\csname car\the\@malloc\endcsname{#1{#2}}%
-    \let\@@next\@@@apply@create@env@cdr
-  \fi\@@next}
-
-\def\@@set@cdr#1#2{\expandafter\gdef\csname cdr\the\@malloc\endcsname{#1{#2}}}
-\def\@@apply@create@env@phantom{%
-  \expandafter\@@@apply@ph\csname car\the\@malloc\endcsname\csname cdr\the\@malloc\endcsname}
-\def\@@@apply@ph#1{\expandafter\@@@@apply@ph\expandafter#1}
-\def\@@@@apply@ph#1#2{\def\@@@@ph{\@tlabel@cons{#1#2}}}
-\def\@@apply@create@env@fin#1:#2{}
-\def\@@apply@modify@env#1#2#3#4#5\@{%
-  \ifx#2\relax
-    \errmessage{LISP on TeX [apply --- closure]: too few args}%
-  \else
-    \expandafter\def\expandafter#1\expandafter{#1#4{#2{#3}}}%
+    \let\@@next\@@apply@create@env@bind@one
+  \fi
+  \@@next#1#2|{#3}}
+\def\@@apply@create@env@bind@fin#1|#2#3#4{%
+  \ifx#3\relax\else
+    \let#1\relax
+    \def\@@apply@create@env@error@message{Too more arguments}%
   \fi}
-\def\@@next@args#1#2\@{\def\@@next@args@{#2}}
+% #5{#6} is an real argument
+% of closure/macro call. If there is no unbound argument, 
+% #5 and #6 are \relax (see caller).
+\def\@@apply@create@env@bind@one#1#2#3|#4#5#6{%
+  \ifx#5\relax
+    \let\@@next\@@apply@create@env@bind@one@error
+  \else
+    \let\@@next\@@apply@create@env@bind@one@
+  \fi
+  \@@next#1#2{#3}{#4}{#5{#6}}}
+\def\@@apply@create@env@bind@one@#1#2#3#4#5{%
+  \expandafter\def\expandafter#1\expandafter{#1#2{#5}}%
+  \@@apply@create@env@#1{#3}{#4}}
+\def\@@apply@create@env@bind@one@error#1#2#3#4#5{%
+  \def\@@apply@create@env@error@message{Too few arguments}%
+  \let#1\relax}
+\def\@@apply@create@env@bind@rest#1|#2{%
+  \def\@lisp@tmp@local@i{#1#2}%
+  \def\@lisp@tmp@local@ii{}%
+  \@@apply@create@env@bind@rest@}
+\def\@@apply@create@env@bind@rest@#1#2{%
+  \ifx#1\relax
+    \let\@@next\@@apply@create@env@bind@rest@create@cell
+  \else
+    \let\@@next\@@apply@create@env@bind@rest@reverse
+  \fi
+  \@@next#1{#2}}
+\def\@@apply@create@env@bind@rest@reverse#1#2{%
+  \toks0{#1{#2}}%
+  \toks2\expandafter{\@lisp@tmp@local@ii}%
+  \edef\@lisp@tmp@local@ii{\the\toks0 \the\toks2}%
+  \@@apply@create@env@bind@rest@}
+\def\@@apply@create@env@bind@rest@create@cell#1#2{% #1 and #2 is dummy
+ \def\@lisp@tmp@local@iii{\@tlabel@nil{}}%
+ \expandafter\if\expandafter!\@lisp@tmp@local@ii!%if there is no argument
+   \let\@@next\@@apply@create@env@bind@rest@create@cell@fin
+ \else
+   \let\@@next\@@apply@create@env@bind@rest@create@cell@alloc
+ \fi
+ \expandafter\@@next\@lisp@tmp@local@ii\relax\relax}
+\def\@@apply@create@env@bind@rest@create@cell@fin{%
+  \expandafter\@@apply@create@env@bind@rest@create@cell@fin@\@lisp@tmp@local@i}
+\def\@@apply@create@env@bind@rest@create@cell@fin@#1#2{%
+  \expandafter\@@apply@create@env@bind@rest@create@cell@fin@@
+    \expandafter{\@lisp@tmp@local@iii}#1#2}
+\def\@@apply@create@env@bind@rest@create@cell@fin@@#1#2#3{%
+  \expandafter\def\expandafter#2\expandafter{#2#3{#1}}}
+\def\@@apply@create@env@bind@rest@create@cell@alloc#1#2#3#4{%
+  \@lisp@gc@alloc\@lisp@tmp@local@iv % CAR
+  \expandafter\gdef\@lisp@tmp@local@iv{#1{#2}}%
+  \@lisp@gc@alloc\@lisp@tmp@local@v % CDR
+  \expandafter\global\expandafter\let\@lisp@tmp@local@v\@lisp@tmp@local@iii
+  \toks0\expandafter{\@lisp@tmp@local@iv}%
+  \toks2\expandafter{\@lisp@tmp@local@v}%
+  \edef\@lisp@tmp@local@iii{\noexpand\@tlabel@cons{\the\toks0 \the\toks2}}%
+  \ifx#3\relax
+    \let\@@next\@@apply@create@env@bind@rest@create@cell@fin
+  \else
+    \let\@@next\@@apply@create@env@bind@rest@create@cell@alloc
+  \fi
+  \@@next#3{#4}}
+
+
+
+
+
+% \def\@@apply@create@env#1#2:#3#4#5{%
+%   \let\@@next@pre\@@apply@create@env@pre@default
+%   \ifx!#2!% if #2 is empty
+%     \let\@@next@args@\@empty
+%     \ifx#3\@@unused
+%       \let\@@next\@@apply@create@env@fin
+%     \else
+%       \ifx#4\relax
+%         \let\@@next\@@apply@create@env@fin
+%         \@@apply@modify@env#1\@tlabel@nil{}#3\@
+%       \else
+%         \let\@@next@pre\@@apply@create@env@pre@i
+%       \fi
+%     \fi
+%   \else
+%     \let\@@next@pre\@@apply@create@env@pre@ii
+%   \fi\@@next@pre{#1}{#2}{#3}{#4}{#5}\expandafter\@@next\expandafter#1\@@next@args@:#3}
+
+% \def\@@apply@create@env@pre@default#1#2#3#4#5{}
+% \def\@@apply@create@env@pre@i#1#2#3#4#5{%
+%   \@@apply@create@env@phantom
+%   \expandafter\@@apply@modify@env\expandafter#1\@@@@ph#3\@
+%   \expandafter\gdef\csname car\the\@malloc\endcsname{#4{#5}}%
+%   \let\@@next\@@apply@create@env@cdr}
+% \def\@@apply@create@env@pre@ii#1#2#3#4#5{%
+%   \@@apply@modify@env#1#4{#5}#2\@
+%   \@@next@args#2\@
+%   \let\@@next\@@apply@create@env}
+
+
+% \def\@@apply@create@env@cdr#1:#2{\@@@apply@create@env@cdr}
+% \def\@@@apply@create@env@cdr#1#2{%
+%   \ifx#1\relax
+%     \expandafter\gdef\csname cdr\the\@malloc\endcsname{\@tlabel@nil{}}%
+%     \global\advance\@malloc1\relax
+%     \let\@@next\relax
+%   \else
+%     \global\advance\@malloc1\relax
+%     \@@apply@create@env@phantom
+%     \global\advance\@malloc-1\relax
+%     \expandafter\@@set@cdr\@@@@ph
+%     \global\advance\@malloc1\relax
+%     \expandafter\gdef\csname car\the\@malloc\endcsname{#1{#2}}%
+%     \let\@@next\@@@apply@create@env@cdr
+%   \fi\@@next}
+
+% \def\@@set@cdr#1#2{\expandafter\gdef\csname cdr\the\@malloc\endcsname{#1{#2}}}
+% \def\@@apply@create@env@phantom{%
+%   \expandafter\@@@apply@ph\csname car\the\@malloc\endcsname\csname cdr\the\@malloc\endcsname}
+% \def\@@@apply@ph#1{\expandafter\@@@@apply@ph\expandafter#1}
+% \def\@@@@apply@ph#1#2{\def\@@@@ph{\@tlabel@cons{#1#2}}}
+% \def\@@apply@create@env@fin#1:#2{}
+% \def\@@apply@modify@env#1#2#3#4#5\@{%
+%   \ifx#2\relax
+%     \errmessage{LISP on TeX [apply --- closure]: too few args}%
+%   \else
+%     \expandafter\def\expandafter#1\expandafter{#1#4{#2{#3}}}%
+%   \fi}
+% \def\@@next@args#1#2\@{\def\@@next@args@{#2}}
 
 \def\@@apply@macro#1#2\@#3#4{\@@apply@macro@next#1#2\@{#3}#4}
 \def\@@apply@macro@next#1#2#3#4#5\@#6#7{%
