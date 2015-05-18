@@ -14,12 +14,6 @@
 \ExecuteOptions{noGC}
 \ProcessOptions
 
-% select GC engine
-\ifcase\@lisp@gc@style
-  \input{lisp-simple-alloc.sty} \or
-  \message{not implemented...} \fi
-\@lisp@gc@init
-
 
 % lisp's global environment and some macros for it
 \def\@lisp@globalenv{}
@@ -586,7 +580,7 @@
 % create a list 
 \def\@@apply@create@env@bind@rest@create@cell#1#2{% #1 and #2 is dummy
  \def\@lisp@tmp@local@iii{\@tlabel@nil{}}%
- \expandafter\if\expandafter!\@lisp@tmp@local@ii!%if there is no argument
+ \ifx\@lisp@tmp@local@ii\@empty%if there is no argument
    \let\@@next\@@apply@create@env@bind@rest@create@cell@fin
  \else
    \let\@@next\@@apply@create@env@bind@rest@create@cell@alloc
@@ -717,6 +711,13 @@
 \def\@apply@continuation@normal#1#2#3#4#5{%
   \toks0\expandafter{#5}%
   \xdef#5{\noexpand\@tlabel@exception{{#1}{\the\toks0}}}}
+
+% select GC engine
+\ifcase\@lisp@gc@style
+  \input{lisp-simple-alloc.sty} \or
+  \input{lisp-mark-sweep-gc-alloc.sty} \fi
+\@lisp@gc@init
+
 
 
 % reader
