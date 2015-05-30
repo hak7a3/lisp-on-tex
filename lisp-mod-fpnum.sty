@@ -1,5 +1,13 @@
 %%% module name :: fpnum
 
+% regist type and gc 
+\ifx\@defined@additional@type\@empty
+  \def\@defined@additional@type{fpnum}%
+\else
+  \edef\@defined@additional@type{\@defined@additional@type,fpnum}%
+\fi
+\let\@lisp@gc@trace@fpnum\@gobble
+
 \def\@mod@read@fpnum#1#2{\gdef#1{\@tlabel@fpnum{#2}}}
 \def\@tlabel@fpnum{\@eval@fpnum\@apply@fpnum\@@apply@fpnum}
 

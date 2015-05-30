@@ -145,6 +145,8 @@
   lambda,quote,define,if,defmacro,begin,%
   mdefine,setb,@let,@mlet,macroexpand,callocc}
 \edef\@defined@lisp@on@tex{\@defined@datatype,\@defined@specialform}
+% all additional types of LISP on TeX
+\def\@defined@additional@type{}
 
 
 %%%%%MEMO
@@ -182,9 +184,11 @@
  \expandafter\gdef\expandafter#1\expandafter{#1#2}}
 
 \def\lispeval#1#2{% #1 : \cs -> S-exp, #2 : target register
-  \gdef\@temp@write@buffer{}%
+  \begingroup
+    \gdef\@temp@write@buffer{}%
     \expandafter\@eval#1{}#2%
-  \@temp@write@buffer}
+    \@temp@write@buffer
+  \endgroup}
 
 \def\@eval#1#2#3#4{%
   \begingroup
