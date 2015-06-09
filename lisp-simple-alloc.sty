@@ -15,6 +15,18 @@
 % In simple mode, this does not affects.
 \def\@lisp@gc@perform{}
 
-% pinning a object. 
+% pinning a object on global.
 % In simple mode, this does not affects.
 \def\@lisp@gc@pinning#1#2{}
+
+% pinning objects on local.
+% In simple mode, this does not affects.
+\def\@lisp@gc@save@objects@local#1{}
+
+% pinning memories on local.
+% In simple mode, this does not affects.
+\def\@lisp@gc@save@memory@local#1{}
+
+% pinning environmnt on local.
+% In simple mode, this does not affects.
+\def\@lisp@gc@save@env@local#1{}

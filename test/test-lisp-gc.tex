@@ -1,0 +1,375 @@
+\documentclass{article}
+\usepackage{lisp-gc}
+\usepackage{qstest}
+\usepackage{etoolbox}
+\IncludeTests{*}
+
+\makeatletter % types of lisp objects (used for this test)
+\edef\@defined@lisp@on@tex{cons,mutable,closure,macro,exception,int}
+\def\@defined@additional@type{hoge}
+\def\@check{xxx}
+\def\@lisp@gc@trace@fpnum#1{\gdef\@check{called}}
+\def\@lisp@globalenv{}
+\makeatother
+
+\begin{document}
+  \LogTests{lgout}{*}{*}
+  \makeatletter
+  \def\@lisp@gc@alloc@count@max{20}
+  \@lisp@gc@init
+  \begin{qstest}{Simple Allocator Test}{\@lispeval}
+   \@lisp@gc@alloc\hoge
+   \expandafter\def\expandafter\hoge@expect\expandafter{%
+     \csname @lisp@gc@memory@0\endcsname}
+   % NOTICE this test works on e-TeX or more over. 
+   \Expect*{\expandonce\hoge}*{\expandonce\hoge@expect}
+   \@lisp@gc@alloc\hoge
+   \expandafter\def\expandafter\hoge@expect\expandafter{%
+     \csname @lisp@gc@memory@1\endcsname}
+   \Expect*{\expandonce\hoge}*{\expandonce\hoge@expect}
+  \end{qstest}
+  \begin{qstest}{Test for Marked Memory}{\@lisp@gc@alloc}
+   \def\@lisp@gc@alloc@local{}       
+   \def\@lisp@gc@usedenv{}           
+   \def\@lisp@gc@alloc@raw{}         
+   \def\@lisp@gc@alloc@pinning{}     
+   \@lisp@gc@count=0
+   \csname @lisp@gc@memory@0true\endcsname % mark 0th memory
+   \csname @lisp@gc@memory@1false\endcsname % unmark 1st memory
+   \csname @lisp@gc@memory@2true\endcsname % mark 2nd memory
+   \csname @lisp@gc@memory@3false\endcsname % unmark 3rd memory
+   \@lisp@gc@alloc\hoge
+   \toks0\expandafter{\csname @lisp@gc@memory@1\endcsname}
+   % NOTICE this test works on e-TeX or more over. 
+   \Expect*{\expandonce\hoge}*{\the\toks0}
+   \@lisp@gc@alloc\hoge
+   \toks0\expandafter{\csname @lisp@gc@memory@3\endcsname}
+   % NOTICE this test works on e-TeX or more over. 
+   \Expect*{\expandonce\hoge}*{\the\toks0}
+  \end{qstest}
+  \begin{qstest}{Test for Raw Memory}{\@lisp@gc@alloc}
+   \def\@lisp@gc@alloc@local{}       
+   \def\@lisp@gc@usedenv{}           
+   \def\@lisp@gc@alloc@raw{}         
+   \def\@lisp@gc@alloc@pinning{}     
+   \@lisp@gc@count=0
+   \@tempcnta=0\relax
+   \@whilenum\@tempcnta<\@lisp@gc@alloc@count@max\do{%
+      \csname @lisp@gc@memory@\the\@tempcnta false\endcsname
+    \advance\@tempcnta1}
+   \begingroup                  % 1st stack
+     \@lisp@gc@alloc\hoge % memory 0
+     \expandafter\@lisp@gc@save@memory@local\hoge % pin 0
+     \begingroup                % 2nd stack
+        \@lisp@gc@alloc\hoge % memory 1
+        \@lisp@gc@alloc\hoge % memory 2
+        \expandafter\@lisp@gc@save@memory@local\hoge % pin 2 only
+        \begingroup             % 3rd stack
+          \@lisp@gc@alloc\hoge % memory 3
+          \expandafter\@lisp@gc@save@memory@local\hoge % pin 3
+          \toks0\expandafter{\csname @lisp@gc@memory@3\endcsname}
+          \Expect*{hoge\expandonce\hoge}*{hoge\the\toks0}
+        \endgroup
+        \@lisp@gc@alloc\hoge % memory 4
+        \expandafter\@lisp@gc@save@memory@local\hoge % pin 4
+        \@lisp@gc@perform % 0, 2, 4 -> remain,  1,3 -> GCed
+        \@lisp@gc@alloc\hoge % memory 1
+        \toks0\expandafter{\csname @lisp@gc@memory@1\endcsname}
+        \Expect*{\expandonce\hoge}*{\the\toks0}
+        \@lisp@gc@alloc\hoge % memory 3
+        \toks0\expandafter{\csname @lisp@gc@memory@3\endcsname}
+        \Expect*{\expandonce\hoge}*{\the\toks0}
+        \@lisp@gc@alloc\hoge % memory 5
+        \toks0\expandafter{\csname @lisp@gc@memory@5\endcsname}
+        \Expect*{\expandonce\hoge}*{\the\toks0}
+     \endgroup
+   \endgroup
+  \end{qstest}
+  \begin{qstest}{Test for Local Object}{\@lisp@gc@alloc}
+   \def\@lisp@gc@alloc@local{}       
+   \def\@lisp@gc@usedenv{}           
+   \def\@lisp@gc@alloc@raw{}         
+   \def\@lisp@gc@alloc@pinning{}     
+   \@lisp@gc@count=0
+   \@tempcnta=0\relax
+   \@whilenum\@tempcnta<\@lisp@gc@alloc@count@max\do{%
+      \csname @lisp@gc@memory@\the\@tempcnta false\endcsname
+    \advance\@tempcnta1}
+   \begingroup
+     \toks0\expandafter{\csname @lisp@gc@memory@1\endcsname}
+     \toks1\expandafter{\csname @lisp@gc@memory@2\endcsname}
+     \edef\hoge{{\noexpand\@tlabel@cons{\the\toks0 \the\toks1}}}
+     \expandafter\@lisp@gc@save@objects@local\hoge % pin a cell
+     \begingroup
+       \toks0\expandafter{\csname @lisp@gc@memory@3\endcsname}
+       \edef\hoge{{\noexpand\@tlabel@mutable{\the\toks0}}}
+       \expandafter\@lisp@gc@save@objects@local\hoge % pin a mutable objct
+       \begingroup
+         \toks0\expandafter{\csname @lisp@gc@memory@4\endcsname}
+         \edef\hoge{{\noexpand\@tlabel@mutable{\the\toks0}}}
+         \expandafter\@lisp@gc@save@objects@local\hoge % pin a mutable objct 
+       \endgroup
+       \toks0\expandafter{\csname @lisp@gc@memory@5\endcsname}
+       \edef\hoge{{\noexpand\@tlabel@mutable{\the\toks0}}}
+       \expandafter\@lisp@gc@save@objects@local\hoge % pin a mutable objct
+       \@lisp@gc@perform % 1, 2, 3, 5 -> remain,  0 ,4 -> GCed
+        \@lisp@gc@alloc\hoge % memory 0
+        \toks0\expandafter{\csname @lisp@gc@memory@0\endcsname}
+        \Expect*{\expandonce\hoge}*{\the\toks0}
+        \@lisp@gc@alloc\hoge % memory 4
+        \toks0\expandafter{\csname @lisp@gc@memory@4\endcsname}
+        \Expect*{\expandonce\hoge}*{\the\toks0}
+        \@lisp@gc@alloc\hoge % memory 6
+        \toks0\expandafter{\csname @lisp@gc@memory@6\endcsname}
+        \Expect*{\expandonce\hoge}*{\the\toks0}
+      \endgroup
+   \endgroup
+  \end{qstest}
+  \begin{qstest}{Test for Global Environment}{\@lisp@gc@alloc}
+   \def\@lisp@gc@alloc@local{}       
+   \def\@lisp@gc@usedenv{}           
+   \def\@lisp@gc@alloc@raw{}         
+   \def\@lisp@gc@alloc@pinning{}     
+   \@lisp@gc@count=0
+   \@tempcnta=0\relax
+   \@whilenum\@tempcnta<\@lisp@gc@alloc@count@max\do{%
+      \csname @lisp@gc@memory@\the\@tempcnta false\endcsname
+    \advance\@tempcnta1}
+   \begingroup
+     \begingroup
+        \toks0\expandafter{\csname @lisp@gc@memory@1\endcsname}
+        \toks1\expandafter{\csname @lisp@gc@memory@2\endcsname}
+        \xdef\@lisp@globalenv{%
+          \noexpand\foo{\noexpand\@tlabel@cons{\the\toks0 \the\toks1}}}
+     \endgroup
+     \@lisp@gc@perform % 1, 2 -> saved, others are GCed
+     \@lisp@gc@alloc\hoge % memory 0
+     \toks0\expandafter{\csname @lisp@gc@memory@0\endcsname}
+     \Expect*{\expandonce\hoge}*{\the\toks0}
+     \@lisp@gc@alloc\hoge % memory 3
+     \toks0\expandafter{\csname @lisp@gc@memory@3\endcsname}
+     \Expect*{\expandonce\hoge}*{\the\toks0}
+   \endgroup
+   \gdef\@lisp@globalenv{} % reset
+  \end{qstest}
+  \begin{qstest}{Test for Local Environment}{\@lisp@gc@alloc}
+   \def\@lisp@gc@alloc@local{}       
+   \def\@lisp@gc@usedenv{}           
+   \def\@lisp@gc@alloc@raw{}         
+   \def\@lisp@gc@alloc@pinning{}     
+   \@lisp@gc@count=0
+   \@tempcnta=0\relax
+   \@whilenum\@tempcnta<\@lisp@gc@alloc@count@max\do{%
+      \csname @lisp@gc@memory@\the\@tempcnta false\endcsname
+    \advance\@tempcnta1}
+   \begingroup
+     \toks0\expandafter{\csname @lisp@gc@memory@1\endcsname}
+     \toks1\expandafter{\csname @lisp@gc@memory@2\endcsname}
+     \edef\hoge{{\noexpand\foo{\noexpand\@tlabel@cons{\the\toks0 \the\toks1}}}}
+        \expandafter\@lisp@gc@save@env@local\hoge
+     \begingroup
+       \toks0\expandafter{\csname @lisp@gc@memory@4\endcsname}
+       \edef\hoge{{\noexpand\foo{\noexpand\@tlabel@mutable{\the\toks0}}}}
+       \expandafter\@lisp@gc@save@env@local\hoge
+       \begingroup
+         \toks0\expandafter{\csname @lisp@gc@memory@5\endcsname}
+         \edef\hoge{{\noexpand\foo{\noexpand\@tlabel@mutable{\the\toks0}}}}
+         \expandafter\@lisp@gc@save@env@local\hoge
+       \endgroup
+       \@lisp@gc@perform % 1,2,4 -> saved, 0,3,5 -> GCed
+       \@lisp@gc@alloc\hoge % memory 0
+       \toks0\expandafter{\csname @lisp@gc@memory@0\endcsname}
+       \Expect*{\expandonce\hoge}*{\the\toks0}
+       \@lisp@gc@alloc\hoge % memory 3
+       \toks0\expandafter{\csname @lisp@gc@memory@3\endcsname}
+       \Expect*{\expandonce\hoge}*{\the\toks0}
+       \@lisp@gc@alloc\hoge % memory 5
+       \toks0\expandafter{\csname @lisp@gc@memory@5\endcsname}
+       \Expect*{\expandonce\hoge}*{\the\toks0}
+     \endgroup
+   \endgroup
+  \end{qstest}
+  \begin{qstest}{Test for Manual Pinning}{\@lisp@gc@alloc}
+   \def\@lisp@gc@alloc@local{}       
+   \def\@lisp@gc@usedenv{}           
+   \def\@lisp@gc@alloc@raw{}         
+   \def\@lisp@gc@alloc@pinning{}     
+   \@lisp@gc@count=0
+   \@tempcnta=0\relax
+   \@whilenum\@tempcnta<\@lisp@gc@alloc@count@max\do{%
+      \csname @lisp@gc@memory@\the\@tempcnta false\endcsname
+    \advance\@tempcnta1}
+   \begingroup
+     \begingroup
+       \toks0\expandafter{\csname @lisp@gc@memory@0\endcsname}
+       \toks1\expandafter{\csname @lisp@gc@memory@2\endcsname}
+       \edef\hoge{\noexpand\@tlabel@cons{\the\toks0 \the\toks1}}
+       \expandafter\@lisp@gc@pinning\hoge
+     \endgroup
+     \@lisp@gc@perform % 0, 2 -> saved, others are GCed
+     \@lisp@gc@alloc\hoge % memory 1
+     \toks0\expandafter{\csname @lisp@gc@memory@1\endcsname}
+     \Expect*{\expandonce\hoge}*{\the\toks0}
+     \@lisp@gc@alloc\hoge % memory 3
+     \toks0\expandafter{\csname @lisp@gc@memory@3\endcsname}
+     \Expect*{\expandonce\hoge}*{\the\toks0}
+   \endgroup
+   
+  \end{qstest}
+  \begin{qstest}{Test for Object Types}{\@lisp@gc@alloc}
+   \@lisp@gc@count=0
+   \@tempcnta=0\relax
+   \@whilenum\@tempcnta<\@lisp@gc@alloc@count@max\do{%
+      \csname @lisp@gc@memory@\the\@tempcnta false\endcsname
+    \advance\@tempcnta1}
+   \begingroup
+     %% cons
+     \toks0\expandafter{\csname @lisp@gc@memory@0\endcsname}
+     \toks1\expandafter{\csname @lisp@gc@memory@2\endcsname}
+     \edef\hoge{{\noexpand\@tlabel@cons{\the\toks0 \the\toks1}}}
+     \expandafter\@lisp@gc@save@objects@local\hoge
+     %% mutable
+     \toks0\expandafter{\csname @lisp@gc@memory@4\endcsname}
+     \edef\hoge{{\noexpand\@tlabel@mutable{\the\toks0}}}
+     \expandafter\@lisp@gc@save@objects@local\hoge
+     %% macro
+     \toks0\expandafter{\csname @lisp@gc@memory@5\endcsname}
+     \toks1\expandafter{\csname @lisp@gc@memory@7\endcsname}
+     \edef\@body{\noexpand\@tlabel@mutable{\the\toks0}}
+     \edef\@env{\noexpand\foo{\noexpand\@tlabel@mutable{\the\toks1}}}
+     \edef\hoge{{\noexpand\@tlabel@macro{{:\noexpand\@@unused}{\expandonce\@env}\expandonce\@body}}}
+     \expandafter\@lisp@gc@save@objects@local\hoge
+     %% closure
+     \toks0\expandafter{\csname @lisp@gc@memory@8\endcsname}
+     \toks1\expandafter{\csname @lisp@gc@memory@9\endcsname}
+     \edef\@body{\noexpand\@tlabel@mutable{\the\toks0}}
+     \edef\@env{\noexpand\foo{\noexpand\@tlabel@mutable{\the\toks1}}}
+     \edef\hoge{{\noexpand\@tlabel@closure{{:\noexpand\@@unused}{\expandonce\@env}\expandonce\@body}}}
+     \expandafter\@lisp@gc@save@objects@local\hoge
+     %% exception
+     \toks0\expandafter{\csname @lisp@gc@memory@11\endcsname}
+     \edef\hoge{{\noexpand\@tlabel@exception{{1}{\noexpand\@tlabel@mutable{\the\toks0}}}}}
+     \expandafter\@lisp@gc@save@objects@local\hoge
+     %% int (\@gobble)
+     \@lisp@gc@save@objects@local{\@tlabel@int{42}}
+     %% hoge (outer type)
+     \@lisp@gc@save@objects@local{\@tlabel@hoge{}}
+     %% perform
+     \tracingmacros=1
+     \@lisp@gc@perform % 0,2,4,5,7,8,9,11 are saved
+     \@lisp@gc@alloc\hoge % memory 1
+     \toks0\expandafter{\csname @lisp@gc@memory@1\endcsname}
+     \Expect*{\expandonce\hoge}*{\the\toks0}
+     \@lisp@gc@alloc\hoge % memory 3
+     \toks0\expandafter{\csname @lisp@gc@memory@3\endcsname}
+     \Expect*{\expandonce\hoge}*{\the\toks0}
+     \@lisp@gc@alloc\hoge % memory 6
+     \toks0\expandafter{\csname @lisp@gc@memory@6\endcsname}
+     \Expect*{\expandonce\hoge}*{\the\toks0}
+     \@lisp@gc@alloc\hoge % memory 10
+     \toks0\expandafter{\csname @lisp@gc@memory@10\endcsname}
+     \Expect*{\expandonce\hoge}*{\the\toks0}
+     \@lisp@gc@alloc\hoge % memory 12
+     \toks0\expandafter{\csname @lisp@gc@memory@12\endcsname}
+     \Expect*{\expandonce\hoge}*{\the\toks0}
+   \endgroup
+  \end{qstest}
+  \begin{qstest}{Test for Values in Memory}{\@lisp@gc@alloc}
+   \def\@lisp@gc@alloc@local{}       
+   \def\@lisp@gc@usedenv{}           
+   \def\@lisp@gc@alloc@raw{}         
+   \def\@lisp@gc@alloc@pinning{}     
+   \@lisp@gc@count=0
+   \@tempcnta=0\relax
+   \@whilenum\@tempcnta<\@lisp@gc@alloc@count@max\do{%
+      \csname @lisp@gc@memory@\the\@tempcnta false\endcsname
+    \advance\@tempcnta1}
+     \begingroup
+       \toks0\expandafter{\csname @lisp@gc@memory@0\endcsname}
+       \edef\hoge{{\noexpand\@tlabel@mutable{\the\toks0}}}
+       \expandafter\@lisp@gc@save@objects@local\hoge
+       \toks1\expandafter{\csname @lisp@gc@memory@2\endcsname}
+       \expandafter\xdef\the\toks0{%
+         \noexpand\@tlabel@mutable{\the\toks1}}
+       \@lisp@gc@perform % 0, 2 are saved
+       \@lisp@gc@alloc\hoge % memory 1
+       \toks0\expandafter{\csname @lisp@gc@memory@1\endcsname}
+       \Expect*{\expandonce\hoge}*{\the\toks0}
+       \@lisp@gc@alloc\hoge % memory 3
+       \toks0\expandafter{\csname @lisp@gc@memory@3\endcsname}
+       \Expect*{\expandonce\hoge}*{\the\toks0}
+     \endgroup
+  \end{qstest}
+  \begin{qstest}{Test for Circular Reference}{\@lisp@gc@alloc}
+   \def\@lisp@gc@alloc@local{}       
+   \def\@lisp@gc@usedenv{}           
+   \def\@lisp@gc@alloc@raw{}         
+   \def\@lisp@gc@alloc@pinning{}     
+   \@lisp@gc@count=0
+   \@tempcnta=0\relax
+   \@whilenum\@tempcnta<\@lisp@gc@alloc@count@max\do{%
+      \csname @lisp@gc@memory@\the\@tempcnta false\endcsname
+    \advance\@tempcnta1}
+  \begingroup
+       \toks0\expandafter{\csname @lisp@gc@memory@1\endcsname}
+       \edef\hoge{{\noexpand\@tlabel@mutable{\the\toks0}}}
+       \expandafter\@lisp@gc@save@objects@local\hoge
+       \toks1\expandafter{\csname @lisp@gc@memory@3\endcsname}
+       \expandafter\xdef\the\toks0{%
+         \noexpand\@tlabel@mutable{\the\toks1}}
+       \expandafter\xdef\the\toks1{%
+         \noexpand\@tlabel@mutable{\the\toks0}}
+       \@lisp@gc@perform % 1, 3 are saved
+       \@lisp@gc@alloc\hoge % memory 0
+       \toks0\expandafter{\csname @lisp@gc@memory@0\endcsname}
+       \Expect*{\expandonce\hoge}*{\the\toks0}
+       \@lisp@gc@alloc\hoge % memory 2
+       \toks0\expandafter{\csname @lisp@gc@memory@2\endcsname}
+       \Expect*{\expandonce\hoge}*{\the\toks0}
+  \endgroup
+  \end{qstest}
+  \begin{qstest}{Test for Tag's definition}
+   \def\@lisp@gc@alloc@local{}       
+   \def\@lisp@gc@usedenv{}           
+   \def\@lisp@gc@alloc@raw{}         
+   \def\@lisp@gc@alloc@pinning{}     
+   \@lisp@gc@count=0
+   \@tempcnta=0\relax
+   \@whilenum\@tempcnta<\@lisp@gc@alloc@count@max\do{%
+      \csname @lisp@gc@memory@\the\@tempcnta false\endcsname
+    \advance\@tempcnta1}
+   \begingroup
+     \def\@tlabel@cons{cons}
+     \@lisp@gc@perform
+     \Expect*{\@tlabel@cons}{cons}
+   \endgroup   
+  \end{qstest}
+  \begin{qstest}{Test for memory's value}
+   \def\@lisp@gc@alloc@local{}       
+   \def\@lisp@gc@usedenv{}           
+   \def\@lisp@gc@alloc@raw{}         
+   \def\@lisp@gc@alloc@pinning{}     
+   \@lisp@gc@count=0
+   \@tempcnta=0\relax
+   \@whilenum\@tempcnta<\@lisp@gc@alloc@count@max\do{%
+      \csname @lisp@gc@memory@\the\@tempcnta false\endcsname
+    \advance\@tempcnta1}
+   \begingroup
+       \toks0\expandafter{\csname @lisp@gc@memory@0\endcsname}
+       \expandafter\gdef\the\toks0{\@tlabel@int{42}}
+       \expandafter\@lisp@gc@save@memory@local
+         \expandafter{\the\toks0}
+       \toks1\expandafter{\csname @lisp@gc@memory@1\endcsname}
+       \expandafter\gdef\the\toks1{\@tlabel@int{23}}
+       \@lisp@gc@perform % 0 is saved
+       \edef\left{\noexpand\expandonce\the\toks0}
+       \Expect*{\left}{\@tlabel@int{42}}
+       \edef\left{\noexpand\expandonce\the\toks1}
+       \Expect*{\left}{\@tlabel@int{23}}
+       \@lisp@gc@alloc\hoge % memory 1
+       \toks0\expandafter{\csname @lisp@gc@memory@1\endcsname}
+       \Expect*{\expandonce\hoge}*{\the\toks0}
+   \endgroup   
+  \end{qstest}
+  \LogClose{lgout}
+\end{document}

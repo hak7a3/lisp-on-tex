@@ -1,0 +1,145 @@
+\newcount\@lisp@gc@count
+\def\@lisp@gc@alloc@count@max{1500} % memory limit
+\def\@lisp@gc@alloc@local{}         % objects on stack
+\def\@lisp@gc@usedenv{}             % used local environment
+\def\@lisp@gc@alloc@raw{}           % used memory on local
+\def\@lisp@gc@alloc@pinning{}       % pinned objects
+
+
+
+% gc initializer (called by lisp-on-tex.sty)
+\def\@lisp@gc@init{%
+  \@lisp@gc@count=0\relax
+  % create mark bits \if@lisp@gc@memory@<number>
+  \@tempcnta=0\relax
+  \@whilenum\@tempcnta<\@lisp@gc@alloc@count@max\do{%
+    \expandafter\newif\csname if@lisp@gc@memory@\the\@tempcnta\endcsname
+    \expandafter\gdef\csname @lisp@gc@memory@\the\@tempcnta\endcsname{\relax\relax}% initialize
+    \advance\@tempcnta1}}
+
+% allocator
+% The allocator define #1 to allocated the control sequence
+\def\@lisp@gc@alloc#1{%
+  % if memory is full, do gc
+  \ifnum\@lisp@gc@count<\@lisp@gc@alloc@count@max\else
+    \@lisp@gc@perform
+  \fi
+  % allocation
+  \def#1{}%
+  \@lisp@gc@alloc@@#1%
+  \ifx#1\@empty
+    \def#1{\@tlabel@exception{{-1}{\@tlabel@string{Memory is full}}}}%
+  \fi}
+\def\@lisp@gc@alloc@@#1{%
+  \csname if@lisp@gc@memory@\the\@lisp@gc@count\endcsname
+  \else % unused memory is found
+    % allocate
+    \expandafter\def\expandafter#1%
+      \expandafter{\csname @lisp@gc@memory@\the\@lisp@gc@count\endcsname}%
+    % clear memory (for marking)
+    \expandafter\gdef
+      \csname @lisp@gc@memory@\the\@lisp@gc@count\endcsname{\relax\relax}%
+  \fi
+  \global\advance\@lisp@gc@count1
+  \let\@@next\@gobble
+  \ifx#1\@empty\ifnum\@lisp@gc@count<\@lisp@gc@alloc@count@max
+    \let\@@next\@lisp@gc@alloc@@
+  \fi\fi
+  \@@next#1}
+
+
+% GC main routine. The routine is called by the allocator.
+% If you want to call GC manually, you can do it.
+\def\@lisp@gc@perform{%
+  \message{LISP on TeX: now GCing...^^J}%
+  % clear all mark bits
+  \@tempcnta0
+  \@whilenum\@tempcnta<\@lisp@gc@alloc@count@max\relax\do{%
+    \csname @lisp@gc@memory@\the\@tempcnta false\endcsname
+    \advance\@tempcnta1}%
+  % start marking mode
+  \begingroup
+  % define \@lisp@gc@memory@nnn to mark nnn-th memory and trace it's
+  % contents
+  \@tempcnta0
+  \@whilenum\@tempcnta<\@lisp@gc@alloc@count@max\relax\do{%
+    \expandafter\@lisp@gc@create@markmode@macro\expandafter{\the\@tempcnta}%
+      {\csname @lisp@gc@memory@\the\@tempcnta\endcsname}%
+    \advance\@tempcnta1}%
+  % define all typelabels to mark mode
+  \@lisp@gc@make@tlabel@mark@mode
+  % mark
+  %% local env
+  \expandafter\@lisp@gc@mark@env\@lisp@gc@usedenv\@lisp@unused\relax
+  %% global env
+  \expandafter\@lisp@gc@mark@env\@lisp@globalenv\@lisp@unused\relax
+  %% pinned objects
+  \@lisp@gc@alloc@pinning
+  %% stack
+  \@lisp@gc@alloc@local
+  %% mamory
+  \@lisp@gc@alloc@raw
+  % end marking mode 
+  \endgroup
+  % reset counter
+  \global\@lisp@gc@count0
+  \message{LISP on TeX: GC done^^J}}
+\def\@lisp@gc@create@markmode@macro#1#2{%
+  \expandafter\expandafter\expandafter\@lisp@gc@create@markmode@macro@#2{#1}}
+\def\@lisp@gc@create@markmode@macro@#1#2#3{%
+  \expandafter\def\csname @lisp@gc@memory@#3\endcsname{%
+    \let\@@next\relax
+    \csname if@lisp@gc@memory@#3\endcsname\else
+       % turn mark bit on
+       \expandafter\global\csname @lisp@gc@memory@#3true\endcsname
+       \def\@@next{#1{#2}}% trace
+    \fi\@@next}}
+\def\@lisp@gc@make@tlabel@mark@mode{%
+  \@for\@lisp@on@tex@type:=\@defined@lisp@on@tex\do{%
+    \expandafter\let
+      \csname @tlabel@\@lisp@on@tex@type\endcsname\@gobble}%
+  \def\@tlabel@cons##1{##1}%
+  \def\@tlabel@mutable##1{##1}%
+  \def\@tlabel@closure##1{\@lisp@gc@mark@closure##1}%
+  \def\@tlabel@macro##1{\@lisp@gc@mark@closure##1}%
+  \def\@tlabel@exception##1{\@lisp@gc@mark@exception##1}%
+  \@for\@lisp@on@tex@type:=\@defined@additional@type\do{%
+    \expandafter\@lisp@gc@create@markmode@additional
+      \csname @tlabel@\@lisp@on@tex@type\endcsname
+      \csname @lisp@gc@trace\@lisp@on@tex@type\endcsname}}
+\def\@lisp@unused{\@lisp@unused@}
+\def\@lisp@gc@mark@closure#1#2#3#4{%
+  \@lisp@gc@mark@env#2\@lisp@unused\relax
+  #3{#4}}
+\def\@lisp@gc@mark@exception#1#2{#2}%
+\def\@lisp@gc@create@markmode@additional#1{%
+  \expandafter\@lisp@gc@create@markmode@additional@\expandafter#1}
+\def\@lisp@gc@create@markmode@additional@#1#2{\let#1#2}
+% mark objects in a environment
+\def\@lisp@gc@mark@env#1#2{%
+  \ifx#1\@lisp@unused
+    \let\@@next\relax
+  \else
+    \def\@@next{#2\@lisp@gc@mark@env}%
+  \fi
+  \@@next}
+
+% pin a object on global.
+\def\@lisp@gc@pinning#1#2{%
+  \expandafter\gdef\expandafter\@lisp@gc@alloc@pinning
+    \expandafter{\@lisp@gc@alloc@pinning#1{#2}}}
+
+% pinning objects on local.
+\def\@lisp@gc@save@objects@local#1{%
+  \expandafter\def\expandafter\@lisp@gc@alloc@local
+    \expandafter{\@lisp@gc@alloc@local#1}}
+
+% pinning memories on local.
+\def\@lisp@gc@save@memory@local#1{%
+  \expandafter\def\expandafter\@lisp@gc@alloc@raw
+    \expandafter{\@lisp@gc@alloc@raw#1}}
+
+% pinning environmnt on local.
+\def\@lisp@gc@save@env@local#1{%
+  \expandafter\def\expandafter\@lisp@gc@usedenv
+    \expandafter{\@lisp@gc@usedenv#1}}
