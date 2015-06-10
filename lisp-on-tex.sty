@@ -190,14 +190,15 @@
  \expandafter\gdef\expandafter#1\expandafter{#1#2}}
 
 \def\lispeval#1#2{% #1 : \cs -> S-exp, #2 : target register
-  \begingroup
     \gdef\@temp@write@buffer{}%
     \expandafter\@eval#1{}#2%
-    \@temp@write@buffer
-  \endgroup}
+    \@temp@write@buffer}
 
 \def\@eval#1#2#3#4{%
   \begingroup
+    % pin target S-exp object.
+    % The environment (#3) must be pinned before call it.
+    \@lisp@gc@save@objects@local{#1{#2}}%
     \expandafter\@@select@eval#1{#2}{#3}#4%
   \endgroup}
 
@@ -222,12 +223,24 @@
     \let\@@next\@@eval@cons@exception\else\let\@@next\@@eval@cons@normal\fi
   \@@next{#2}{#3}{#4}}
 \def\@@eval@cons@normal#1#2#3{%
+  \expandafter\@lisp@gc@save@objects@local\expandafter{\@temp@i}% pin evaluated value of CAR
   \def\@temp@ii{}% init
-  \expandafter\@flatten@args#1\@temp@ii
-  \expandafter\expandafter\expandafter\@@select@apply@pre
-  \expandafter\@temp@i\@temp@ii\@{#2}#3}
+  \expandafter\@flatten@args#1\@temp@ii % args are already pined, maybe...
+  %errorcheck of argument form
+  \ifx\@temp@ii\@@flatten@error@symbol
+    \let\@@next\@@eval@cons@args@error
+  \else
+    \let\@@next\@@eval@cons@apply
+  \fi
+  \@@next{#2}{#3}}
 \def\@@select@apply@pre{\expandafter\@@select@apply}
 \def\@@eval@cons@exception#1#2#3{\global\let#3\@temp@i}
+\def\@@eval@cons@apply#1#2{%
+  \expandafter\expandafter\expandafter\@@select@apply@pre
+     \expandafter\@temp@i\@temp@ii\@{#1}#2}
+\def\@@eval@cons@args@error#1#2{%
+  \gdef#2{\@tlabel@exception{%
+    {-1}{\@tlabel@string{LISP on TeX: Eval Improper List}}}}}
 
 \def\@flatten@args#1#2#3{%
   \ifx#1\@tlabel@cons
@@ -235,17 +248,17 @@
   \else\ifx#1\@tlabel@nil
     \let\@flatten@next\@@flatten@fin
   \else
-    \errmessage{LISP on TeX [internal apply]: Invalid args}%
+    \let\@flatten@next\@@flatten@error
   \fi\fi
   \@flatten@next#2#3}
-
 \def\@@flatten@next#1#2#3{%
   \expandafter\expandafter\expandafter\def
   \expandafter\expandafter\expandafter#3%
   \expandafter\expandafter\expandafter{\expandafter#3#1}%
   \expandafter\@flatten@args#2#3}
-
 \def\@@flatten@fin#1{}
+\def\@@flatten@error#1#2{\def#2{error}}
+\def\@@flatten@error@symbol{error}
 
 \def\@apply@lambda#1#2#3#4#5\@#6#7{%
   \def\@lambda@args{}% init

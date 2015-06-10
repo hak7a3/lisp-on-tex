@@ -101,6 +101,8 @@
    \end{qstest}
    \begin{qstest}{cons cell (function call)}{\@lispeval,\@tlabel@cons}
     \testEvalWithSExp{(\+ :1 :2)}{\@tlabel@int{3}}
+    \testEvalWithSExp{(\+ :1 :2 . :3)}
+      {\@tlabel@exception{{-1}{\@tlabel@string{LISP on TeX: Eval Improper List}}}}
    \end{qstest}
    \begin{qstest}{special forms}{\@lispeval}
     % define
