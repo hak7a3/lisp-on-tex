@@ -226,7 +226,7 @@
   \expandafter\@lisp@gc@save@objects@local\expandafter{\@temp@i}% pin evaluated value of CAR
   \def\@temp@ii{}% init
   \expandafter\@flatten@args#1\@temp@ii % args are already pined, maybe...
-  %errorcheck of argument form
+  %error-check of argument form
   \ifx\@temp@ii\@@flatten@error@symbol
     \let\@@next\@@eval@cons@args@error
   \else
@@ -307,6 +307,7 @@
   \@@next{#2}{#6}}
 
 \def\@apply@mdefine@normal#1#2{%
+  \@lisp@gc@save@objects@local{#2}% pin the evaluated value
   \@lisp@gc@alloc\@lisp@tmp@local@i
   \expandafter\global\expandafter\let\@lisp@tmp@local@i#2%
   \expandafter\@apply@mdefine@normal@\@lisp@tmp@local@i#1%
@@ -335,6 +336,7 @@
   \fi\fi
   \@@next#1#2{#3}{#4}#5}
 \def\@apply@setb@normal@#1#2#3#4#5{%
+  % the environment and the value is already pinned, maybe...
   \let\@lisp@tmp@local@i#5%
   \@eval#2{#3}{#4}#5%
   \expandafter\expandafter\expandafter\ifx
@@ -352,13 +354,12 @@
 
 \def\@apply@setb@argtype@symbol@error#1#2#3#4#5{%
   \gdef#5{\@tlabel@exception{{-1}%
-    {The 1st argument of \setB must be a symbol}}}}
+    {\@tlabel@string{The 1st argument of \setB must be a symbol}}}}}
 \def\@apply@setb@raise@exception#1#2#3#4#5{}
 \def\@apply@setb@argtype@mutable@error#1#2#3#4#5{%
   \gdef#5{\@tlabel@exception{{-1}%
-    {The symbol #1 is not defined as a 'mutable'. %
-     Use \defineM, \letM, or \letrec.}}}}
-
+    {\@tlabel@string{The symbol #1 is not defined as a 'mutable'. %
+     Use \defineM, \letM, or \letrec.}}}}}
 
 \def\@apply@@let#1\@tlabel@symbol#2#3#4#5#6\@#7#8{%
   \@eval#3{#4}{#7}#8%
@@ -369,10 +370,16 @@
   \@@next{#2}{#5}{#6}{#7}{#8}}
 \def\@apply@@let@normal#1#2#3#4#5{%
   \expandafter\def\expandafter\@temp@env\expandafter{\expandafter#1\expandafter{#5}#4}%
-  \expandafter\gdef\expandafter\@@tco
-    \expandafter{\expandafter\@@eval@envcs\expandafter{\@temp@env}#2{#3}#5}%
+  \begingroup
+    \toks0\expandafter{\@temp@env}%
+    \toks1{#2{#3}#5}%
+    \toks2\expandafter{#5}%
+    \xdef\@@tco{%
+      \noexpand\@lisp@gc@save@objects@local{\the\toks2}% pin appended value
+      \noexpand\@@eval@envcs{\the\toks0}\the\toks1}%
+  \endgroup  
   \aftergroup\@@tco}
-\def\@apply@@let@exception#1#2#3#4#5{}
+\def\@apply@@let@exception#1#2#3#4#5{}%TODO: return exception to #5
 
 \def\@apply@@mlet#1\@tlabel@symbol#2#3#4#5#6\@#7#8{%
   \@eval#3{#4}{#7}#8%
@@ -383,13 +390,19 @@
   \@@next{#2}{#5}{#6}{#7}{#8}}
 
 \def\@apply@@mlet@normal#1#2#3#4#5{%
+  \expandafter\@lisp@gc@save@objects@local\expandafter{#5}% pin target value
   \@lisp@gc@alloc\@lisp@tmp@local@i
   \expandafter\global\expandafter\let\@lisp@tmp@local@i#5%
   \expandafter\@apply@@mlet@normal@\@lisp@tmp@local@i#1{#4}%
-  \expandafter\gdef\expandafter\@@tco\expandafter{%
-    \expandafter\@@eval@envcs\expandafter{\@lisp@tmp@local@ii}#2{#3}#5}%
-  \aftergroup\@@tco
-}
+  \begingroup
+    \toks0\expandafter{\@lisp@tmp@local@ii}%
+    \toks1{#2{#3}#5}%
+    \toks2\expandafter{\@lisp@tmp@local@i}%
+    \xdef\@@tco{%
+      \noexpand\@lisp@gc@save@memory@local{\the\toks2}% pin the appended value
+      \noexpand\@@eval@envcs{\the\toks0}\the\toks1}
+  \endgroup
+  \aftergroup\@@tco}
 \def\@apply@@mlet@normal@#1#2#3{%
   \def\@lisp@tmp@local@ii{#2{\@tlabel@mutable{#1}}#3}}
 
