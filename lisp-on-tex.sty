@@ -42,13 +42,17 @@
     \@lisp@env@tail
   % #2 is not bound on #3, so I try to get the value 
   % from global environment.
+  \def\@@next#1#2{}%
   \ifx#1\@lisp@env@get@value@dummy
-    \expandafter\global\expandafter\let\expandafter#1%
-      \csname @lisp@env@\string#2\endcsname\fi
+    \let\@@next\@lisp@env@get@value@global\fi
+  \@@next#1#2%
   % not found    
   \ifx#1\relax
     \gdef#1{\@tlabel@exception{{-1}{\@tlabel@string{unbound variable #2}}}}\fi}
-\def\@lisp@env@get@value@dummy{\@lisp@env@get@value@dummy}  
+\def\@lisp@env@get@value@dummy{\@lisp@env@get@value@dummy}
+\def\@lisp@env@get@value@global#1#2{%
+  \expandafter\global\expandafter\let\expandafter#1%
+      \csname @lisp@env@\string#2\endcsname}
 
 
 % ENTRY point of LISP on TeX. It takes a LISP program (#1)
@@ -524,7 +528,7 @@
 % #2 is formal arguments and #3 is rest argument. If there is
 % no rest argument, #3 is \@@unused. If an error occurs, it set
 % #1 to \relax by \let.
-\def\@@apply@create@env#1#2:#3{\tracingmacros=1%
+\def\@@apply@create@env#1#2:#3{%
   \def#1{}% initialize
   \@@apply@create@env@#1{#2}{#3}}
 \def\@@apply@create@env@#1#2#3{%
