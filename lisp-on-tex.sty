@@ -400,7 +400,7 @@
     \toks2\expandafter{\@lisp@tmp@local@i}%
     \xdef\@@tco{%
       \noexpand\@lisp@gc@save@memory@local{\the\toks2}% pin the appended value
-      \noexpand\@@eval@envcs{\the\toks0}\the\toks1}
+      \noexpand\@@eval@envcs{\the\toks0}\the\toks1}%
   \endgroup
   \aftergroup\@@tco}
 \def\@apply@@mlet@normal@#1#2#3{%
