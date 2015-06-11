@@ -26,10 +26,7 @@
   \fi
   % allocation
   \def#1{}%
-  \@lisp@gc@alloc@@#1%
-  \ifx#1\@empty
-    \def#1{\@tlabel@exception{{-1}{\@tlabel@string{Memory is full}}}}%
-  \fi}
+  \@lisp@gc@alloc@@#1}
 \def\@lisp@gc@alloc@@#1{%
   \csname if@lisp@gc@memory@\the\@lisp@gc@count\endcsname
   \else % unused memory is found
