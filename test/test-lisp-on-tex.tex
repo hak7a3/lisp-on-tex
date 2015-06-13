@@ -147,6 +147,10 @@
     % if
     \testEvalWithSExp{(\lispif /t 'hoge' :42)}{\@tlabel@string{hoge}}
     \testEvalWithSExp{(\lispif /f 'hoge' :42)}{\@tlabel@int{42}}
+    \testEvalWithSExp{(\lispif /x 'hoge' :42)}%
+      {\@tlabel@exception{{-1}{\@tlabel@string{Fatal. Invalid Boolean}}}}
+    \testEvalWithSExp{(\lispif :1 'hoge' :42)}%
+      {\@tlabel@exception{{-1}{\@tlabel@string{The condition must be a bool.}}}}
     \lispinterp{(\defineM \@if@target 'valid')}
     \testEvalWithSExp{(\lispif /t 'hoge' (\setB \@if@target 'invalid'))}{\@tlabel@string{hoge}}
     \testEval{\@tlabel@symbol{\@if@target}}{\@tlabel@string{valid}}

@@ -452,11 +452,10 @@
 \def\@apply@if@next@f#1#2#3#4#5#6{\gdef\@@tco{\@eval#3{#4}{#5}#6}}
 \def\@apply@if@next@invalid#1#2#3#4#5#6{%
   \gdef\@@tco{\gdef#6{\@tlabel@exception{%
-    {-1}{\@tlabel@string{Fatal. Invalid Boolean}}}}}}}
+    {-1}{\@tlabel@string{Fatal. Invalid Boolean}}}}}}
 \def\@apply@if@next@type@error#1#2#3#4#5#6{%
   \gdef\@@tco{\gdef#6{\@tlabel@exception{%
-    {-1}{\@tlabel@string{The condition must be a bool.}}}}}}}
-
+    {-1}{\@tlabel@string{The condition must be a bool.}}}}}}
 
 %% use general
 \def\@apply@eval@args#1#2#3#4{%
@@ -466,11 +465,11 @@
   \else
     \let\@@next@pre\@apply@eval@args@pre@i
   \fi\@@next@pre{#1}{#2}{#3}{#4}\@@next#1{#2}}
-
 \def\@apply@eval@args@pre@default#1#2#3#4{}
 \def\@apply@eval@args@pre@i#1#2#3#4{%
   \let\@@save#1%
   \@eval#3{#4}{#2}#1%
+  \expandafter\@lisp@gc@save@objects@local\expandafter{#1}% pin evaluated value 
   \expandafter\expandafter\expandafter\ifx
     \expandafter\@@eval@get@typelabel#1\@tlabel@exception
       \let\@@next\@apply@eval@args@exception
@@ -491,6 +490,7 @@
 \def\@apply@func#1#2\@#3#4{%
   \def\@temp@i{}%
   \def\@@dummy@temp@i{}%
+  \@lisp@gc@save@objects@local{\@tlabel@func{#1}}% pin function
   \@apply@eval@args\@temp@i{#3}#2\relax\relax
   \ifx\@@dummy@temp@i\@temp@i%
     \def\@@test@temp@i{\@tlabel@dummy{}}%
@@ -510,11 +510,16 @@
 \def\@apply@func@exception#1#2#3{%
   \expandafter\gdef\expandafter#3\expandafter{\@temp@i}}
 
-\def\@@apply@func#1#2\@#3#4{\gdef\@@tco{#1#4#2\relax\relax}\aftergroup\@@tco}
+\def\@@apply@func#1#2\@#3#4{%
+  \gdef\@@tco{%
+    % pin arguments because this stack will be fold.
+    \@lisp@gc@save@objects@local{#2}%
+    #1#4#2\relax\relax}\aftergroup\@@tco}
 
 \def\@apply@envfunc#1#2\@#3#4{%
   \def\@temp@i{}%
   \def\@@dummy@temp@i{}%
+  \@lisp@gc@save@objects@local{\@tlabel@envfunc{#1}}% pin function
   \@apply@eval@args\@temp@i{#3}#2\relax\relax
   \ifx\@temp@i\@@dummy@temp@i%
     \def\@@test@temp@i{\@tlabel@dummy{}}%
@@ -532,12 +537,18 @@
   \expandafter\@apply@envfunc@next\expandafter{\@temp@i}{#1}{#2}#3}
 \def\@apply@envfunc@next#1#2#3#4{\@@apply@envfunc{#2}#1\@{#3}#4}
 
-\def\@@apply@envfunc#1#2\@#3#4{\gdef\@@tco{#1#4{#3}#2\relax\relax}\aftergroup\@@tco}
+\def\@@apply@envfunc#1#2\@#3#4{%
+  \gdef\@@tco{%
+    \@lisp@gc@save@objects@local{#2}%
+    \@lisp@gc@save@env@local{#3}%
+    #1#4{#3}#2\relax\relax}\aftergroup\@@tco}
 
 
 \def\@apply@closure#1#2\@#3#4{%
   \def\@temp@i{}%
   \def\@@dummy@temp@i{}%
+  \@lisp@gc@save@objects@local{\@tlabel@closure{#1}}% pin closure
+  \@lisp@gc@save@objects@local{#2}% pin arguments
   \@apply@eval@args\@temp@i{#3}#2\relax\relax
   \ifx\@temp@i\@@dummy@temp@i%
     \def\@@test@temp@i{\@tlabel@dummy{}}%
@@ -558,9 +569,15 @@
 \def\@@apply@closure#1#2\@#3#4{\@@apply@closure@next#1#2\@#4}
 \def\@@apply@closure@next#1#2#3#4#5\@#6{%
   \def\@temp@env{}%
+  \@lisp@gc@save@objects@local{#5}% pin arguments
   \@@apply@create@env\@temp@env#1#5\relax\relax
-  \expandafter\gdef\expandafter\@@tco\expandafter{%
-    \expandafter\@@eval@envcs\expandafter{\@temp@env#2}#3{#4}#6}%
+  \begingroup
+    \toks0\expandafter{\@temp@env#2}%
+    \toks1{#3{#4}#6}%
+    \xdef\@@tco{%
+      \noexpand\@lisp@gc@save@env@local{\the\toks0}%
+      \noexpand\@@eval@envcs{\the\toks0}\the\toks1}%
+  \endgroup
   \aftergroup\@@tco}
 
 % create an environment using in evaluation of closure's body.
@@ -656,27 +673,44 @@
   \fi
   \@@next#3{#4}}
 
-
+% koko, @apply to @@apply wo irekaeru beki?
 \def\@@apply@macro#1#2\@#3#4{\@@apply@macro@next#1#2\@{#3}#4}
 \def\@@apply@macro@next#1#2#3#4#5\@#6#7{%
   \def\@temp@env{}%
+  \@lisp@gc@save@objects@local{#5}% pin arguments
   \@@apply@create@env\@temp@env#1#5\relax\relax
-  \expandafter\gdef\expandafter\@@tco\expandafter{%
-    \expandafter\@@eval@envcs\expandafter{\@temp@env#2}#3{#4}#7%
-    \expandafter\@eval#7{#6}#7}%
+  \begingroup
+    \toks0\expandafter{\@temp@env#2}%
+    \toks1{#3{#4}#7}%
+    \toks2{#7{#6}#7}%
+    \xdef\@@tco{%
+      \noexpand\@@eval@envcs{\the\toks0}\the\toks1
+      \noexpand\expandafter\noexpand\@eval\the\toks2}%
+  \endgroup
   \aftergroup\@@tco}
 \let\@apply@macro\@@apply@macro
 
 \def\@apply@macroexpand#1#2#3\@#4#5{% cont, args, \@ env, reg
   \let\@@apply@macro@next\@@apply@macro@next@expand@only
+  \@lisp@gc@save@env@local{#4}% pin environment
   \@eval#2{#3}{#4}#5%
+  \expandafter\@lisp@gc@save@objects@local\expandafter{#5}% pin tmp result
   \expandafter\@eval#5{#4}#5}
 \def\@@apply@macro@next@expand@only#1#2#3#4#5\@#6#7{%
   \def\@temp@env{}%
+  \@lisp@gc@save@objects@local{#5}% pin args
   \@@apply@create@env\@temp@env#1#5\relax\relax
-  \expandafter\gdef\expandafter\@@tco\expandafter{%
-    \expandafter\@@eval@envcs\expandafter{\@temp@env#2}#3{#4}#7%
-    \expandafter\@eval@if@macro#7{#6}#7}%
+  \begingroup
+    \toks0\expandafter{\@temp@env#2}%
+    \toks1{#3{#4}#7}%
+    \toks2\expandafter{#7{#6}#7}%
+    \toks3{#6}%
+    \xdef\@@tco{%
+       \noexpand\@lisp@gc@save@env@local{\the\toks0}%
+       \noexpand\@@eval@envcs{\the\toks0}\the\toks1
+       \noexpand\@lisp@gc@save@env@local{\the\toks3}%
+       \noexpand\@eval@if@macro\the\toks2}%
+  \endgroup
   \aftergroup\@@tco}
 \def\@eval@if@macro#1#2#3#4{%
   \ifx#1\@tlabel@cons\@eval@if@macro@#2{#3}#4\fi}
@@ -690,13 +724,17 @@
 \def\@apply@begin#1#2\@#3#4{%
   \@apply@begin@next#4{#3}#2\relax\relax}
 \def\@apply@begin@next#1#2#3#4#5#6{%
+  \@lisp@gc@save@env@local{#2}% pin environment
   \ifx#5\relax
     \let\@@next\@apply@begin@final
   \else
     \let\@@next\@apply@begin@cont
   \fi\@@next{#1}{#2}{#3}{#4}{#5}{#6}}
 \def\@apply@begin@final#1#2#3#4#5#6{%
-  \gdef\@@tco{\@eval#3{#4}{#2}#1}\aftergroup\@@tco}
+  \gdef\@@tco{%
+    \@lisp@gc@save@env@local{#2}%
+    \@eval#3{#4}{#2}#1}%
+  \aftergroup\@@tco}
 \def\@apply@begin@cont#1#2#3#4#5#6{%
   \@eval#3{#4}{#2}#1%
   \expandafter\expandafter\expandafter\ifx
@@ -713,6 +751,7 @@
 \newcount\c@lisp@continuation@label
 \def\@apply@callocc#1#2#3\@#4#5{%
   \advance\c@lisp@continuation@label 1
+  \@lisp@gc@save@env@local{#4}%
   \@eval#2{#3}{#4}#5%
   \expandafter\expandafter\expandafter\ifx
     \expandafter\@@eval@get@typelabel#5\@tlabel@exception
@@ -748,6 +787,7 @@
 \def\@apply@callocc@hook#1#2{\gdef#1{#2}}
 
 \def\@apply@continuation#1#2#3\@#4#5{%
+  \@lisp@gc@save@env@local{#4}%
   \@eval#2{#3}{#4}#5%
   \expandafter\expandafter\expandafter\ifx
     \expandafter\@@eval@get@typelabel#5\@tlabel@exception
