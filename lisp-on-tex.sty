@@ -193,13 +193,20 @@
 
 \def\lispeval#1#2{% #1 : \cs -> S-exp, #2 : target register
     \gdef\@temp@write@buffer{}%
+    \@lisp@eval@save@envfalse
     \expandafter\@eval#1{}#2%
     \@temp@write@buffer}
 
+\newif\if@lisp@eval@save@env
 \def\@eval#1#2#3#4{%
   \begingroup
     % pin target S-exp object.
-    % The environment (#3) must be pinned before call it.
+    \if@lisp@eval@save@env
+      \@lisp@eval@save@envfalse
+      \expandafter\@lisp@gc@save@env@local
+    \else
+      \expandafter\@gobble
+    \fi{#3}%
     \@lisp@gc@save@objects@local{#1{#2}}%
     \expandafter\@@select@eval#1{#2}{#3}#4%
   \endgroup}
@@ -377,6 +384,7 @@
     \toks1{#2{#3}#5}%
     \toks2\expandafter{#5}%
     \xdef\@@tco{%
+      \noexpand\@lisp@eval@save@envtrue
       \noexpand\@lisp@gc@save@objects@local{\the\toks2}% pin appended value
       \noexpand\@@eval@envcs{\the\toks0}\the\toks1}%
   \endgroup  
@@ -401,6 +409,7 @@
     \toks1{#2{#3}#5}%
     \toks2\expandafter{\@lisp@tmp@local@i}%
     \xdef\@@tco{%
+      \noexpand\@lisp@eval@save@envtrue
       \noexpand\@lisp@gc@save@memory@local{\the\toks2}% pin the appended value
       \noexpand\@@eval@envcs{\the\toks0}\the\toks1}%
   \endgroup
@@ -540,7 +549,7 @@
 \def\@@apply@envfunc#1#2\@#3#4{%
   \gdef\@@tco{%
     \@lisp@gc@save@objects@local{#2}%
-    \@lisp@gc@save@env@local{#3}%
+    \@lisp@eval@save@envtrue%
     #1#4{#3}#2\relax\relax}\aftergroup\@@tco}
 
 
@@ -575,7 +584,7 @@
     \toks0\expandafter{\@temp@env#2}%
     \toks1{#3{#4}#6}%
     \xdef\@@tco{%
-      \noexpand\@lisp@gc@save@env@local{\the\toks0}%
+      \noexpand\@lisp@eval@save@envtrue
       \noexpand\@@eval@envcs{\the\toks0}\the\toks1}%
   \endgroup
   \aftergroup\@@tco}
@@ -692,7 +701,7 @@
 
 \def\@apply@macroexpand#1#2#3\@#4#5{% cont, args, \@ env, reg
   \let\@@apply@macro@next\@@apply@macro@next@expand@only
-  \@lisp@gc@save@env@local{#4}% pin environment
+  \@lisp@eval@save@envtrue
   \@eval#2{#3}{#4}#5%
   \expandafter\@lisp@gc@save@objects@local\expandafter{#5}% pin tmp result
   \expandafter\@eval#5{#4}#5}
@@ -704,11 +713,10 @@
     \toks0\expandafter{\@temp@env#2}%
     \toks1{#3{#4}#7}%
     \toks2\expandafter{#7{#6}#7}%
-    \toks3{#6}%
     \xdef\@@tco{%
-       \noexpand\@lisp@gc@save@env@local{\the\toks0}%
+       \noexpand\@lisp@eval@save@envtrue
        \noexpand\@@eval@envcs{\the\toks0}\the\toks1
-       \noexpand\@lisp@gc@save@env@local{\the\toks3}%
+       \noexpand\@lisp@eval@save@envtrue
        \noexpand\@eval@if@macro\the\toks2}%
   \endgroup
   \aftergroup\@@tco}
