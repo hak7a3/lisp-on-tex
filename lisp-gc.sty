@@ -1,5 +1,5 @@
 \newcount\@lisp@gc@count
-\def\@lisp@gc@alloc@count@max{24000} % memory limit
+\def\@lisp@gc@alloc@count@max{12000} % memory limit
 \def\@lisp@gc@alloc@local{}          % objects on stack
 \def\@lisp@gc@usedenv{}              % used local environment
 \def\@lisp@gc@alloc@raw{}            % used memory on local
@@ -47,8 +47,11 @@
 
 % GC main routine. The routine is called by the allocator.
 % If you want to call GC manually, you can do it.
+\newcount\@lisp@gc@perform@result
 \def\@lisp@gc@perform{%
   \message{LISP on TeX: now GCing...^^J}%
+  % reset result
+  \global\@lisp@gc@perform@result0
   % clear all mark bits
   \@tempcnta0
   \@whilenum\@tempcnta<\@lisp@gc@alloc@count@max\relax\do{%
@@ -80,13 +83,17 @@
   \endgroup
   % reset counter
   \global\@lisp@gc@count0
-  \message{LISP on TeX: GC done^^J}}
+  \advance\@lisp@gc@perform@result-\@lisp@gc@alloc@count@max\relax
+  \multiply\@lisp@gc@perform@result-1
+  \message{LISP on TeX: GC done (free \the\@lisp@gc@perform@result)^^J}}
 \def\@lisp@gc@create@markmode@macro#1#2{%
   \expandafter\expandafter\expandafter\@lisp@gc@create@markmode@macro@#2{#1}}
 \def\@lisp@gc@create@markmode@macro@#1#2#3{%
   \expandafter\def\csname @lisp@gc@memory@#3\endcsname{%
     \let\@@next\relax
     \csname if@lisp@gc@memory@#3\endcsname\else
+       % count up live objects
+       \global\advance\@lisp@gc@perform@result1
        % turn mark bit on
        \expandafter\global\csname @lisp@gc@memory@#3true\endcsname
        \def\@@next{#1{#2}}% trace
