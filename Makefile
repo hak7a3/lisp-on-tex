@@ -3,6 +3,7 @@
 TMPDIR=/tmp
 STYLEFILES=$(wildcard ./*.sty)
 EXAMPLE_SOURCE=$(wildcard examples/*.tex)
+OUTER_EXAMPLE_SOURCE=$(wildcard outer-examples/*.tex)
 EXAMPLE= $(subst examples/repl.pdf,,$(EXAMPLE_SOURCE:.tex=.pdf))
 TUG2013= ./tug2013/slide.pdf
 TARGETS= LICENSE README $(STYLEFILES) $(EXAMPLE) $(EXAMPLE_SOURCE) $(TUG2013)
@@ -20,6 +21,14 @@ $(subst examples/showfont.pdf,,$(EXAMPLE)): %.pdf: %.tex
 
 examples/showfont.pdf: %pdf: %tex
 	cd examples && echo 'cmr10' | TEXINPUTS='../;' xelatex $(notdir $<)
+
+outer-examples/facterutaso.pdf: %.pdf: %.tex
+	cd outer-examples && TEXINPUTS='../;' uplatex $(notdir $<)
+	cd outer-examples && dvipdfmx $(notdir $(<:.tex=.dvi))
+
+outer-examples/facterutaso_nogc.pdf: %.pdf: %.tex
+	cd outer-examples && TEXINPUTS='../;' uplatex $(notdir $<)
+	cd outer-examples && dvipdfmx $(notdir $(<:.tex=.dvi))
 
 test: $(wildcard test/test-*.tex)
 	cd test && for target in $(notdir $^); do \

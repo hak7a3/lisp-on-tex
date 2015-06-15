@@ -1,0 +1,82 @@
+% -*- coding:utf-8-unix -*-
+\documentclass[uplatex]{jsarticle}
+\usepackage[scale=0.85]{geometry}
+\usepackage{lisp-on-tex}
+\lispinterp{%
+(\define \alphNames (\quote
+  ('ぜっと' 'えー' 'びー' 'しー' 'でぃー' 'いー' 'えふ' 'じー'
+   'えいち' 'あい' 'じぇー' 'けー' 'える' 'えむ' 'えぬ' 'おー'
+   'ぴー' 'きゅー' 'あーる' 'えす' 'てぃー' 'ゆー' 'ぶい'
+   'だぶりゅー' 'えっくす' 'わい')))
+(\define \bigUnits (\quote
+  ('' '万' '億' '兆' '京' '垓' '秭' '穣' '溝' '澗' '正' '載' '極'
+   '恒河沙' '阿僧祇' '那由他' '不可思議' '無量大数')))
+(\define \listEltasoFactorial (\lambda (\n)
+  (\let ((\iter (\lambda (\self) (\lambda (\m)
+    (\lispif (\< \n \m) ()
+      (\begin 
+        (\texprint (\concat (\eltasoName (\mpFact \m))
+                     '\newpara'))
+        (\texprint (\concat '\message' (\group (\intTOstring \m))))
+        (\immediatewrite)
+        ((\self \self) (\+ \m :1))))))))
+  (\begin (\texprint '\newpara')
+    ((\iter \iter) :1)))))
+(\define \eltasoName (\lambda (\mplX)
+  (\concat (\toKanji \mplX) '反田'
+    (\ith \alphNames (\mpModulo \mplX :26)))))
+(\define \ith (\lambda (\lst \n)
+  (\lispif (\= \n :0) (\car \lst)
+    (\ith (\cdr \lst) (\- \n :1)))))
+(\define \modulo (\lambda (\x \y)
+  (\- \x (\* \y (\/ \x \y)))))
+(\define \reverse (\lambda (\lst)
+  (\let ((\iter (\lambda (\self) (\lambda (\lstA \lstB)
+    (\lispif (\= () \lstA) \lstB
+      ((\self \self) (\cdr \lstA) (\cons (\car \lstA) \lstB)))))))
+  ((\iter \iter) \lst ()))))
+(\define \mpFact (\lambda (\n)
+  (\let ((\iter (\lambda (\self) (\lambda (\x \mplR)
+    (\lispif (\< \n \x) \mplR
+      ((\self \self) (\+ \x :1) (\mpMult \mplR \x)))))))
+  ((\iter \iter) :2 (\quote (:1))))))
+(\define \mpMult (\lambda (\mplX \y)
+  (\let ((\iter (\lambda (\self) (\lambda (\mplX \revR \cry)
+    (\lispif (\= () \mplX)
+      (\reverse (\lispif (\= \cry :0) \revR (\cons \cry \revR)))
+      (\let ((\t (\+ (\* (\car \mplX) \y) \cry)))
+        ((\self \self) (\cdr \mplX)
+          (\cons (\modulo \t :10000) \revR) (\/ \t :10000))))))))
+  ((\iter \iter) \mplX () :0))))
+(\define \mpModulo (\lambda (\mplX \y)
+  (\let ((\iter (\lambda (\self) (\lambda (\revX \cry)
+    (\lispif (\= () \revX) \cry
+      (\let ((\t (\+ (\* \cry :10000) (\car \revX))))
+        ((\self \self) (\cdr \revX) (\modulo \t \y))))))))
+  ((\iter \iter) (\reverse \mplX) :0))))
+(\define \toKanji (\lambda (\mplX)
+  (\let ((\iter (\lambda (\self) (\lambda (\mplX \lstU \res)
+    (\lispif (\= () \mplX) \res
+    (\lispif (\= () \lstU) 'たくさん'
+      ((\self \self) (\cdr \mplX) (\cdr \lstU)
+        (\lispif (\= :0 (\car \mplX)) \res
+          (\concat (\toKanjiS (\car \mplX)) (\car \lstU) \res)))))))))
+    ((\iter \iter) \mplX \bigUnits ''))))
+(\define \toKanjiS (\lambda (\v)
+  (\let ((\onePos (\lambda (\r \u)
+    (\let ((\t (\modulo (\/ \v \r) :10)))
+      (\lispif (\= \t :0) ''
+      (\lispif (\and (\< :1 \r) (\= \t :1)) \u
+        (\concat '\kansuji' (\intTOstring \t) \u)))))))
+  (\concat (\onePos :1000 '千') (\onePos :100 '百')
+    (\onePos :10 '十') (\onePos :1 '')))))
+(\define \id (\lambda (\x) \x))
+}
+\newcommand*\newpara{\par}
+\newcommand*\listEltasoFactorial[1]{%
+  \lispinterp{(\listEltasoFactorial :#1)}%
+}
+\begin{document}
+\tracingmacros=1
+\listEltasoFactorial{60}
+\end{document}

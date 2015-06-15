@@ -384,9 +384,11 @@
     \toks1{#2{#3}#5}%
     \toks2\expandafter{#5}%
     \xdef\@@tco{%
+      \begingroup
       \noexpand\@lisp@eval@save@envtrue
       \noexpand\@lisp@gc@save@objects@local{\the\toks2}% pin appended value
-      \noexpand\@@eval@envcs{\the\toks0}\the\toks1}%
+      \noexpand\@@eval@envcs{\the\toks0}\the\toks1
+      \endgroup}%
   \endgroup  
   \aftergroup\@@tco}
 \def\@apply@@let@exception#1#2#3#4#5{} % #5 is already set the value of exception
@@ -409,9 +411,11 @@
     \toks1{#2{#3}#5}%
     \toks2\expandafter{\@lisp@tmp@local@i}%
     \xdef\@@tco{%
+      \begingroup
       \noexpand\@lisp@eval@save@envtrue
       \noexpand\@lisp@gc@save@memory@local{\the\toks2}% pin the appended value
-      \noexpand\@@eval@envcs{\the\toks0}\the\toks1}%
+      \noexpand\@@eval@envcs{\the\toks0}\the\toks1
+      \endgroup}%
   \endgroup
   \aftergroup\@@tco}
 \def\@apply@@mlet@normal@#1#2#3{%
@@ -522,8 +526,10 @@
 \def\@@apply@func#1#2\@#3#4{%
   \gdef\@@tco{%
     % pin arguments because this stack will be fold.
+    \begingroup
     \@lisp@gc@save@objects@local{#2}%
-    #1#4#2\relax\relax}\aftergroup\@@tco}
+    #1#4#2\relax\relax
+    \endgroup}\aftergroup\@@tco}
 
 \def\@apply@envfunc#1#2\@#3#4{%
   \def\@temp@i{}%
@@ -548,9 +554,11 @@
 
 \def\@@apply@envfunc#1#2\@#3#4{%
   \gdef\@@tco{%
+    \begingroup
     \@lisp@gc@save@objects@local{#2}%
     \@lisp@eval@save@envtrue%
-    #1#4{#3}#2\relax\relax}\aftergroup\@@tco}
+    #1#4{#3}#2\relax\relax
+    \endgroup}\aftergroup\@@tco}
 
 
 \def\@apply@closure#1#2\@#3#4{%
@@ -714,10 +722,12 @@
     \toks1{#3{#4}#7}%
     \toks2\expandafter{#7{#6}#7}%
     \xdef\@@tco{%
+       \begingroup
        \noexpand\@lisp@eval@save@envtrue
        \noexpand\@@eval@envcs{\the\toks0}\the\toks1
        \noexpand\@lisp@eval@save@envtrue
-       \noexpand\@eval@if@macro\the\toks2}%
+       \noexpand\@eval@if@macro\the\toks2
+       \endgroup}%
   \endgroup
   \aftergroup\@@tco}
 \def\@eval@if@macro#1#2#3#4{%
@@ -740,7 +750,7 @@
   \fi\@@next{#1}{#2}{#3}{#4}{#5}{#6}}
 \def\@apply@begin@final#1#2#3#4#5#6{%
   \gdef\@@tco{%
-    \@lisp@gc@save@env@local{#2}%
+    \@lisp@eval@save@envtrue
     \@eval#3{#4}{#2}#1}%
   \aftergroup\@@tco}
 \def\@apply@begin@cont#1#2#3#4#5#6{%
