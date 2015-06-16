@@ -32,12 +32,12 @@
    \def\@lisp@gc@alloc@local{}       
    \def\@lisp@gc@usedenv{}           
    \def\@lisp@gc@alloc@raw{}         
-   \def\@lisp@gc@alloc@pinning{}     
+   \def\@lisp@gc@alloc@pinning{}
+   \let\@lisp@gc@mark@bitvector\@lisp@gc@mark@bitvector@
+   % 0, 2 -> marked
+   \setbitvector\@lisp@gc@mark@bitvector{0}{1}
+   \setbitvector\@lisp@gc@mark@bitvector{2}{1}
    \@lisp@gc@count=0
-   \csname @lisp@gc@memory@0true\endcsname % mark 0th memory
-   \csname @lisp@gc@memory@1false\endcsname % unmark 1st memory
-   \csname @lisp@gc@memory@2true\endcsname % mark 2nd memory
-   \csname @lisp@gc@memory@3false\endcsname % unmark 3rd memory
    \@lisp@gc@alloc\hoge
    \toks0\expandafter{\csname @lisp@gc@memory@1\endcsname}
    % NOTICE this test works on e-TeX or more over. 
@@ -53,10 +53,7 @@
    \def\@lisp@gc@alloc@raw{}         
    \def\@lisp@gc@alloc@pinning{}     
    \@lisp@gc@count=0
-   \@tempcnta=0\relax
-   \@whilenum\@tempcnta<\@lisp@gc@alloc@count@max\do{%
-      \csname @lisp@gc@memory@\the\@tempcnta false\endcsname
-    \advance\@tempcnta1}
+   \let\@lisp@gc@mark@bitvector\@lisp@gc@mark@bitvector@
    \begingroup                  % 1st stack
      \@lisp@gc@alloc\hoge % memory 0
      \expandafter\@lisp@gc@save@memory@local\hoge % pin 0
@@ -91,10 +88,7 @@
    \def\@lisp@gc@alloc@raw{}         
    \def\@lisp@gc@alloc@pinning{}     
    \@lisp@gc@count=0
-   \@tempcnta=0\relax
-   \@whilenum\@tempcnta<\@lisp@gc@alloc@count@max\do{%
-      \csname @lisp@gc@memory@\the\@tempcnta false\endcsname
-    \advance\@tempcnta1}
+   \let\@lisp@gc@mark@bitvector\@lisp@gc@mark@bitvector@
    \begingroup
      \toks0\expandafter{\csname @lisp@gc@memory@1\endcsname}
      \toks1\expandafter{\csname @lisp@gc@memory@2\endcsname}
@@ -131,10 +125,7 @@
    \def\@lisp@gc@alloc@raw{}         
    \def\@lisp@gc@alloc@pinning{}     
    \@lisp@gc@count=0
-   \@tempcnta=0\relax
-   \@whilenum\@tempcnta<\@lisp@gc@alloc@count@max\do{%
-      \csname @lisp@gc@memory@\the\@tempcnta false\endcsname
-    \advance\@tempcnta1}
+   \let\@lisp@gc@mark@bitvector\@lisp@gc@mark@bitvector@
    \begingroup
      \begingroup
         \toks0\expandafter{\csname @lisp@gc@memory@1\endcsname}
@@ -158,10 +149,7 @@
    \def\@lisp@gc@alloc@raw{}         
    \def\@lisp@gc@alloc@pinning{}     
    \@lisp@gc@count=0
-   \@tempcnta=0\relax
-   \@whilenum\@tempcnta<\@lisp@gc@alloc@count@max\do{%
-      \csname @lisp@gc@memory@\the\@tempcnta false\endcsname
-    \advance\@tempcnta1}
+   \let\@lisp@gc@mark@bitvector\@lisp@gc@mark@bitvector@
    \begingroup
      \toks0\expandafter{\csname @lisp@gc@memory@1\endcsname}
      \toks1\expandafter{\csname @lisp@gc@memory@2\endcsname}
@@ -195,10 +183,7 @@
    \def\@lisp@gc@alloc@raw{}         
    \def\@lisp@gc@alloc@pinning{}     
    \@lisp@gc@count=0
-   \@tempcnta=0\relax
-   \@whilenum\@tempcnta<\@lisp@gc@alloc@count@max\do{%
-      \csname @lisp@gc@memory@\the\@tempcnta false\endcsname
-    \advance\@tempcnta1}
+   \let\@lisp@gc@mark@bitvector\@lisp@gc@mark@bitvector@
    \begingroup
      \begingroup
        \toks0\expandafter{\csname @lisp@gc@memory@0\endcsname}
@@ -214,14 +199,10 @@
      \toks0\expandafter{\csname @lisp@gc@memory@3\endcsname}
      \Expect*{\expandonce\hoge}*{\the\toks0}
    \endgroup
-   
   \end{qstest}
   \begin{qstest}{Test for Object Types}{\@lisp@gc@alloc}
    \@lisp@gc@count=0
-   \@tempcnta=0\relax
-   \@whilenum\@tempcnta<\@lisp@gc@alloc@count@max\do{%
-      \csname @lisp@gc@memory@\the\@tempcnta false\endcsname
-    \advance\@tempcnta1}
+   \let\@lisp@gc@mark@bitvector\@lisp@gc@mark@bitvector@
    \begingroup
      %% cons
      \toks0\expandafter{\csname @lisp@gc@memory@0\endcsname}
@@ -280,10 +261,7 @@
    \def\@lisp@gc@alloc@raw{}         
    \def\@lisp@gc@alloc@pinning{}     
    \@lisp@gc@count=0
-   \@tempcnta=0\relax
-   \@whilenum\@tempcnta<\@lisp@gc@alloc@count@max\do{%
-      \csname @lisp@gc@memory@\the\@tempcnta false\endcsname
-    \advance\@tempcnta1}
+   \let\@lisp@gc@mark@bitvector\@lisp@gc@mark@bitvector@
      \begingroup
        \toks0\expandafter{\csname @lisp@gc@memory@0\endcsname}
        \edef\hoge{{\noexpand\@tlabel@mutable{\the\toks0}}}
@@ -306,10 +284,7 @@
    \def\@lisp@gc@alloc@raw{}         
    \def\@lisp@gc@alloc@pinning{}     
    \@lisp@gc@count=0
-   \@tempcnta=0\relax
-   \@whilenum\@tempcnta<\@lisp@gc@alloc@count@max\do{%
-      \csname @lisp@gc@memory@\the\@tempcnta false\endcsname
-    \advance\@tempcnta1}
+   \let\@lisp@gc@mark@bitvector\@lisp@gc@mark@bitvector@
   \begingroup
        \toks0\expandafter{\csname @lisp@gc@memory@1\endcsname}
        \edef\hoge{{\noexpand\@tlabel@mutable{\the\toks0}}}
@@ -334,10 +309,7 @@
    \def\@lisp@gc@alloc@raw{}         
    \def\@lisp@gc@alloc@pinning{}     
    \@lisp@gc@count=0
-   \@tempcnta=0\relax
-   \@whilenum\@tempcnta<\@lisp@gc@alloc@count@max\do{%
-      \csname @lisp@gc@memory@\the\@tempcnta false\endcsname
-    \advance\@tempcnta1}
+   \let\@lisp@gc@mark@bitvector\@lisp@gc@mark@bitvector@
    \begingroup
      \def\@tlabel@cons{cons}
      \@lisp@gc@perform
@@ -350,10 +322,7 @@
    \def\@lisp@gc@alloc@raw{}         
    \def\@lisp@gc@alloc@pinning{}     
    \@lisp@gc@count=0
-   \@tempcnta=0\relax
-   \@whilenum\@tempcnta<\@lisp@gc@alloc@count@max\do{%
-      \csname @lisp@gc@memory@\the\@tempcnta false\endcsname
-    \advance\@tempcnta1}
+   \let\@lisp@gc@mark@bitvector\@lisp@gc@mark@bitvector@
    \begingroup
        \toks0\expandafter{\csname @lisp@gc@memory@0\endcsname}
        \expandafter\gdef\the\toks0{\@tlabel@int{42}}

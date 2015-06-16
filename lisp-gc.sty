@@ -1,20 +1,27 @@
 \newcount\@lisp@gc@count
-\def\@lisp@gc@alloc@count@max{12000} % memory limit
+\def\@lisp@gc@alloc@count@max{65536} % memory limit
 \def\@lisp@gc@alloc@local{}          % objects on stack
 \def\@lisp@gc@usedenv{}              % used local environment
 \def\@lisp@gc@alloc@raw{}            % used memory on local
 \def\@lisp@gc@alloc@pinning{}        % pinned objects
+\def\@lisp@gc@mark@bitvector{}       % mark bitmap
+\def\@lisp@gc@mark@bitvector@{}      % mark bitmap (default)
 
-
+\input{bitvector.sty}
 
 % gc initializer (called by lisp-on-tex.sty)
 \def\@lisp@gc@init{%
   \@lisp@gc@count=0\relax
-  % create mark bits \if@lisp@gc@memory@<number>
+  % create mark bit vector
+  \createbitvector\@lisp@gc@mark@bitvector\@lisp@gc@alloc@count@max
+  \global\let\@lisp@gc@mark@bitvector\@lisp@gc@mark@bitvector
+  \global\let\@lisp@gc@mark@bitvector@\@lisp@gc@mark@bitvector
+  % set default value to each memory
   \@tempcnta=0\relax
   \@whilenum\@tempcnta<\@lisp@gc@alloc@count@max\do{%
-    \expandafter\newif\csname if@lisp@gc@memory@\the\@tempcnta\endcsname
-    \expandafter\gdef\csname @lisp@gc@memory@\the\@tempcnta\endcsname{\relax\relax}% initialize
+    \expandafter\gdef
+      \csname @lisp@gc@memory@\the\@tempcnta\endcsname
+      {\relax\relax}% initialize
     \advance\@tempcnta1}}
 
 % allocator
@@ -28,7 +35,9 @@
   \def#1{}%
   \@lisp@gc@alloc@@#1}
 \def\@lisp@gc@alloc@@#1{%
-  \csname if@lisp@gc@memory@\the\@lisp@gc@count\endcsname
+  \expandafter\getbitvector\expandafter\@lisp@gc@mark@bitvector
+    \expandafter{\the\@lisp@gc@count}\@lisp@gc@tmp
+  \ifx\@lisp@gc@tmp\@bitvector@one
   \else % unused memory is found
     % allocate
     \expandafter\def\expandafter#1%
@@ -53,10 +62,7 @@
   % reset result
   \global\@lisp@gc@perform@result0
   % clear all mark bits
-  \@tempcnta0
-  \@whilenum\@tempcnta<\@lisp@gc@alloc@count@max\relax\do{%
-    \csname @lisp@gc@memory@\the\@tempcnta false\endcsname
-    \advance\@tempcnta1}%
+  \global\let\@lisp@gc@mark@bitvector\@lisp@gc@mark@bitvector@
   % start marking mode
   \begingroup
   % define \@lisp@gc@memory@nnn to mark nnn-th memory and trace it's
@@ -91,11 +97,13 @@
 \def\@lisp@gc@create@markmode@macro@#1#2#3{%
   \expandafter\def\csname @lisp@gc@memory@#3\endcsname{%
     \let\@@next\relax
-    \csname if@lisp@gc@memory@#3\endcsname\else
+    \getbitvector\@lisp@gc@mark@bitvector{#3}\@lisp@gc@tmp
+    \ifx\@lisp@gc@tmp\@bitvector@zero
        % count up live objects
        \global\advance\@lisp@gc@perform@result1
        % turn mark bit on
-       \expandafter\global\csname @lisp@gc@memory@#3true\endcsname
+       \setbitvector\@lisp@gc@mark@bitvector{#3}{1}%
+       \global\let\@lisp@gc@mark@bitvector\@lisp@gc@mark@bitvector
        \def\@@next{#1{#2}}% trace
     \fi\@@next}}
 \def\@lisp@gc@make@tlabel@mark@mode{%
