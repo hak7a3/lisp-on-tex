@@ -107,7 +107,7 @@
 \def\@lisp@gc@create@markmode@macro#1#2{%
   \expandafter\expandafter\expandafter\@lisp@gc@create@markmode@macro@#2{#1}}
 \def\@lisp@gc@create@markmode@macro@#1#2#3{%
-  \expandafter\def\csname @lisp@gc@memory@#3\endcsname{%
+  \expandafter\gdef\csname @lisp@gc@memory@#3\endcsname{%
     \let\@@next\relax
     \getbitvector\@lisp@gc@mark@bitvector{#3}\@lisp@gc@tmp
     \ifx\@lisp@gc@tmp\@bitvector@zero
