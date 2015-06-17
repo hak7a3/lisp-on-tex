@@ -1,5 +1,5 @@
 \newcount\@lisp@gc@count
-\def\@lisp@gc@alloc@count@max{32768} % memory limit
+\def\@lisp@gc@alloc@count@max{65536} % memory limit
 \def\@lisp@gc@alloc@local{}          % objects on stack
 \def\@lisp@gc@usedenv{}              % used local environment
 \def\@lisp@gc@alloc@raw{}            % used memory on local
@@ -69,6 +69,10 @@
   % contents
   \@tempcnta0
   \@whilenum\@tempcnta<\@lisp@gc@alloc@count@max\relax\do{%
+    % save memory
+    \expandafter\@lisp@gc@global@let
+      \csname @lisp@gc@save@\the\@tempcnta\endcsname
+      \csname @lisp@gc@memory@\the\@tempcnta\endcsname
     \expandafter\@lisp@gc@create@markmode@macro\expandafter{\the\@tempcnta}%
       {\csname @lisp@gc@memory@\the\@tempcnta\endcsname}%
     \advance\@tempcnta1}%
@@ -85,10 +89,18 @@
   \@lisp@gc@alloc@local
   %% mamory
   \@lisp@gc@alloc@raw
+  % restore memory
+  \@tempcnta0
+  \@whilenum\@tempcnta<\@lisp@gc@alloc@count@max\relax\do{%
+    \expandafter\@lisp@gc@global@let
+      \csname @lisp@gc@memory@\the\@tempcnta\endcsname
+      \csname @lisp@gc@save@\the\@tempcnta\endcsname
+    \advance\@tempcnta1}%
   % end marking mode 
   \endgroup
   % reset counter
   \global\@lisp@gc@count0
+  % show GC result
   \advance\@lisp@gc@perform@result-\@lisp@gc@alloc@count@max\relax
   \multiply\@lisp@gc@perform@result-1
   \message{LISP on TeX: GC done (free \the\@lisp@gc@perform@result)^^J}}
@@ -135,6 +147,9 @@
     \def\@@next{#2\@lisp@gc@mark@env}%
   \fi
   \@@next}
+% global let for save and restore memory
+\def\@lisp@gc@global@let#1{\expandafter\@lisp@gc@global@let@\expandafter#1}
+\def\@lisp@gc@global@let@#1#2{\global\let#1#2}
 
 % pin a object on global.
 \def\@lisp@gc@pinning#1#2{%
