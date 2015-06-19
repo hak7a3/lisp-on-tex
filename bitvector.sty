@@ -63,6 +63,7 @@
 }
 
 % get bitvector #1's #2-th bit to #3
+\def\@@debug{}%
 \def\getbitvector#1#2#3{%
   \expandafter\@bitvector@get#1{#2}#3}
 \def\@bitvector@get#1#2#3#4{%
@@ -73,19 +74,14 @@
   \advance\@tempcntb-\@tempcnta\relax
   \@tempcnta#3\relax
   \divide\@tempcnta2
-  \ifnum\@tempcntb=0\relax
-    \def#4{#1}%
-  \else
-    \def#4{#2}%
-  \fi
+  \edef#4{\ifnum\@tempcntb=0 #1\else#2\fi}%
   \let\@@next\relax
   \ifx#4\@bitvector@one
   \else\ifx#4\@bitvector@zero
   \else
-    \ifnum\@tempcntb=0\relax
-      \edef\@@next{\noexpand\@bitvector@get#1{\the\@tempcnta}\noexpand#4}%
-    \else
-      \edef\@@next{\noexpand\@bitvector@get#2{\the\@tempcnta}\noexpand#4}%
-    \fi
+    \edef\@@next{%
+      \noexpand\@bitvector@get
+        \ifnum\@tempcntb=0 #1\else#2\fi
+        {\the\@tempcnta}\noexpand#4}%
   \fi\fi
   \@@next}

@@ -23,6 +23,8 @@
    \Expect*{\fuga}{0}
    \getbitvector\hoge{1}\fuga
    \Expect*{\fuga}{1}
+   \setbox0\hbox{\getbitvector\hoge{0}\fuga}
+   \Expect*{\the\wd0}{0.0pt}
   \end{qstest}
   \LogClose{lgout}
 \end{document}

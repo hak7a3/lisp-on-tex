@@ -65,20 +65,11 @@
   \global\let\@lisp@gc@mark@bitvector\@lisp@gc@mark@bitvector@
   % start marking mode
   \begingroup
-  % define \@lisp@gc@memory@nnn to mark nnn-th memory and trace it's
-  % contents
-  \@tempcnta0
-  \@whilenum\@tempcnta<\@lisp@gc@alloc@count@max\relax\do{%
-    % save memory
-    \expandafter\@lisp@gc@global@let
-      \csname @lisp@gc@save@\the\@tempcnta\endcsname
-      \csname @lisp@gc@memory@\the\@tempcnta\endcsname
-    \expandafter\@lisp@gc@create@markmode@macro\expandafter{\the\@tempcnta}%
-      {\csname @lisp@gc@memory@\the\@tempcnta\endcsname}%
-    \advance\@tempcnta1}%
   % define all typelabels to mark mode
   \@lisp@gc@make@tlabel@mark@mode
-  % mark
+  % init queue and enque root set
+  %% raw memory 
+  \expandafter\def\expandafter\@lisp@gc@mark@Q\expandafter{\@lisp@gc@alloc@raw}%
   %% local env
   \expandafter\@lisp@gc@mark@env\@lisp@gc@usedenv\@lisp@unused\relax
   %% global env
@@ -87,15 +78,8 @@
   \@lisp@gc@alloc@pinning
   %% stack
   \@lisp@gc@alloc@local
-  %% mamory
-  \@lisp@gc@alloc@raw
-  % restore memory
-  \@tempcnta0
-  \@whilenum\@tempcnta<\@lisp@gc@alloc@count@max\relax\do{%
-    \expandafter\@lisp@gc@global@let
-      \csname @lisp@gc@memory@\the\@tempcnta\endcsname
-      \csname @lisp@gc@save@\the\@tempcnta\endcsname
-    \advance\@tempcnta1}%
+  % marking start
+  \@lisp@gc@foreachQ\@lisp@gc@mark@Q\@lisp@gc@mark
   % end marking mode 
   \endgroup
   % reset counter
@@ -108,8 +92,8 @@
   \expandafter\expandafter\expandafter\@lisp@gc@create@markmode@macro@#2{#1}}
 \def\@lisp@gc@create@markmode@macro@#1#2#3{%
   \expandafter\gdef\csname @lisp@gc@memory@#3\endcsname{%
-    \let\@@next\relax
     \getbitvector\@lisp@gc@mark@bitvector{#3}\@lisp@gc@tmp
+    \let\@@next\relax
     \ifx\@lisp@gc@tmp\@bitvector@zero
        % count up live objects
        \global\advance\@lisp@gc@perform@result1
@@ -122,8 +106,8 @@
   \@for\@lisp@on@tex@type:=\@defined@lisp@on@tex\do{%
     \expandafter\let
       \csname @tlabel@\@lisp@on@tex@type\endcsname\@gobble}%
-  \def\@tlabel@cons##1{##1}%
-  \def\@tlabel@mutable##1{##1}%
+  \def\@tlabel@cons##1{\@lisp@gc@mark@cons##1}%
+  \def\@tlabel@mutable##1{\@lisp@gc@enQ\@lisp@gc@mark@Q{##1}}%
   \def\@tlabel@closure##1{\@lisp@gc@mark@closure##1}%
   \def\@tlabel@macro##1{\@lisp@gc@mark@closure##1}%
   \def\@tlabel@exception##1{\@lisp@gc@mark@exception##1}%
@@ -132,6 +116,9 @@
       \csname @tlabel@\@lisp@on@tex@type\endcsname
       \csname @lisp@gc@trace\@lisp@on@tex@type\endcsname}}
 \def\@lisp@unused{\@lisp@unused@}
+\def\@lisp@gc@mark@cons#1#2{%
+  \@lisp@gc@enQ\@lisp@gc@mark@Q{#1}%
+  \@lisp@gc@enQ\@lisp@gc@mark@Q{#2}}
 \def\@lisp@gc@mark@closure#1#2#3#4{%
   \@lisp@gc@mark@env#2\@lisp@unused\relax
   #3{#4}}
@@ -150,6 +137,40 @@
 % global let for save and restore memory
 \def\@lisp@gc@global@let#1{\expandafter\@lisp@gc@global@let@\expandafter#1}
 \def\@lisp@gc@global@let@#1#2{\global\let#1#2}
+% queue
+\def\@lisp@gc@enQ#1#2{% #1 : queue, #2 value
+  \expandafter\def\expandafter#1\expandafter{#1#2}}
+\def\@lisp@gc@deQ#1#2{% #1 : queue, #2 cs
+  \ifx#1\@empty
+    \def#2{}%
+  \else
+    \expandafter\@lisp@gc@deQ@\expandafter#1\expandafter#2#1\relax
+  \fi}
+\def\@lisp@gc@deQ@#1#2#3#4\relax{%
+  \def#1{#4}\def#2{#3}}
+\def\@lisp@gc@foreachQ#1#2{% #1 : queue, #2 : token -> 'a
+  \@lisp@gc@deQ#1\@lisp@gc@temp@local
+  \ifx\@lisp@gc@temp@local\@empty
+    \let\@@next\relax
+  \else
+    \def\@@next{%
+      \expandafter#2\expandafter{\@lisp@gc@temp@local}%
+      \@lisp@gc@foreachQ#1#2}%
+  \fi\@@next}
+% marker
+\def\@lisp@gc@mark#1{\expandafter\@lisp@gc@mark@\string#1\relax}
+\expandafter\def\expandafter\@lisp@gc@mark@\string\@lisp@gc@memory@#1\relax{%
+  \getbitvector\@lisp@gc@mark@bitvector{#1}\@lisp@gc@tmp
+  \ifx\@lisp@gc@tmp\@bitvector@zero
+    % count up live objects
+    \global\advance\@lisp@gc@perform@result1
+    % turn mark bit on
+    \setbitvector\@lisp@gc@mark@bitvector{#1}{1}%
+    \global\let\@lisp@gc@mark@bitvector\@lisp@gc@mark@bitvector
+    % enqueue if we need
+    \csname @lisp@gc@memory@#1\endcsname
+  \fi}
+
 
 % pin a object on global.
 \def\@lisp@gc@pinning#1#2{%

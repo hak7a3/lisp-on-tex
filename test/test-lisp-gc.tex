@@ -69,7 +69,8 @@
         \endgroup
         \@lisp@gc@alloc\hoge % memory 4
         \expandafter\@lisp@gc@save@memory@local\hoge % pin 4
-        \@lisp@gc@perform % 0, 2, 4 -> remain,  1,3 -> GCed
+        \setbox0\hbox{\@lisp@gc@perform}% 0, 2, 4 -> remain,  1,3 -> GCed
+        \Expect*{\the\wd0}{0.0pt}
         \@lisp@gc@alloc\hoge % memory 1
         \toks0\expandafter{\csname @lisp@gc@memory@1\endcsname}
         \Expect*{\expandonce\hoge}*{\the\toks0}
@@ -106,7 +107,8 @@
        \toks0\expandafter{\csname @lisp@gc@memory@5\endcsname}
        \edef\hoge{{\noexpand\@tlabel@mutable{\the\toks0}}}
        \expandafter\@lisp@gc@save@objects@local\hoge % pin a mutable objct
-       \@lisp@gc@perform % 1, 2, 3, 5 -> remain,  0 ,4 -> GCed
+       \setbox0\hbox{\@lisp@gc@perform} % 1, 2, 3, 5 -> remain,  0 ,4 -> GCed
+       \Expect*{\the\wd0}{0.0pt}
         \@lisp@gc@alloc\hoge % memory 0
         \toks0\expandafter{\csname @lisp@gc@memory@0\endcsname}
         \Expect*{\expandonce\hoge}*{\the\toks0}
@@ -133,7 +135,8 @@
         \xdef\@lisp@globalenv{%
           \noexpand\foo{\noexpand\@tlabel@cons{\the\toks0 \the\toks1}}}
      \endgroup
-     \@lisp@gc@perform % 1, 2 -> saved, others are GCed
+     \setbox0\hbox{\@lisp@gc@perform} % 1, 2 -> saved, others are GCed
+     \Expect*{\the\wd0}{0.0pt}
      \@lisp@gc@alloc\hoge % memory 0
      \toks0\expandafter{\csname @lisp@gc@memory@0\endcsname}
      \Expect*{\expandonce\hoge}*{\the\toks0}
@@ -164,7 +167,8 @@
          \edef\hoge{{\noexpand\foo{\noexpand\@tlabel@mutable{\the\toks0}}}}
          \expandafter\@lisp@gc@save@env@local\hoge
        \endgroup
-       \@lisp@gc@perform % 1,2,4 -> saved, 0,3,5 -> GCed
+       \setbox0\hbox{\@lisp@gc@perform} % 1,2,4 -> saved, 0,3,5 -> GCed
+       \Expect*{\the\wd0}{0.0pt}
        \@lisp@gc@alloc\hoge % memory 0
        \toks0\expandafter{\csname @lisp@gc@memory@0\endcsname}
        \Expect*{\expandonce\hoge}*{\the\toks0}
@@ -191,7 +195,8 @@
        \edef\hoge{\noexpand\@tlabel@cons{\the\toks0 \the\toks1}}
        \expandafter\@lisp@gc@pinning\hoge
      \endgroup
-     \@lisp@gc@perform % 0, 2 -> saved, others are GCed
+     \setbox0\hbox{\@lisp@gc@perform} % 0, 2 -> saved, others are GCed
+     \Expect*{\the\wd0}{0.0pt}
      \@lisp@gc@alloc\hoge % memory 1
      \toks0\expandafter{\csname @lisp@gc@memory@1\endcsname}
      \Expect*{\expandonce\hoge}*{\the\toks0}
@@ -236,8 +241,8 @@
      %% hoge (outer type)
      \@lisp@gc@save@objects@local{\@tlabel@hoge{}}
      %% perform
-     \tracingmacros=1
-     \@lisp@gc@perform % 0,2,4,5,7,8,9,11 are saved
+     \setbox0\hbox{\@lisp@gc@perform} % 0,2,4,5,7,8,9,11 are saved
+     \Expect*{\the\wd0}{0.0pt}
      \@lisp@gc@alloc\hoge % memory 1
      \toks0\expandafter{\csname @lisp@gc@memory@1\endcsname}
      \Expect*{\expandonce\hoge}*{\the\toks0}
@@ -269,7 +274,8 @@
        \toks1\expandafter{\csname @lisp@gc@memory@2\endcsname}
        \expandafter\xdef\the\toks0{%
          \noexpand\@tlabel@mutable{\the\toks1}}
-       \@lisp@gc@perform % 0, 2 are saved
+       \setbox0\hbox{\@lisp@gc@perform} % 0, 2 are saved
+       \Expect*{\the\wd0}{0.0pt}
        \@lisp@gc@alloc\hoge % memory 1
        \toks0\expandafter{\csname @lisp@gc@memory@1\endcsname}
        \Expect*{\expandonce\hoge}*{\the\toks0}
@@ -294,7 +300,8 @@
          \noexpand\@tlabel@mutable{\the\toks1}}
        \expandafter\xdef\the\toks1{%
          \noexpand\@tlabel@mutable{\the\toks0}}
-       \@lisp@gc@perform % 1, 3 are saved
+       \setbox0\hbox{\@lisp@gc@perform} % 1, 3 are saved
+       \Expect*{\the\wd0}{0.0pt}
        \@lisp@gc@alloc\hoge % memory 0
        \toks0\expandafter{\csname @lisp@gc@memory@0\endcsname}
        \Expect*{\expandonce\hoge}*{\the\toks0}
@@ -312,7 +319,8 @@
    \let\@lisp@gc@mark@bitvector\@lisp@gc@mark@bitvector@
    \begingroup
      \def\@tlabel@cons{cons}
-     \@lisp@gc@perform
+     \setbox0\hbox{\@lisp@gc@perform}
+     \Expect*{\the\wd0}{0.0pt}
      \Expect*{\@tlabel@cons}{cons}
    \endgroup   
   \end{qstest}
@@ -330,7 +338,8 @@
          \expandafter{\the\toks0}
        \toks1\expandafter{\csname @lisp@gc@memory@1\endcsname}
        \expandafter\gdef\the\toks1{\@tlabel@int{23}}
-       \@lisp@gc@perform % 0 is saved
+       \setbox0\hbox{\@lisp@gc@perform} % 0 is saved
+       \Expect*{\the\wd0}{0.0pt}
        \edef\left{\noexpand\expandonce\the\toks0}
        \Expect*{\left}{\@tlabel@int{42}}
        \edef\left{\noexpand\expandonce\the\toks1}
