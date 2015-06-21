@@ -35,4 +35,4 @@ test: $(wildcard test/test-*.tex)
       TEXINPUTS='../;' $(PYTHON) jenkins-qstest.py $$target; done
 
 clean:
-	rm -f test/*.xml test/*.lgout $(EXAMPLE)
+	rm -f test/*.xml test/*.lgout $(EXAMPLE) outer-examples/*.pdf
