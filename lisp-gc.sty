@@ -1,11 +1,11 @@
 \newcount\@lisp@gc@count
-\def\@lisp@gc@alloc@count@max{65536} % memory limit
-\def\@lisp@gc@alloc@local{}          % objects on stack
-\def\@lisp@gc@usedenv{}              % used local environment
-\def\@lisp@gc@alloc@raw{}            % used memory on local
-\def\@lisp@gc@alloc@pinning{}        % pinned objects
-\def\@lisp@gc@mark@bitvector{}       % mark bitmap
-\def\@lisp@gc@mark@bitvector@{}      % mark bitmap (default)
+\def\@lisp@gc@alloc@count@max{131072} % memory limit
+\def\@lisp@gc@alloc@local{}           % objects on stack
+\def\@lisp@gc@usedenv{}               % used local environment
+\def\@lisp@gc@alloc@raw{}             % used memory on local
+\def\@lisp@gc@alloc@pinning{}         % pinned objects
+\def\@lisp@gc@mark@bitvector{}        % mark bitmap
+\def\@lisp@gc@mark@bitvector@{}       % mark bitmap (default)
 
 % gc initializer (called by lisp-on-tex.sty)
 \def\@lisp@gc@init{%
