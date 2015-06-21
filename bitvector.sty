@@ -1,87 +1,41 @@
-\def\@bitvector@unit{00}
 \def\@bitvector@one{1}
 \def\@bitvector@zero{0}
 
 % create bitvector whose length is more than #2
 % Control sequence #1 will be the result
 \def\createbitvector#1#2{%
-  \@tempcnta2
-  \let#1\@bitvector@unit
-  \@bitvector@create#1{#2}}
-\def\@bitvector@create#1#2{%
-  \ifnum\@tempcnta<#2\relax
-    \edef#1{{#1}{#1}}%
-    \multiply\@tempcnta2
-    \let\@@next\@bitvector@create
-  \else
-   \let\@@next\@bitvector@create@gobble
-  \fi
-  \@@next#1{#2}}
-\def\@bitvector@create@gobble#1#2{}
+  \@tempcnta0
+  \def#1{}%
+  \@whilenum\@tempcnta<#2\do{%
+    \expandafter\expandafter\expandafter\def
+    \expandafter\expandafter\expandafter#1%
+    \expandafter\expandafter\expandafter{%
+      \expandafter#1\csname\the\@tempcnta\endcsname0}%
+    \advance\@tempcnta1}}
+
 
 % set bitvector #1's #2-th bit to #3
 \def\setbitvector#1#2#3{%
-  \expandafter\@bitvector@set#1{#2}{#3}#1}
-\def\@bitvector@set#1#2#3#4#5{%
-  \@tempcnta#3\relax % div
-  \@tempcntb#3\relax % mod
-  \divide\@tempcnta2
-  \multiply\@tempcnta2
-  \advance\@tempcntb-\@tempcnta\relax
-  \@tempcnta#3\relax
-  \divide\@tempcnta2
-  \ifnum\@tempcntb=0\relax
-    \def\@bitvector@tmp{#1}%
-  \else
-    \def\@bitvector@tmp{#2}%
-  \fi
-  \let\@@next\relax
-  \ifx\@bitvector@tmp\@bitvector@one
-    \ifnum\@tempcntb=0\relax
-      \def#5{#4#2}%
-    \else
-      \def#5{#1#4}%
-    \fi
-  \else\ifx\@bitvector@tmp\@bitvector@zero
-    \ifnum\@tempcntb=0\relax
-      \def#5{#4#2}%
-    \else
-      \def#5{#1#4}%
-    \fi
-  \else
-    \ifnum\@tempcntb=0\relax
-      \edef\@@next{%
-        \noexpand\@bitvector@set#1{\the\@tempcnta}{#4}\noexpand#5%
-        \edef\noexpand#5{{\noexpand#5}{#2}}}%
-    \else
-      \edef\@@next{%
-        \noexpand\@bitvector@set#2{\the\@tempcnta}{#4}\noexpand#5%
-        \edef\noexpand#5{{#1}{\noexpand#5}}}%
-    \fi
-  \fi\fi
-  \@@next
-}
+  \begingroup
+    \toks0\expandafter{\csname#2\endcsname}%
+    \xdef\@bitvector@tmp{%
+      \gdef\noexpand\@bitvector@set####1####2\the\toks0####3####4\relax{%
+      \def####1{####2\the\toks0 #3####4}}}%
+  \endgroup
+  \@bitvector@tmp
+  \expandafter\@bitvector@set\expandafter#1#1\relax
+  \global\let\@bitvector@tmp\relax
+  \global\let\@bitvector@set\relax}
 
 % get bitvector #1's #2-th bit to #3
-\def\@@debug{}%
 \def\getbitvector#1#2#3{%
-  \expandafter\@bitvector@get#1{#2}#3}
-\def\@bitvector@get#1#2#3#4{%
-  \@tempcnta#3\relax % div
-  \@tempcntb#3\relax % mod
-  \divide\@tempcnta2
-  \multiply\@tempcnta2
-  \advance\@tempcntb-\@tempcnta\relax
-  \@tempcnta#3\relax
-  \divide\@tempcnta2
-  \edef#4{\ifnum\@tempcntb=0 #1\else#2\fi}%
-  \let\@@next\relax
-  \ifx#4\@bitvector@one
-  \else\ifx#4\@bitvector@zero
-  \else
-    \edef\@@next{%
-      \noexpand\@bitvector@get
-        \ifnum\@tempcntb=0 #1\else#2\fi
-        {\the\@tempcnta}\noexpand#4}%
-  \fi\fi
-  \@@next}
+  \begingroup
+    \toks0\expandafter{\csname#2\endcsname}%
+    \xdef\@bitvector@tmp{%
+      \gdef\noexpand\@bitvector@get####1####2\the\toks0 ####3####4\relax{%
+      \def####1{####3}}}%
+  \endgroup
+  \@bitvector@tmp
+  \expandafter\@bitvector@get\expandafter#3#1\relax
+  \global\let\@bitvector@tmp\relax
+  \global\let\@bitvector@get\relax}

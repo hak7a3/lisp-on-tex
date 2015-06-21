@@ -1,30 +1,29 @@
 \documentclass{article}
-\usepackage{qstest, bitvector}
+\usepackage{qstest, bitvector_grouptree}
 \IncludeTests{*}
-\def\expandonce{\expandafter\noexpand}
 \begin{document}
   \LogTests{lgout}{*}{*}
   \begin{qstest}{create bitvector}{\createbitvector}
    \createbitvector\hoge{2}
-   \expandafter\Expect\expandafter{\hoge}{\00\10}
+   \Expect*{\hoge}{00}
    \createbitvector\hoge{8}
-   \expandafter\Expect\expandafter{\hoge}{\00\10\20\30\40\50\60\70}
+   \Expect*{\hoge}{{{00}{00}}{{00}{00}}}
    \createbitvector\hoge{3}
-   \expandafter\Expect\expandafter{\hoge}{\00\10\20}
+   \Expect*{\hoge}{{00}{00}}
   \end{qstest}
   \begin{qstest}{set value}{\setbitvector}
-   \def\hoge{\01\10\21\30}
+   \def\hoge{{01}{10}}
+   \tracingmacros=1
    \setbitvector\hoge{2}{0}
-   \expandafter\Expect\expandafter{\hoge}{\01\10\20\30}
-   \setbox0\hbox{\setbitvector\hoge{2}{0}}
-   \Expect*{\the\wd0}{0.0pt}
+   \Expect*{\hoge}{{00}{10}}
   \end{qstest}
   \begin{qstest}{get value}{\getbitvector}
-   \def\hoge{\00\11\20\30}
+   \def\hoge{{01}{10}}
+   \tracingmacros=1
    \getbitvector\hoge{0}\fuga
-   \expandafter\Expect\expandafter{\fuga}{0}
+   \Expect*{\fuga}{0}
    \getbitvector\hoge{1}\fuga
-   \expandafter\Expect\expandafter{\fuga}{1}
+   \Expect*{\fuga}{1}
    \setbox0\hbox{\getbitvector\hoge{0}\fuga}
    \Expect*{\the\wd0}{0.0pt}
   \end{qstest}

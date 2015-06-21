@@ -1,0 +1,91 @@
+\def\@bitvector@unit{00}
+\def\@bitvector@one{1}
+\def\@bitvector@zero{0}
+
+% create bitvector whose length is more than #2
+% Control sequence #1 will be the result
+\def\createbitvector#1#2{%
+  \@tempcnta2
+  \let#1\@bitvector@unit
+  \@bitvector@create#1{#2}}
+\def\@bitvector@create#1#2{%
+  \ifnum\@tempcnta<#2\relax
+    \edef#1{{#1}{#1}}%
+    \multiply\@tempcnta2
+    \let\@@next\@bitvector@create
+  \else
+   \let\@@next\@bitvector@create@gobble
+  \fi
+  \@@next#1{#2}}
+\def\@bitvector@create@gobble#1#2{}
+
+% set bitvector #1's #2-th bit to #3
+\def\setbitvector#1#2#3{%
+  \expandafter\@bitvector@set#1{#2}{#3}#1}
+\def\@bitvector@set#1#2#3#4#5{%
+  \def\@bitvector@l{#1}%
+  \def\@bitvector@r{#2}%
+  \@bitvector@set@{#3}{#4}#5}
+\def\@bitvector@set@#1#2#3{%
+  \@tempcnta#1\relax % div
+  \@tempcntb#1\relax % mod
+  \divide\@tempcnta2
+  \multiply\@tempcnta2
+  \advance\@tempcntb-\@tempcnta\relax
+  \@tempcnta#1\relax
+  \divide\@tempcnta2
+  \ifnum\@tempcntb=0
+    \let\@bitvector@selected\@bitvector@l
+    \let\@bitvector@unselected\@bitvector@r
+    \def\@bitvector@const{\@bitvector@const@l}%
+  \else
+    \let\@bitvector@selected\@bitvector@r
+    \let\@bitvector@unselected\@bitvector@l
+    \def\@bitvector@const{\@bitvector@const@r}%
+  \fi
+  \ifx\@bitvector@selected\@bitvector@one
+    \expandafter\ifx\@bitvector@const\@bitvector@const@l
+      \def\@bitvector@const{\@bitvector@const@ll}%
+    \else
+      \def\@bitvector@const{\@bitvector@const@rr}%
+    \fi
+    \def\@@next{\@bitvector@const#3{#2}}%
+  \else\ifx\@bitvector@selected\@bitvector@zero
+    \def\@@next{\@bitvector@const#3{#2}}%
+  \else
+    \@bitvector@tok@tmp@i{\expandafter\@bitvector@set\@bitvector@selected}%
+    \@bitvector@tok@tmp@ii\expandafter{\@bitvector@const#3}%
+    \edef\@@next{%
+      \the\@bitvector@tok@tmp@i{\the\@tempcnta}{#2}\noexpand#3%
+      \the\@bitvector@tok@tmp@ii}%
+  \fi\fi
+  \expandafter\@@next\expandafter{\@bitvector@unselected}}
+\newtoks\@bitvector@tok@tmp@i
+\newtoks\@bitvector@tok@tmp@ii
+\def\@bitvector@const@l#1#2{\edef#1{{#1}{#2}}}
+\def\@bitvector@const@r#1#2{\edef#1{{#2}{#1}}}
+\def\@bitvector@const@ll#1#2#3{\def#1{#2#3}}
+\def\@bitvector@const@rr#1#2#3{\def#1{#3#2}}
+
+
+% get bitvector #1's #2-th bit to #3
+\def\@@debug{}%
+\def\getbitvector#1#2#3{%
+  \expandafter\@bitvector@get#1{#2}#3}
+\def\@bitvector@get#1#2#3#4{%
+  \@tempcnta#3\relax % div
+  \@tempcntb#3\relax % mod
+  \divide\@tempcnta2
+  \multiply\@tempcnta2
+  \advance\@tempcntb-\@tempcnta\relax
+  \@tempcnta#3\relax
+  \divide\@tempcnta2
+  \edef#4{\ifnum\@tempcntb=0 #1\else#2\fi}%
+  \let\@@next\relax
+  \ifx#4\@bitvector@one
+  \else\ifx#4\@bitvector@zero
+  \else
+    \edef\@@next{%
+      \noexpand\@bitvector@get#4{\the\@tempcnta}\noexpand#4}%
+  \fi\fi
+  \@@next}

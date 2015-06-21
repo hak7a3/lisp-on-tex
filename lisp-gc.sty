@@ -1,5 +1,5 @@
 \newcount\@lisp@gc@count
-\def\@lisp@gc@alloc@count@max{32768} % memory limit
+\def\@lisp@gc@alloc@count@max{3000} % memory limit
 \def\@lisp@gc@alloc@local{}          % objects on stack
 \def\@lisp@gc@usedenv{}              % used local environment
 \def\@lisp@gc@alloc@raw{}            % used memory on local
@@ -162,6 +162,8 @@
 \expandafter\def\expandafter\@lisp@gc@mark@\string\@lisp@gc@memory@#1\relax{%
   \getbitvector\@lisp@gc@mark@bitvector{#1}\@lisp@gc@tmp
   \ifx\@lisp@gc@tmp\@bitvector@zero
+    % debug
+    \message{get #1^^J}%
     % count up live objects
     \global\advance\@lisp@gc@perform@result1
     % turn mark bit on
