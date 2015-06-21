@@ -1,5 +1,5 @@
 \newcount\@lisp@gc@count
-\def\@lisp@gc@alloc@count@max{3000} % memory limit
+\def\@lisp@gc@alloc@count@max{32768} % memory limit
 \def\@lisp@gc@alloc@local{}          % objects on stack
 \def\@lisp@gc@usedenv{}              % used local environment
 \def\@lisp@gc@alloc@raw{}            % used memory on local
@@ -7,17 +7,17 @@
 \def\@lisp@gc@mark@bitvector{}       % mark bitmap
 \def\@lisp@gc@mark@bitvector@{}      % mark bitmap (default)
 
-\input{bitvector.sty}
-
 % gc initializer (called by lisp-on-tex.sty)
 \def\@lisp@gc@init{%
   \@lisp@gc@count=0\relax
-  % create mark bit vector
-  \createbitvector\@lisp@gc@mark@bitvector\@lisp@gc@alloc@count@max
-  \global\let\@lisp@gc@mark@bitvector\@lisp@gc@mark@bitvector
-  \global\let\@lisp@gc@mark@bitvector@\@lisp@gc@mark@bitvector
+  % create mark bits
+  % clear all mark bits
+  \@tempcnta0
+  \@whilenum\@tempcnta<\@lisp@gc@alloc@count@max\do{%
+        \@lisp@gc@off@markbit{\the\@tempcnta}%
+        \advance\@tempcnta1}%
   % set default value to each memory
-  \@tempcnta=0\relax
+  \@tempcnta0
   \@whilenum\@tempcnta<\@lisp@gc@alloc@count@max\do{%
     \expandafter\gdef
       \csname @lisp@gc@memory@\the\@tempcnta\endcsname
@@ -35,9 +35,7 @@
   \def#1{}%
   \@lisp@gc@alloc@@#1}
 \def\@lisp@gc@alloc@@#1{%
-  \expandafter\getbitvector\expandafter\@lisp@gc@mark@bitvector
-    \expandafter{\the\@lisp@gc@count}\@lisp@gc@tmp
-  \ifx\@lisp@gc@tmp\@bitvector@one
+  \csname if@lisp@gc@memory@\the\@lisp@gc@count\endcsname
   \else % unused memory is found
     % allocate
     \expandafter\def\expandafter#1%
@@ -62,7 +60,10 @@
   % reset result
   \global\@lisp@gc@perform@result0
   % clear all mark bits
-  \global\let\@lisp@gc@mark@bitvector\@lisp@gc@mark@bitvector@
+  \@tempcnta0
+  \@whilenum\@tempcnta<\@lisp@gc@count\do{%
+     \@lisp@gc@off@markbit{\the\@tempcnta}%
+     \advance\@tempcnta1}%
   % start marking mode
   \begingroup
   % define all typelabels to mark mode
@@ -160,15 +161,13 @@
 % marker
 \def\@lisp@gc@mark#1{\expandafter\@lisp@gc@mark@\string#1\relax}
 \expandafter\def\expandafter\@lisp@gc@mark@\string\@lisp@gc@memory@#1\relax{%
-  \getbitvector\@lisp@gc@mark@bitvector{#1}\@lisp@gc@tmp
-  \ifx\@lisp@gc@tmp\@bitvector@zero
+  \csname if@lisp@gc@memory@#1\endcsname\else
     % debug
     \message{get #1^^J}%
     % count up live objects
     \global\advance\@lisp@gc@perform@result1
     % turn mark bit on
-    \setbitvector\@lisp@gc@mark@bitvector{#1}{1}%
-    \global\let\@lisp@gc@mark@bitvector\@lisp@gc@mark@bitvector
+    \@lisp@gc@on@markbit{#1}%
     % enqueue if we need
     \csname @lisp@gc@memory@#1\endcsname
   \fi}
@@ -193,3 +192,7 @@
 \def\@lisp@gc@save@env@local#1{%
   \expandafter\def\expandafter\@lisp@gc@usedenv
     \expandafter{\@lisp@gc@usedenv#1}}
+
+% for mark bits
+\def\@lisp@gc@on@markbit#1{\expandafter\global\expandafter\let\csname if@lisp@gc@memory@#1\endcsname\iftrue}
+\def\@lisp@gc@off@markbit#1{\expandafter\global\expandafter\let\csname if@lisp@gc@memory@#1\endcsname\iffalse}
