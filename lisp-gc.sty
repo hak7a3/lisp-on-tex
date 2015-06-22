@@ -1,3 +1,5 @@
+\RequirePackage{xkeyval}
+
 \newcount\@lisp@gc@count
 \def\@lisp@gc@alloc@count@max{32768}  % memory limit
 \def\@lisp@gc@alloc@local{}           % objects on stack
@@ -6,6 +8,10 @@
 \def\@lisp@gc@alloc@pinning{}         % pinned objects
 \def\@lisp@gc@mark@bitvector{}        % mark bitmap
 \def\@lisp@gc@mark@bitvector@{}       % mark bitmap (default)
+
+% execute GC option
+\DeclareOptionX{heapsize}{\def\@lisp@gc@alloc@count@max{#1}}
+\ProcessOptionsX
 
 % gc initializer (called by lisp-on-tex.sty)
 \def\@lisp@gc@init{%

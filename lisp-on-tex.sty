@@ -3,16 +3,18 @@
 %%
 %%  License: Modified BSD - see LICENSE file
 %%
-
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{lisp-on-tex}[2015/05/03 v2.0]
+\ProvidesPackage{lisp-on-tex}[2015/06/22 v2.0]
 
+\RequirePackage{xkeyval}
 \newcount\@lisp@gc@style
+\def\@lisp@opt@gc{}
 % I use bad magic numbers...
-\DeclareOption{noGC}{\@lisp@gc@style0\relax}
-\DeclareOption{markGC}{\@lisp@gc@style1\relax}
-\ExecuteOptions{noGC}
-\ProcessOptions
+\DeclareOptionX{noGC}{\@lisp@gc@style0\relax}
+\DeclareOptionX{markGC}{\@lisp@gc@style1\relax}
+\DeclareOptionX{GCopt}[]{\def\@lisp@opt@gc{#1}}
+\ExecuteOptionsX{noGC}
+\ProcessOptionsX
 
 
 % lisp's global environment and some macros for it
@@ -820,8 +822,8 @@
 
 % select GC engine
 \ifcase\@lisp@gc@style
-  \input{lisp-simple-alloc.sty} \or
-  \input{lisp-gc.sty} \fi
+  \expandafter\RequirePackage\expandafter[\@lisp@opt@gc]{lisp-simple-alloc} \or
+  \expandafter\RequirePackage\expandafter[\@lisp@opt@gc]{lisp-gc} \fi
 \@lisp@gc@init
 
 

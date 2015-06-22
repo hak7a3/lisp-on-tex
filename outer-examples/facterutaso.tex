@@ -1,7 +1,7 @@
 % -*- coding:utf-8-unix -*-
 \documentclass[uplatex]{jsarticle}
 \usepackage[scale=0.85]{geometry}
-\usepackage[markGC]{lisp-on-tex}
+\usepackage[markGC, GCopt={heapsize=3000}]{lisp-on-tex}
 \lispinterp{%
 (\define \alphNames (\quote
   ('ぜっと' 'えー' 'びー' 'しー' 'でぃー' 'いー' 'えふ' 'じー'
@@ -77,5 +77,5 @@
   \lispinterp{(\listEltasoFactorial :#1)}%
 }
 \begin{document}
-\listEltasoFactorial{65}
+\listEltasoFactorial{80}
 \end{document}
