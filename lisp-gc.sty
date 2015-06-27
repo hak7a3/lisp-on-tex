@@ -1,6 +1,7 @@
 \RequirePackage{xkeyval}
 
 \newcount\@lisp@gc@count
+\newcount\@lisp@gc@perform@result
 \def\@lisp@gc@alloc@count@max{32768}  % memory limit
 \def\@lisp@gc@alloc@local{}           % objects on stack
 \def\@lisp@gc@usedenv{}               % used local environment
@@ -16,6 +17,7 @@
 % gc initializer (called by lisp-on-tex.sty)
 \def\@lisp@gc@init{%
   \@lisp@gc@count=0\relax
+  \@lisp@gc@perform@result=\@lisp@gc@alloc@count@max\relax
   % create mark bits
   % clear all mark bits
   \@tempcnta0
@@ -56,7 +58,13 @@
     \ifnum\@lisp@gc@count<\@lisp@gc@alloc@count@max
       \let\@@next\@lisp@gc@alloc@@
     \else
-      \def\@@next{\@lisp@gc@perform\@lisp@gc@alloc@@}%
+      \def\@@next{%
+        \@lisp@gc@perform
+        \ifnum\@lisp@gc@perform@result=0\relax
+          \expandafter\@gobble % empty
+        \else
+          \expandafter\@lisp@gc@alloc@@
+        \fi}%
     \fi
   \fi
   \@@next#1}
@@ -64,11 +72,10 @@
 
 % GC main routine. The routine is called by the allocator.
 % If you want to call GC manually, you can do it.
-\newcount\@lisp@gc@perform@result
 \def\@lisp@gc@perform{%
   \message{LISP on TeX: now GCing...^^J}%
   % reset result
-  \global\@lisp@gc@perform@result0
+  \global\@lisp@gc@perform@result\@lisp@gc@alloc@count@max\relax
   % clear all mark bits
   \@tempcnta0
   \@whilenum\@tempcnta<\@lisp@gc@count\do{%
@@ -96,23 +103,7 @@
   % reset counter
   \global\@lisp@gc@count0
   % show GC result
-  \advance\@lisp@gc@perform@result-\@lisp@gc@alloc@count@max\relax
-  \multiply\@lisp@gc@perform@result-1
   \message{LISP on TeX: GC done (free \the\@lisp@gc@perform@result)^^J}}
-\def\@lisp@gc@create@markmode@macro#1#2{%
-  \expandafter\expandafter\expandafter\@lisp@gc@create@markmode@macro@#2{#1}}
-\def\@lisp@gc@create@markmode@macro@#1#2#3{%
-  \expandafter\gdef\csname @lisp@gc@memory@#3\endcsname{%
-    \getbitvector\@lisp@gc@mark@bitvector{#3}\@lisp@gc@tmp
-    \let\@@next\relax
-    \ifx\@lisp@gc@tmp\@bitvector@zero
-       % count up live objects
-       \global\advance\@lisp@gc@perform@result1
-       % turn mark bit on
-       \setbitvector\@lisp@gc@mark@bitvector{#3}{1}%
-       \global\let\@lisp@gc@mark@bitvector\@lisp@gc@mark@bitvector
-       \def\@@next{#1{#2}}% trace
-    \fi\@@next}}
 \def\@lisp@gc@make@tlabel@mark@mode{%
   \@for\@lisp@on@tex@type:=\@defined@lisp@on@tex\do{%
     \expandafter\let
@@ -172,8 +163,8 @@
 \def\@lisp@gc@mark#1{\expandafter\@lisp@gc@mark@\string#1\relax}
 \expandafter\def\expandafter\@lisp@gc@mark@\string\@lisp@gc@memory@#1\relax{%
   \csname if@lisp@gc@memory@#1\endcsname\else
-    % count up live objects
-    \global\advance\@lisp@gc@perform@result1
+    % count down remain memory
+    \global\advance\@lisp@gc@perform@result-1
     % turn mark bit on
     \@lisp@gc@on@markbit{#1}%
     % enqueue if we need
