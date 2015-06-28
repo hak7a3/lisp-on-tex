@@ -102,7 +102,7 @@
    \begin{qstest}{cons cell (function call)}{\@lispeval,\@tlabel@cons}
     \testEvalWithSExp{(\+ :1 :2)}{\@tlabel@int{3}}
     \testEvalWithSExp{(\+ :1 :2 . :3)}
-      {\@tlabel@exception{{-1}{\@tlabel@string{LISP on TeX: Eval Improper List}}}}
+      {\@tlabel@exception{{-1}{\@tlabel@string{Eval Improper List}}}}
    \end{qstest}
    \begin{qstest}{special forms}{\@lispeval}
     % define
@@ -119,6 +119,12 @@
     \testEvalWithSExp{\@test@define@local}{\@tlabel@string{local}}
     \lispinterp{((\lambda ()(\define \@test@define@local 'local2')))}
     \testEvalWithSExp{\@test@define@local}{\@tlabel@string{local2}}
+    \lispinterp{(\define (\@foo \x \y) (\+ \x \y))}
+    \testEvalWithSExp{(\@foo :2 :3)}{\@tlabel@int{5}}
+    \testEvalWithSExp{(\define :1 :2)}{\@tlabel@exception{{-1}
+      {\@tlabel@string{The 1st argument of \define or \defineM must be a symbol or valid list.}}}}
+    \testEvalWithSExp{(\define (:1) :2)}{\@tlabel@exception{{-1}
+      {\@tlabel@string{The 1st argument of \define or \defineM must be a symbol or valid list.}}}}
     %defineM
     \toks0\expandafter{\@lisp@globalenv}
     \def\checkDefineMutableCheckEnv#1#2#3\@@end{%
@@ -138,6 +144,12 @@
     \testEvalWithSExp{\@test@define@local}{\@tlabel@string{local}}
     \lispinterp{((\lambda ()(\defineM \@test@define@local 'local2')))}
     \testEvalWithSExp{\@test@define@local}{\@tlabel@string{local2}}
+    \lispinterp{(\defineM (\@foo \x \y) (\+ \x \y))}
+    \testEvalWithSExp{(\@foo :2 :3)}{\@tlabel@int{5}}
+    \testEvalWithSExp{(\defineM :1 :2)}{\@tlabel@exception{{-1}
+      {\@tlabel@string{The 1st argument of \define or \defineM must be a symbol or valid list.}}}}
+    \testEvalWithSExp{(\defineM (:1) :2)}{\@tlabel@exception{{-1}
+      {\@tlabel@string{The 1st argument of \define or \defineM must be a symbol or valid list.}}}}
     %setB
     \lispinterp{
       (\defineM \@setB@target 'invalid')
@@ -254,6 +266,31 @@
     \testEvalWithSExp{(\apply \+ (\quote (:1 :2)))}{\@tlabel@int{3}} % apply (env func)
     \lispinterp{(\define \@tmp 'valid')}
     \testEvalWithSExp{(\eval (\quote \@tmp))}{\@tlabel@string{valid}} % eval (env func)
+   \end{qstest}
+   \begin{qstest}{function arguments check}{\@lispeval}
+    \def\hoge#1#2\relax\relax{\gdef#1{\@tlabel@string{called}}}
+    % * case
+    \@lisp@env@add@global\hoge{\@tlabel@func{\@lisp@func@check@args{*}{\hoge}}}
+    \tracingmacros=1
+    \testEvalWithSExp{(\hoge)}{\@tlabel@string{called}}
+    \testEvalWithSExp{(\hoge :1)}{\@tlabel@string{called}}
+    \testEvalWithSExp{(\hoge :1 :3)}{\@tlabel@string{called}}
+    % + case
+    \@lisp@env@add@global\hoge{\@tlabel@func{\@lisp@func@check@args{+}{\hoge}}}
+    \testEvalWithSExp{(\hoge)}
+     {\@tlabel@exception{{-1}{\@tlabel@string{too few arguments}}}}
+    \testEvalWithSExp{(\hoge :1)}{\@tlabel@string{called}}
+    \testEvalWithSExp{(\hoge :1 :3)}{\@tlabel@string{called}}
+    % n=2 case
+        % * case
+    \@lisp@env@add@global\hoge{\@tlabel@func{\@lisp@func@check@args{2}{\hoge}}}
+    \testEvalWithSExp{(\hoge)}
+     {\@tlabel@exception{{-1}{\@tlabel@string{too few arguments}}}}
+    \testEvalWithSExp{(\hoge :1)}
+     {\@tlabel@exception{{-1}{\@tlabel@string{too few arguments}}}}
+    \testEvalWithSExp{(\hoge :1 :3)}{\@tlabel@string{called}}
+    \testEvalWithSExp{(\hoge :1 :3 :2)}
+     {\@tlabel@exception{{-1}{\@tlabel@string{too many arguments}}}}
    \end{qstest}
   \end{qstest}
   \LogClose{lgout}

@@ -220,8 +220,6 @@
 \def\@eval@symbol@expand@mutable#1#2#3{%
   \ifx#1\@tlabel@mutable\global\let#3#2\fi}
 
-
-
 \def\@@eval@get@typelabel#1#2{#1}
 \def\@eval@envcs#1#2#3#4{\expandafter\@@eval@envcs\expandafter{#1}#2{#3}#4}
 \def\@@eval@envcs#1#2#3#4{\@eval#2{#3}{#1}#4}
@@ -251,7 +249,7 @@
      \expandafter\@temp@i\@temp@ii\@{#1}#2}
 \def\@@eval@cons@args@error#1#2{%
   \gdef#2{\@tlabel@exception{%
-    {-1}{\@tlabel@string{LISP on TeX: Eval Improper List}}}}}
+    {-1}{\@tlabel@string{Eval Improper List}}}}}
 
 \def\@flatten@args#1#2#3{%
   \ifx#1\@tlabel@cons
@@ -296,27 +294,30 @@
 
 \def\@apply@quote#1#2#3\@#4#5{\gdef#5{#2{#3}}}
 
-\def\@apply@define#1\@tlabel@symbol#2#3#4\@#5#6{%
-  \@eval#3{#4}{#5}#6% define does NOT use local environment
-  \expandafter\expandafter\expandafter\ifx
-    \expandafter\@@eval@get@typelabel#6\@tlabel@exception
-    \let\@@next\@apply@define@exception
-    \else\let\@@next\@apply@define@normal\fi
-  \@@next{#2}{#6}}
-
-\def\@apply@define@exception#1#2{}
+% application of define.
+% #1 empty, #2{#3} 1st argument, #4{#5} 2nd argument,
+% #6 env, #7 cs
+\def\@apply@define#1#2#3#4#5\@#6#7{%
+  \let\@lisp@define@normal\@apply@define@normal
+  \@apply@define@{#1}#2{#3}#4{#5}\@{#6}#7}
+\def\@apply@mdefine#1#2#3#4#5\@#6#7{%
+  \let\@lisp@define@normal\@apply@mdefine@normal
+  \@apply@define@{#1}#2{#3}#4{#5}\@{#6}#7}
+% type check
+\def\@apply@define@#1#2#3#4#5\@#6#7{%
+  \ifx#2\@tlabel@symbol % normal style
+    \let\@@next\@apply@define@@
+  \else\ifx#2\@tlabel@cons % function definition
+    \let\@@next\@apply@define@func
+  \else
+    \let\@@next\@apply@define@error
+  \fi\fi
+  \@@next{#1}#2{#3}#4{#5}\@{#6}#7}
+% \define's normal form
 \def\@apply@define@normal#1#2{%
   \expandafter\@lisp@env@add@global\expandafter#1\expandafter{#2}%
   \gdef#2{\@tlabel@nil{}}}
-
-\def\@apply@mdefine#1\@tlabel@symbol#2#3#4\@#5#6{%
-  \@eval#3{#4}{#5}#6% mdefine does NOT use local environment
-  \expandafter\expandafter\expandafter\ifx
-    \expandafter\@@eval@get@typelabel#6\@tlabel@exception
-    \let\@@next\@apply@define@exception
-    \else\let\@@next\@apply@mdefine@normal\fi
-  \@@next{#2}{#6}}
-
+% \defineM's normal form
 \def\@apply@mdefine@normal#1#2{%
   \@lisp@gc@save@objects@local{#2}% pin the evaluated value
   \@lisp@gc@alloc\@lisp@tmp@local@i
@@ -325,7 +326,39 @@
   \gdef#2{\@tlabel@nil{}}}
 \def\@apply@mdefine@normal@#1#2{%
   \@lisp@env@add@global#2{\@tlabel@mutable{#1}}}
-
+% normal form
+\def\@apply@define@@#1\@tlabel@symbol#2#3#4\@#5#6{%
+  \@eval#3{#4}{#5}#6% define does NOT use local environment
+  \expandafter\expandafter\expandafter\ifx
+    \expandafter\@@eval@get@typelabel#6\@tlabel@exception
+    \let\@@next\@apply@define@exception
+    \else\let\@@next\@lisp@define@normal\fi
+  \@@next{#2}{#6}}
+% function form
+\def\@apply@define@func#1\@tlabel@cons#2#3#4\@#5#6{%
+  \@apply@define@func@#2#3{#4}\@{#5}#6}
+\def\@apply@define@func@#1#2#3#4\@#5#6{%
+  \expandafter\expandafter\expandafter\ifx
+     \expandafter\@@eval@get@typelabel#1\@tlabel@symbol
+    \let\@@next\@apply@define@func@@
+  \else
+    \let\@@next\@apply@define@error
+  \fi
+  \@@next#1#2#3{#4}\@{#5}#6}
+\def\@apply@define@func@@#1#2#3#4\@#5#6{% notice: no tmp token remain the closure  
+  \def\@lisp@tmp@local@i{#3{#4}}% closure body
+  \def\@lisp@tmp@local@ii{\@tlabel@nil{}}%
+  \def\@lisp@tmp@local@iii{\@tlabel@cons{\@lisp@tmp@local@i\@lisp@tmp@local@ii}}%
+  \expandafter\def\expandafter\@lisp@tmp@local@iv\expandafter{#2}% formal arguments
+  \def\@lisp@tmp@local@v{\@tlabel@cons{\@lisp@tmp@local@iv\@lisp@tmp@local@iii}}%
+  \def\@lisp@tmp@local@vi{\@tlabel@lambda{}}% \lambda
+  \expandafter\@apply@define@@\expandafter{\expandafter}#1\@tlabel@cons{\@lisp@tmp@local@vi\@lisp@tmp@local@v}\@{#5}#6}
+% type error
+\def\@apply@define@error#1\@#2#3{%
+  \gdef#3{\@tlabel@exception{{-1}
+    {\@tlabel@string{The 1st argument of \define or \defineM must be a symbol or valid list.}}}}}
+% catch exception at evaluation
+\def\@apply@define@exception#1#2{}
 
 \def\@apply@setb#1#2#3#4#5\@#6#7{%
   \ifx\@tlabel@symbol#2%
@@ -820,28 +853,67 @@
   \toks0\expandafter{#5}%
   \xdef#5{\noexpand\@tlabel@exception{{#1}{\the\toks0}}}}
 
+% check #function's arguments
+%#1 #args(*, +, or n), #2 function body
+%#3 reg, #4 args 
+\newcount\@lisp@func@heck@args@count
+\def\@lisp@func@check@args#1#2#3#4\relax{%
+  \@lisp@func@heck@args@count0
+  \@lisp@func@check@args@#4\relax\relax
+  \def\@@next@true{#2#3#4\relax}%
+  \def\@@next@few{\gdef#3{%
+          \@tlabel@exception{{-1}%
+            {\@tlabel@string{too few arguments}}}}}%
+  \def\@@next@many{\gdef#3{%
+          \@tlabel@exception{{-1}%
+            {\@tlabel@string{too many arguments}}}}}%
+  \ifx#1*%
+    \let\@@next\@@next@true
+  \else\ifx#1+%
+    \ifnum\@lisp@func@heck@args@count>0
+      \let\@@next\@@next@true
+    \else
+      \let\@@next\@@next@few
+    \fi
+  \else
+    \ifnum\@lisp@func@heck@args@count=#1
+      \let\@@next\@@next@true
+    \else\ifnum\@lisp@func@heck@args@count>#1
+      \let\@@next\@@next@many
+    \else
+      \let\@@next\@@next@few
+    \fi\fi
+  \fi\fi
+  \@@next}
+\def\@lisp@func@check@args@#1#2{%
+  \ifx#1\relax
+    \let\@@next\relax
+  \else
+    \advance\@lisp@func@heck@args@count1
+    \let\@@next\@lisp@func@check@args@
+  \fi
+  \@@next}
+
 % select GC engine
 \ifcase\@lisp@gc@style
   \expandafter\RequirePackage\expandafter[\@lisp@opt@gc]{lisp-simple-alloc} \or
   \expandafter\RequirePackage\expandafter[\@lisp@opt@gc]{lisp-gc} \fi
 \@lisp@gc@init
 
-
-
 % reader
-\input{lisp-read.sty}
+\RequirePackage{lisp-read}
 
 %arithmetical functions
-\input{lisp-arith.sty}
+\RequirePackage{lisp-arith}
 
 %string manipulation
-\input{lisp-string.sty}
+\RequirePackage{lisp-string}
 
 % connection to TeX world
-\input{lisp-latexutil.sty}
+\RequirePackage{lisp-latexutil}
 
 % other primitive functions
-\input{lisp-prim.sty}
+\RequirePackage{lisp-prim}
 
 % functions defined by LISP codes 
-\input{lisp-util.sty}
+\RequirePackage{lisp-util}
