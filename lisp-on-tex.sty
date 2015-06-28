@@ -294,7 +294,7 @@
 
 \def\@apply@quote#1#2#3\@#4#5{\gdef#5{#2{#3}}}
 
-% application of define.
+% application of define, defineM, defmacro.
 % #1 empty, #2{#3} 1st argument, #4{#5} 2nd argument,
 % #6 env, #7 cs
 \def\@apply@define#1#2#3#4#5\@#6#7{%
@@ -302,6 +302,9 @@
   \@apply@define@{#1}#2{#3}#4{#5}\@{#6}#7}
 \def\@apply@mdefine#1#2#3#4#5\@#6#7{%
   \let\@lisp@define@normal\@apply@mdefine@normal
+  \@apply@define@{#1}#2{#3}#4{#5}\@{#6}#7}
+\def\@apply@defmacro#1#2#3#4#5\@#6#7{%
+  \let\@lisp@define@normal\@apply@defmacro@normal
   \@apply@define@{#1}#2{#3}#4{#5}\@{#6}#7}
 % type check
 \def\@apply@define@#1#2#3#4#5\@#6#7{%
@@ -326,6 +329,13 @@
   \gdef#2{\@tlabel@nil{}}}
 \def\@apply@mdefine@normal@#1#2{%
   \@lisp@env@add@global#2{\@tlabel@mutable{#1}}}
+% \defmacro's normal form
+\def\@apply@defmacro@normal#1#2{%
+  \expandafter\@apply@defmacro@next\expandafter#1#2%
+  \gdef#2{\@tlabel@nil{}}}
+%TODO: error handling
+\def\@apply@defmacro@next#1\@tlabel@closure#2{%
+  \@lisp@env@add@global#1{\@tlabel@macro{#2}}}
 % normal form
 \def\@apply@define@@#1\@tlabel@symbol#2#3#4\@#5#6{%
   \@eval#3{#4}{#5}#6% define does NOT use local environment
@@ -405,6 +415,7 @@
     {\@tlabel@string{The symbol #1 is not defined as a 'mutable'. %
      Use \defineM, \letM, or \letrec.}}}}}
 
+%TODO: error handling
 \def\@apply@@let#1\@tlabel@symbol#2#3#4#5#6\@#7#8{%
   \@eval#3{#4}{#7}#8%
   \expandafter\expandafter\expandafter\ifx
@@ -428,6 +439,7 @@
   \aftergroup\@@tco}
 \def\@apply@@let@exception#1#2#3#4#5{} % #5 is already set the value of exception
 
+%TODO: error handling
 \def\@apply@@mlet#1\@tlabel@symbol#2#3#4#5#6\@#7#8{%
   \@eval#3{#4}{#7}#8%
   \expandafter\expandafter\expandafter\ifx
@@ -456,19 +468,6 @@
 \def\@apply@@mlet@normal@#1#2#3{%
   \def\@lisp@tmp@local@ii{#2{\@tlabel@mutable{#1}}#3}}
 
-
-\def\@apply@defmacro#1\@tlabel@symbol#2#3#4\@#5#6{%
-  \@eval#3{#4}{#5}#6% NOT use local env!
-  \expandafter\expandafter\expandafter\ifx
-    \expandafter\@@eval@get@typelabel#6\@tlabel@exception
-    \let\@@next\@apply@define@exception
-    \else\let\@@next\@apply@defmacro@normal\fi
-  \@@next{#2}{#6}}
-\def\@apply@defmacro@normal#1#2{%
-  \expandafter\@apply@defmacro@next\expandafter#1#2%
-  \gdef#2{\@tlabel@nil{}}}
-\def\@apply@defmacro@next#1\@tlabel@closure#2{%
-  \@lisp@env@add@global#1{\@tlabel@macro{#2}}}
 
 \def\@apply@if#1#2#3#4#5#6#7\@#8#9{%
   \@eval#2{#3}{#8}#9%
