@@ -119,6 +119,7 @@
     \testEvalWithSExp{\@test@define@local}{\@tlabel@string{local}}
     \lispinterp{((\lambda ()(\define \@test@define@local 'local2')))}
     \testEvalWithSExp{\@test@define@local}{\@tlabel@string{local2}}
+    \testEvalWithSExp{(\define (\@foo \x \y) (\+ \x \y))}{\@tlabel@nil{}}
     \lispinterp{(\define (\@foo \x \y) (\+ \x \y))}
     \testEvalWithSExp{(\@foo :2 :3)}{\@tlabel@int{5}}
     \testEvalWithSExp{(\define :1 :2)}{\@tlabel@exception{{-1}
@@ -144,6 +145,7 @@
     \testEvalWithSExp{\@test@define@local}{\@tlabel@string{local}}
     \lispinterp{((\lambda ()(\defineM \@test@define@local 'local2')))}
     \testEvalWithSExp{\@test@define@local}{\@tlabel@string{local2}}
+    \testEvalWithSExp{(\defineM (\@foo \x \y) (\+ \x \y))}{\@tlabel@nil{}}
     \lispinterp{(\defineM (\@foo \x \y) (\+ \x \y))}
     \testEvalWithSExp{(\@foo :2 :3)}{\@tlabel@int{5}}
     \testEvalWithSExp{(\defineM :1 :2)}{\@tlabel@exception{{-1}
