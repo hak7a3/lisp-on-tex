@@ -87,7 +87,7 @@
    \end{qstest}
    \begin{qstest}{symbol}{\@lispeval,\@tlabel@symbol}
     \testEval{\@tlabel@symbol{\=}}
-      {\@tlabel@func{\@lisp@equal}} % global binding
+      {\@tlabel@func{\@lisp@func@check@args{2}{\@lisp@equal}}} % global binding
     \testEvalWithEnv{\@tlabel@symbol{\foo}}{\@tlabel@int{42}}
       {\hoge{\@tlabel@int{23}}\foo{\@tlabel@int{42}}} % local binding
     \def\dummyRef{\@tlabel@string{hoge}}
