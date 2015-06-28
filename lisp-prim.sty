@@ -12,12 +12,12 @@
 \@lisp@env@add@global\macroexpand{\@tlabel@macroexpand{}}
 \@lisp@env@add@global\callOCC{\@tlabel@callocc{}}
 
-\@lisp@env@add@global\car{\@tlabel@func{\@lisp@perform@car}}
-\@lisp@env@add@global\cdr{\@tlabel@func{\@lisp@perform@cdr}}
-\@lisp@env@add@global\cons{\@tlabel@func{\@lisp@perform@cons}}
+\@lisp@env@add@global\car{\@tlabel@func{\@lisp@func@check@args{1}{\@lisp@perform@car}}}
+\@lisp@env@add@global\cdr{\@tlabel@func{\@lisp@func@check@args{1}{\@lisp@perform@cdr}}}
+\@lisp@env@add@global\cons{\@tlabel@func{\@lisp@func@check@args{2}{\@lisp@perform@cons}}}
 
 \newcount\@temp@count
-\@lisp@env@add@global\length{\@tlabel@func{\@lisp@length}}
+\@lisp@env@add@global\length{\@tlabel@func{\@lisp@func@check@args{1}{\@lisp@length}}}
 \def\@lisp@length{\@temp@count0\relax\@lisp@length@}
 \def\@lisp@length@#1#2#3{%
   \ifx#2\@tlabel@nil
@@ -34,7 +34,7 @@
 \def\@@lisp@length#1#2#3{\expandafter\@lisp@length@\expandafter#3#2}
 
 %equality
-\@lisp@env@add@global\={\@tlabel@func{\@lisp@equal}}
+\@lisp@env@add@global\={\@tlabel@func{\@lisp@func@check@args{2}{\@lisp@equal}}}
 \def\@lisp@equal#1#2#3#4#5{%
   \gdef#1{\@tlabel@bool{f}}%
   \ifx#2#4%
@@ -44,7 +44,7 @@
   \fi}
 
 % printing function
-\@lisp@env@add@global\print{\@tlabel@func{\@tex@print}}
+\@lisp@env@add@global\print{\@tlabel@func{\@lisp@func@check@args{1}{\@tex@print}}}
 \def\@tex@print#1{\gdef#1{\@tlabel@nil{}}\@tex@print@}
 \def\@tex@print@#1#2{%
   \ifx#1\@tlabel@int
@@ -84,7 +84,7 @@
 
 
 
-\@lisp@env@add@global\texprint{\@tlabel@func{\@tex@texprint}}
+\@lisp@env@add@global\texprint{\@tlabel@func{\@lisp@func@check@args{1}{\@tex@texprint}}}
 \def\@tex@texprint#1#2#3{%
    \gdef#1{\@tlabel@nil{}}\@@tex@texprint#2{#3}}
 \def\@@tex@texprint#1#2{%
@@ -96,7 +96,7 @@
     \@add@to@write@buffer\@temp@write@buffer{INNER TOKEN}%
   \fi\fi}
 
-\@lisp@env@add@global\stdprint{\@tlabel@func{\@tex@stdprint}}
+\@lisp@env@add@global\stdprint{\@tlabel@func{\@lisp@func@check@args{1}{\@tex@stdprint}}}
 \def\@tex@stdprint#1#2#3{%
   \gdef#1{\@tlabel@nil{}}%
   \let\@save@write@buffer\@temp@write@buffer
@@ -109,7 +109,7 @@
 
 % Type predicates
 \def\@type@pred@add#1{\expandafter\@@type@pred@add\expandafter#1}
-\def\@@type@pred@add#1#2{\@lisp@env@add@global#1{\@tlabel@func{#2}}}
+\def\@@type@pred@add#1#2{\@lisp@env@add@global#1{\@tlabel@func{\@lisp@func@check@args{1}{#2}}}}
 \def\@type@pred@define#1{\expandafter\@@type@pred@define\expandafter#1}
 \def\@@type@pred@define#1#2{%
 	\def#1##1##2##3{\ifx##2#2\gdef##1{\@tlabel@bool{t}}\else\gdef##1{\@tlabel@bool{f}}\fi}}
@@ -138,7 +138,7 @@
 %\def\@lisp@multivalues#1#2\relax{\gdef#1{#2}}
 
 % read
-\@lisp@env@add@global\read{\@tlabel@func{\@lisp@read@stdin}}
+\@lisp@env@add@global\read{\@tlabel@func{\@lisp@func@check@args{0}{\@lisp@read@stdin}}}
 \def\@lisp@read@stdin#1{%
   \read-1 to#1%
   \def\@lisp@read@stdin@callback##1##2{%

@@ -18,10 +18,12 @@
 \newdimen\@tempdimeni
 \newdimen\@tempdimenii
 
-\@lisp@env@add@global\fpnumTOstring{\@tlabel@func{\@mod@fpnum@tostring}}
+\@lisp@env@add@global\fpnumTOstring{\@tlabel@func{\@lisp@func@check@args{1}{\@mod@fpnum@tostring}}}
+%TODO: error handling
 \def\@mod@fpnum@tostring#1\@tlabel@fpnum#2{\gdef#1{\@tlabel@string{#2}}}
 
-\@lisp@env@add@global\fpplus{\@tlabel@func{\@tempdimeni0pt\relax\@mod@fpnum@plus}}
+\@lisp@env@add@global\fpplus{\@tlabel@func{\@lisp@func@check@args{*}{\@tempdimeni0pt\relax\@mod@fpnum@plus}}}
+%TODO: error handling
 \def\@mod@fpnum@plus#1#2#3{%
 	\ifx#2\relax
 		\let\@next@fpnum@plus\@@fin@fpnum@plus
@@ -33,7 +35,8 @@
 	\fi\fi\@next@fpnum@plus#1}
 \def\@@fin@fpnum@plus#1{\xdef#1{\noexpand\@tlabel@fpnum{\strip@pt\@tempdimeni}}}
 
-\@lisp@env@add@global\fpmul{\@tlabel@func{\@tempdimeni1pt\relax\@mod@fpnum@mul}}
+\@lisp@env@add@global\fpmul{\@tlabel@func{\@lisp@func@check@args{*}{\@tempdimeni1pt\relax\@mod@fpnum@mul}}}
+%TODO: error handling
 \def\@mod@fpnum@mul#1#2#3{%
 	\ifx#2\relax
 		\let\@next@fpnum@mul\@@fin@fpnum@mul
@@ -45,7 +48,7 @@
 	\fi\fi\@next@fpnum@mul#1}
 \def\@@fin@fpnum@mul#1{\xdef#1{\noexpand\@tlabel@fpnum{\strip@pt\@tempdimeni}}}
 
-\@lisp@env@add@global\fpminus{\@tlabel@func{\@mod@fpnum@minus}}
+\@lisp@env@add@global\fpminus{\@tlabel@func{\@lisp@func@check@args{+}{\@mod@fpnum@minus}}}
 \def\@mod@fpnum@minus#1#2#3#4#5{%
 	\ifx#4\relax
 		\ifx#2\@tlabel@fpnum
@@ -80,7 +83,7 @@
 	\fi\fi
 	\@next@fpnum@minus#1}
 
-\@lisp@env@add@global\fplt{\@tlabel@func{\@mod@fpnum@lt}}
+\@lisp@env@add@global\fplt{\@tlabel@func{\@lisp@func@check@args{2}{\@mod@fpnum@lt}}}
 \def\@mod@fpnum@lt#1\@tlabel@fpnum#2\@tlabel@fpnum#3{%
 	\ifdim#2pt<#3pt
 		\gdef#1{\@tlabel@bool{t}}%

@@ -42,50 +42,78 @@
    \testEvalWithSExp{(\+)}{\@tlabel@int{0}}
    \testEvalWithSExp{(\+ :1)}{\@tlabel@int{1}}
    \testEvalWithSExp{(\+ :1 :2)}{\@tlabel@int{3}}
+   \testEvalWithSExp{(\+ 'hoge')}{\@tlabel@exception{{-1}{\@tlabel@string{arithmetical functions takes integer only.}}}}
    % subtraction
    \testEvalWithSExp{(\- :1)}{\@tlabel@int{-1}}
    \testEvalWithSExp{(\- :3 :2 :1)}{\@tlabel@int{0}}
+   \testEvalWithSExp{(\- :1 'hoge')}{\@tlabel@exception{{-1}{\@tlabel@string{arithmetical functions takes integer only.}}}}
+   % \testEvalWithSExp{(\- 'hoge')}{\@tlabel@exception{{-1}{\@tlabel@string{arithmetical functions takes integer only.}}}}
+   \testEvalWithSExp{(\-)}{\@tlabel@exception{{-1}{\@tlabel@string{too few arguments}}}}
    % multiply
    \testEvalWithSExp{(\*)}{\@tlabel@int{1}}
    \testEvalWithSExp{(\* :2)}{\@tlabel@int{2}}
    \testEvalWithSExp{(\* :2 :3)}{\@tlabel@int{6}}
+   \testEvalWithSExp{(\* 'hoge')}{\@tlabel@exception{{-1}{\@tlabel@string{arithmetical functions takes integer only.}}}}
    % division
    \testEvalWithSExp{(\/ :2)}{\@tlabel@int{0}} % 1/2
    \testEvalWithSExp{(\/ :1)}{\@tlabel@int{1}} % 1/1
    \testEvalWithSExp{(\/ :10 :5)}{\@tlabel@int{2}}
-   \testEvalWithSExp{(\/ :11 :5 :2)}{\@tlabel@int{1}} % (11/5)/2
+   \testEvalWithSExp{(\/ :11 :5 :2)}{\@tlabel@int{1}} % (11/5)/
+   \testEvalWithSExp{(\/ :2 'hoge')}{\@tlabel@exception{{-1}{\@tlabel@string{arithmetical functions takes integer only.}}}}
+   % \testEvalWithSExp{(\/ 'hoge')}{\@tlabel@exception{{-1}{\@tlabel@string{arithmetical functions takes integer only.}}}}
+   \testEvalWithSExp{(\/)}{\@tlabel@exception{{-1}{\@tlabel@string{too few arguments}}}}
    % modulo
    \testEvalWithSExp{(\mod :3 :2)}{\@tlabel@int{1}}
    \testEvalWithSExp{(\mod :3 :-2)}{\@tlabel@int{1}}
    \testEvalWithSExp{(\mod :-3 :2)}{\@tlabel@int{-1}}
    \testEvalWithSExp{(\mod :-3 :-2)}{\@tlabel@int{-1}}
+   %\testEvalWithSExp{(\mod 'hoge' :2)}{\@tlabel@exception{{-1}{\@tlabel@string{arithmetical functions takes integer only.}}}}
+   \testEvalWithSExp{(\mod)}{\@tlabel@exception{{-1}{\@tlabel@string{too few arguments}}}}
+   \testEvalWithSExp{(\mod :3 :2 :1)}{\@tlabel@exception{{-1}{\@tlabel@string{too many arguments}}}}
    % comparition
    \testEvalWithSExp{(\> :3 :2)}{\@tlabel@bool{t}}
    \testEvalWithSExp{(\> :2 :3)}{\@tlabel@bool{f}}
    \testEvalWithSExp{(\> :1 :1)}{\@tlabel@bool{f}}
+   \testEvalWithSExp{(\>)}{\@tlabel@exception{{-1}{\@tlabel@string{too few arguments}}}}
+   \testEvalWithSExp{(\> :3 :2 :1)}{\@tlabel@exception{{-1}{\@tlabel@string{too many arguments}}}}
    \testEvalWithSExp{(\< :3 :2)}{\@tlabel@bool{f}}
    \testEvalWithSExp{(\< :2 :3)}{\@tlabel@bool{t}}
    \testEvalWithSExp{(\< :1 :1)}{\@tlabel@bool{f}}
+   \testEvalWithSExp{(\<)}{\@tlabel@exception{{-1}{\@tlabel@string{too few arguments}}}}
+   \testEvalWithSExp{(\< :3 :2 :1)}{\@tlabel@exception{{-1}{\@tlabel@string{too many arguments}}}}
    \testEvalWithSExp{(\geq :3 :2)}{\@tlabel@bool{t}}
    \testEvalWithSExp{(\geq :2 :3)}{\@tlabel@bool{f}}
    \testEvalWithSExp{(\geq :1 :1)}{\@tlabel@bool{t}}
+   \testEvalWithSExp{(\geq)}{\@tlabel@exception{{-1}{\@tlabel@string{too few arguments}}}}
+   \testEvalWithSExp{(\geq :3 :2 :1)}{\@tlabel@exception{{-1}{\@tlabel@string{too many arguments}}}}
    \testEvalWithSExp{(\leq :3 :2)}{\@tlabel@bool{f}}
    \testEvalWithSExp{(\leq :2 :3)}{\@tlabel@bool{t}}
    \testEvalWithSExp{(\leq :1 :1)}{\@tlabel@bool{t}}
+   \testEvalWithSExp{(\leq)}{\@tlabel@exception{{-1}{\@tlabel@string{too few arguments}}}}
+   \testEvalWithSExp{(\leq :3 :2 :1)}{\@tlabel@exception{{-1}{\@tlabel@string{too many arguments}}}}
    % predicates
    \testEvalWithSExp{(\isZeroQ :-1)}{\@tlabel@bool{f}}
    \testEvalWithSExp{(\isZeroQ :0)}{\@tlabel@bool{t}}
    \testEvalWithSExp{(\isZeroQ :1)}{\@tlabel@bool{f}}
+   \testEvalWithSExp{(\isZeroQ)}{\@tlabel@exception{{-1}{\@tlabel@string{too few arguments}}}}
+   \testEvalWithSExp{(\isZeroQ :3 :2)}{\@tlabel@exception{{-1}{\@tlabel@string{too many arguments}}}}
    \testEvalWithSExp{(\positiveQ :-1)}{\@tlabel@bool{f}}
    \testEvalWithSExp{(\positiveQ :0)}{\@tlabel@bool{f}}
    \testEvalWithSExp{(\positiveQ :1)}{\@tlabel@bool{t}}
+   \testEvalWithSExp{(\positiveQ)}{\@tlabel@exception{{-1}{\@tlabel@string{too few arguments}}}}
+   \testEvalWithSExp{(\positiveQ :3 :2)}{\@tlabel@exception{{-1}{\@tlabel@string{too many arguments}}}}
    \testEvalWithSExp{(\negativeQ :-1)}{\@tlabel@bool{t}}
    \testEvalWithSExp{(\negativeQ :0)}{\@tlabel@bool{f}}
    \testEvalWithSExp{(\negativeQ :1)}{\@tlabel@bool{f}}
+   \testEvalWithSExp{(\negativeQ)}{\@tlabel@exception{{-1}{\@tlabel@string{too few arguments}}}}
+   \testEvalWithSExp{(\negativeQ :3 :2)}{\@tlabel@exception{{-1}{\@tlabel@string{too many arguments}}}}
    % max, min
    \testEvalWithSExp{(\max :-10 :-5 :0 :5 :10)}{\@tlabel@int{10}}
+   \testEvalWithSExp{(\max 'hoge')}{\@tlabel@exception{{-1}{\@tlabel@string{arithmetical functions takes integer only.}}}}
+   \testEvalWithSExp{(\max)}{\@tlabel@exception{{-1}{\@tlabel@string{too few arguments}}}}
    \testEvalWithSExp{(\min :-10 :-5 :0 :5 :10)}{\@tlabel@int{-10}}
-   % TODO
+   \testEvalWithSExp{(\min 'hoge')}{\@tlabel@exception{{-1}{\@tlabel@string{arithmetical functions takes integer only.}}}}
+   \testEvalWithSExp{(\min)}{\@tlabel@exception{{-1}{\@tlabel@string{too few arguments}}}}
   \end{qstest}
   \LogClose{lgout}
 \end{document}

@@ -1,7 +1,7 @@
 \newcount\@temp@inti
 \newcount\@temp@intii
 
-\@lisp@env@add@global\+{\@tlabel@func{\@temp@inti0\relax\@arith@plus}}
+\@lisp@env@add@global\+{\@tlabel@func{\@lisp@func@check@args{*}{\@temp@inti0\relax\@arith@plus}}}
 \def\@arith@plus#1#2#3{%
   \ifx#2\relax
     \let\@next@plus\@@arith@pm@fin
@@ -9,23 +9,30 @@
     \advance\@temp@inti#3\relax
     \let\@next@plus\@arith@plus
   \else
-    \errmessage{LISP on TeX [integer plus]: Invalid argument}%
+    \let\@next@plus\@arith@type@error
   \fi\fi\@next@plus#1}
 
-\@lisp@env@add@global\*{\@tlabel@func{\@temp@inti1\relax\@arith@mul}}
+\@lisp@env@add@global\*{\@tlabel@func{\@lisp@func@check@args{*}{\@temp@inti1\relax\@arith@mul}}}
 \def\@arith@mul#1#2#3{%
   \ifx#2\relax
     \let\@next@mul\@@arith@pm@fin
   \else\ifx#2\@tlabel@int
     \multiply\@temp@inti#3\relax
     \let\@next@mul\@arith@mul
+  \else
+    \let\@next@mul\@arith@type@error
   \fi\fi\@next@mul#1}
 
 \def\@@arith@pm@fin#1{\expandafter\gdef
   \expandafter#1\expandafter{%
   \expandafter\@tlabel@int\expandafter{\the\@temp@inti}}}
 
-\@lisp@env@add@global\-{\@tlabel@func{\@arith@minus}}
+\def\@arith@type@error#1#2\relax{% notice #2 is dust
+  \gdef#1{\@tlabel@exception{{-1}%
+    {\@tlabel@string{arithmetical functions takes integer only.}}}}}
+
+\@lisp@env@add@global\-{\@tlabel@func{\@lisp@func@check@args{+}{\@arith@minus}}}
+%TODO: error handling of 1st argument
 \def\@arith@minus#1#2#3#4#5{%
   \@temp@inti#3\relax
   \ifx#4\relax
@@ -33,6 +40,8 @@
     \let\@next@minus\@@arith@pm@fin
   \else\ifx#4\@tlabel@int
     \let\@next@minus\@@arith@minus
+  \else
+    \let\@next@minus\@arith@type@error
   \fi\fi\@next@minus#1#4{#5}}
 
 \def\@@arith@minus#1#2#3{%
@@ -42,10 +51,13 @@
     \@temp@intii#3\relax % #3 < 0
     \advance\@temp@inti-\@temp@intii\relax
     \let\@next@minus\@@arith@minus
+  \else
+    \let\@next@minus\@arith@type@error
   \fi\fi\@next@minus#1}
 
 
-\@lisp@env@add@global\/{\@tlabel@func{\@arith@div}}
+\@lisp@env@add@global\/{\@tlabel@func{\@lisp@func@check@args{+}{\@arith@div}}}
+%TODO: error handling of 1st argument
 \def\@arith@div#1#2#3#4#5{%
   \@temp@inti#3\relax
   \ifx#4\relax
@@ -55,6 +67,8 @@
     \let\@next@div\@@arith@pm@fin
   \else\ifx#4\@tlabel@int
     \let\@next@div\@@arith@div
+  \else
+    \let\@next@div\@arith@type@error
   \fi\fi\@next@div#1#4{#5}}
 
 \def\@@arith@div#1#2#3{%
@@ -63,9 +77,12 @@
   \else\ifx#2\@tlabel@int
     \divide\@temp@inti#3\relax
     \let\@next@div\@@arith@div
+  \else
+    \let\@next@div\@arith@type@error
   \fi\fi\@next@div#1}
 
-\@lisp@env@add@global\mod{\@tlabel@func{\@arith@mod}}
+\@lisp@env@add@global\mod{\@tlabel@func{\@lisp@func@check@args{2}{\@arith@mod}}}
+%TODO: error handling
 \def\@arith@mod#1\@tlabel@int#2\@tlabel@int#3{%
   \@temp@intii#2\relax
   \divide\@temp@intii#3\relax
@@ -74,43 +91,50 @@
   \advance\@temp@inti-\@temp@intii
   \@@arith@pm@fin#1}
 
-\@lisp@env@add@global\<{\@tlabel@func{\@arith@lt}}
+\@lisp@env@add@global\<{\@tlabel@func{\@lisp@func@check@args{2}{\@arith@lt}}}
+%TODO: error handling
 \def\@arith@lt#1\@tlabel@int#2\@tlabel@int#3{%
   \ifnum#2<#3 \gdef#1{\@tlabel@bool{t}}\else\gdef#1{\@tlabel@bool{f}}\fi}
 
-\@lisp@env@add@global\>{\@tlabel@func{\@arith@gt}}
+\@lisp@env@add@global\>{\@tlabel@func{\@lisp@func@check@args{2}{\@arith@gt}}}
+%TODO: error handling
 \def\@arith@gt#1\@tlabel@int#2\@tlabel@int#3{%
   \ifnum#2>#3 \gdef#1{\@tlabel@bool{t}}\else\gdef#1{\@tlabel@bool{f}}\fi}
 
-\@lisp@env@add@global\leq{\@tlabel@func{\@arith@leq}}
+\@lisp@env@add@global\leq{\@tlabel@func{\@lisp@func@check@args{2}{\@arith@leq}}}
+%TODO: error handling
 \def\@arith@leq#1\@tlabel@int#2\@tlabel@int#3{%
   \ifnum#2<#3 \gdef#1{\@tlabel@bool{t}}\else\gdef#1{\@tlabel@bool{f}}\fi
   \ifnum#2=#3 \gdef#1{\@tlabel@bool{t}}\fi}
 
-\@lisp@env@add@global\geq{\@tlabel@func{\@arith@geq}}
+\@lisp@env@add@global\geq{\@tlabel@func{\@lisp@func@check@args{2}{\@arith@geq}}}
+%TODO: error handling
 \def\@arith@geq#1\@tlabel@int#2\@tlabel@int#3{%
   \ifnum#2>#3 \gdef#1{\@tlabel@bool{t}}\else\gdef#1{\@tlabel@bool{f}}\fi
   \ifnum#2=#3 \gdef#1{\@tlabel@bool{t}}\fi}
 
-\@lisp@env@add@global\isZeroQ{\@tlabel@func{\@arith@is@zero}}
+\@lisp@env@add@global\isZeroQ{\@tlabel@func{\@lisp@func@check@args{1}{\@arith@is@zero}}}
+%TODO: error handling
 \def\@arith@is@zero#1\@tlabel@int#2{%
   \ifnum#2=0 \gdef#1{\@tlabel@bool{t}}\else\gdef#1{\@tlabel@bool{f}}\fi}
 
-\@lisp@env@add@global\positiveQ{\@tlabel@func{\@arith@is@positive}}
+\@lisp@env@add@global\positiveQ{\@tlabel@func{\@lisp@func@check@args{1}{\@arith@is@positive}}}
+%TODO: error handling
 \def\@arith@is@positive#1\@tlabel@int#2{%
   \ifnum#2>0 \gdef#1{\@tlabel@bool{t}}\else\gdef#1{\@tlabel@bool{f}}\fi}
 
-\@lisp@env@add@global\negativeQ{\@tlabel@func{\@arith@is@negative}}
+\@lisp@env@add@global\negativeQ{\@tlabel@func{\@lisp@func@check@args{1}{\@arith@is@negative}}}
+%TODO: error handling
 \def\@arith@is@negative#1\@tlabel@int#2{%
   \ifnum#2<0 \gdef#1{\@tlabel@bool{t}}\else\gdef#1{\@tlabel@bool{f}}\fi}
 
-\@lisp@env@add@global\max{\@tlabel@func{\@arith@max}}
+\@lisp@env@add@global\max{\@tlabel@func{\@lisp@func@check@args{+}{\@arith@max}}}
 \def\@arith@max#1#2#3{%
   \ifx#2\@tlabel@int
     \@temp@inti#3\relax
     \let\@next@max\@@arith@max
   \else
-    \errmessage{LISP on TeX [integer max]: Invalid argument or Too few arguments}%
+    \let\@next@max\@arith@type@error
   \fi\@next@max#1}
 \def\@@arith@max#1#2#3{%
   \ifx#2\relax
@@ -119,16 +143,16 @@
     \ifnum#3>\@temp@inti\@temp@inti#3\relax\fi
     \let\@next@max\@@arith@max
   \else
-    \errmessage{LISP on TeX [integer max]: Invalid argument}%
+    \let\@next@max\@arith@type@error
   \fi\fi\@next@max#1}
 
-\@lisp@env@add@global\min{\@tlabel@func{\@arith@min}}
+\@lisp@env@add@global\min{\@tlabel@func{\@lisp@func@check@args{+}{\@arith@min}}}
 \def\@arith@min#1#2#3{%
   \ifx#2\@tlabel@int
     \@temp@inti#3\relax
     \let\@next@min\@@arith@min
   \else
-    \errmessage{LISP on TeX [integer min]: Invalid argument or Too few arguments}%
+    \let\@next@min\@arith@type@error
   \fi\@next@min#1}
 \def\@@arith@min#1#2#3{%
   \ifx#2\relax
@@ -137,5 +161,5 @@
     \ifnum#3<\@temp@inti\@temp@inti#3\relax\fi
     \let\@next@min\@@arith@min
   \else
-    \errmessage{LISP on TeX [integer min]: Invalid argument}%
+    \let\@next@min\@arith@type@error
   \fi\fi\@next@min#1}

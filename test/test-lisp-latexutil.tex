@@ -42,12 +42,20 @@
    \newcounter{hoge}
    \setcounter{hoge}{42}
    \testEvalWithSExp{(\readLaTeXCounter 'hoge')}{\@tlabel@int{42}}
+   \testEvalWithSExp{(\readLaTeXCounter)}
+    {\@tlabel@exception{{-1}{\@tlabel@string{too few arguments}}}}
+   \testEvalWithSExp{(\readLaTeXCounter 'hoge' 'fuga')}
+    {\@tlabel@exception{{-1}{\@tlabel@string{too many arguments}}}}
    % message
    %% hook \message
    \begingroup
      \def\message#1{\gdef\@message@result{#1}}
    \testEvalWithSExp{(\message 'foo')}{\@tlabel@nil{}}
    \Expect*{\@message@result}{^^Jfoo^^J}
+   \testEvalWithSExp{(\message)}
+    {\@tlabel@exception{{-1}{\@tlabel@string{too few arguments}}}}
+   \testEvalWithSExp{(\message 'foo' 'bar')}
+    {\@tlabel@exception{{-1}{\@tlabel@string{too many arguments}}}}
    \endgroup
   \end{qstest}
   \LogClose{lgout}
