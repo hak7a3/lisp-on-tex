@@ -1,0 +1,29 @@
+\documentclass{article}
+\usepackage{lisp-on-tex}
+%\usepackage[markGC]{lisp-on-tex}
+\lispinterp {
+  (\define (\create \n) (\createAcc \n ()))
+  (\define (\createAcc \n \acc)
+    (\lispif (\= \n :0) \acc (\createAcc (\- \n :1) (\cons () \acc))))
+  (\define \ll (\create :200))
+  (\define (\divII \l)
+    (\lispif (\= \l ()) () (\cons (\car \l) (\divII (\cdr (\cdr \l))))))
+  (\define (\test \l) (\testAcc \l :500)) % original is 300
+  (\define (\testAcc \l \i)
+    (\lispif (\= \i :0) ()
+      (\begin
+        (\lispif (\= (\length (\divII \l)) :100)
+            (\message 'OK') (\message 'Hmm'))
+        (\lispif (\= (\length (\divII \l)) :100)
+            (\message 'OK') (\message 'Hmm'))
+        (\lispif (\= (\length (\divII \l)) :100)
+            (\message 'OK') (\message 'Hmm'))
+        (\lispif (\= (\length (\divII \l)) :100)
+            (\message 'OK') (\message 'Hmm'))
+        (\message (\intTOstring \i))
+        (\testAcc \l (\- \i :1)))))
+}
+
+\begin{document}
+  \lispinterp{(\test \ll)}
+\end{document}

@@ -1,0 +1,99 @@
+% wrapper for l3regex
+\RequirePackage{l3regex}
+
+% \regex_match:nnTF
+\@lisp@env@add@global\regMatch{\@tlabel@func{\@lisp@func@check@args{2}{\@lisp@regex@match}}}
+\ExplSyntaxOn
+\cs_new:Npn \lot_regex_match:Nnn #1#2#3 {
+  \regex_match:nnTF{#2}{#3}{\gdef#1{\@tlabel@bool{t}}}{\gdef#1{\@tlabel@bool{f}}}
+}
+\cs_new_eq:NN \@lisp@regex@match@ \lot_regex_match:Nnn
+\ExplSyntaxOff
+%TODO: error handling
+\def\@lisp@regex@match#1\@tlabel@string#2\@tlabel@string#3{\@lisp@regex@match@#1{#2}{#3}}
+
+% \regex_extract_all
+\@lisp@env@add@global\regExtract{\@tlabel@func{\@lisp@func@check@args{2}{\@lisp@regex@extract}}}
+\ExplSyntaxOn
+\seq_new:N \lot_regex_extract_seq
+\cs_new:Npn \lot_regex_extract:nnN #1#2#3{
+  \regex_extract_all:nnN{#1}{#2}\lot_regex_extract_seq
+  \seq_map_variable:NNn \lot_regex_extract_seq \lot_regex_tmp
+   {\@lisp@regex@add@sep@result#3\lot_regex_tmp}}
+\cs_new_eq:NN \@lisp@regex@extract@ \lot_regex_extract:nnN
+\ExplSyntaxOff
+\def\@lisp@regex@add@sep@result#1#2{\expandafter\@lisp@regex@add@sep@result@\expandafter#1\expandafter{#2}}
+\def\@lisp@regex@add@sep@result@#1#2{\expandafter\def\expandafter#1\expandafter{#1{#2}}}
+\def\@lisp@regex@add@typelabel#1#2{%
+  \gdef#2{}%
+  \@tfor\@lisp@regex@tmp:=#1\do{%
+     \begingroup
+       \toks0\expandafter{\@lisp@regex@tmp}%
+       \toks1\expandafter{#2}%
+       \xdef#2{\the\toks1 \noexpand\@tlabel@string{\the\toks0}}%
+     \endgroup}}
+\def\@lisp@regex@extract#1\@tlabel@string#2\@tlabel@string#3{%
+  \def#1{}%
+  \@lisp@regex@extract@{#2}{#3}#1%
+  \expandafter\@lisp@regex@add@typelabel\expandafter{#1}#1%
+  \expandafter\@lisp@prim@list@pre\expandafter#1#1\relax\relax}
+
+
+% \regex_extract_once
+\@lisp@env@add@global\regMatchResult{\@tlabel@func{\@lisp@func@check@args{2}{\@lisp@regex@extract@once}}}
+\ExplSyntaxOn
+\seq_new:N \lot_regex_extract_once_seq
+\cs_new:Npn \lot_regex_extract_once:nnN #1#2#3{
+  \regex_extract_once:nnN{#1}{#2}\lot_regex_extract_once_seq
+  \seq_map_variable:NNn \lot_regex_extract_once_seq \lot_regex_tmp
+   {\@lisp@regex@add@sep@result#3\lot_regex_tmp}}
+\cs_new_eq:NN \@lisp@regex@extract@once@ \lot_regex_extract_once:nnN
+\ExplSyntaxOff
+\def\@lisp@regex@extract@once#1\@tlabel@string#2\@tlabel@string#3{%
+  \def#1{}%
+  \@lisp@regex@extract@once@{#2}{#3}#1%
+  \expandafter\@lisp@regex@add@typelabel\expandafter{#1}#1%
+  \expandafter\@lisp@prim@list@pre\expandafter#1#1\relax\relax}
+
+% \regex_split
+\@lisp@env@add@global\regSplit{\@tlabel@func{\@lisp@func@check@args{2}{\@lisp@regex@split}}}
+\ExplSyntaxOn
+\seq_new:N \lot_regex_split_seq
+\cs_new:Npn \lot_regex_split:nnN #1#2#3{
+  \regex_split:nnN{#1}{#2}\lot_regex_split_seq
+  \seq_map_variable:NNn \lot_regex_split_seq \lot_regex_tmp
+   {\@lisp@regex@add@sep@result#3\lot_regex_tmp}}
+\cs_new_eq:NN \@lisp@regex@split@ \lot_regex_split:nnN
+\ExplSyntaxOff
+\def\@lisp@regex@split#1\@tlabel@string#2\@tlabel@string#3{%
+  \def#1{}%
+  \@lisp@regex@split@{#2}{#3}#1%
+  \expandafter\@lisp@regex@add@typelabel\expandafter{#1}#1%
+  \expandafter\@lisp@prim@list@pre\expandafter#1#1\relax\relax}
+
+
+
+
+% \regex_replace_once
+\@lisp@env@add@global\regReplaceOnce{\@tlabel@func{\@lisp@func@check@args{3}{\@lisp@regex@replace@once}}}
+\ExplSyntaxOn
+\cs_new_eq:NN \@lisp@regex@replace@once@  \regex_replace_once:nnN
+\ExplSyntaxOff
+%TODO: error handling
+\def\@lisp@regex@replace@once#1\@tlabel@string#2\@tlabel@string#3\@tlabel@string#4{%
+  \def#1{#4}%
+  \@lisp@regex@replace@once@{#2}{#3}#1%
+  \expandafter\gdef\expandafter#1\expandafter{%
+    \expandafter\@tlabel@string\expandafter{#1}}}
+
+% \regex_replace_all
+\@lisp@env@add@global\regReplaceAll{\@tlabel@func{\@lisp@func@check@args{3}{\@lisp@regex@replace@all}}}
+\ExplSyntaxOn
+\cs_new_eq:NN \@lisp@regex@replace@all@  \regex_replace_all:nnN
+\ExplSyntaxOff
+%TODO: error handling
+\def\@lisp@regex@replace@all#1\@tlabel@string#2\@tlabel@string#3\@tlabel@string#4{%
+  \def#1{#4}%
+  \@lisp@regex@replace@all@{#2}{#3}#1%
+  \expandafter\gdef\expandafter#1\expandafter{%
+    \expandafter\@tlabel@string\expandafter{#1}}}

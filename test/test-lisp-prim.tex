@@ -115,6 +115,11 @@
    \def\@dummy@cdr{\@tlabel@int{1}}
    \testRead{('\hoge{1}' . :1)}{\@tlabel@cons{\@dummy@car\@dummy@cdr}}
    \endgroup
+   % list
+   \def\@read@to@@tmp\@tlabel@cons#1{\@read@to@@tmp@#1}
+   \def\@read@to@@tmp@#1#2{\let\@@tmp@car#1\let\@@tmp@cdr#2}
+   \@lispread\@read@to@@tmp(:1 :2 :3)
+   \testEvalWithSExp{(\list :1 :2 :3)}{\@tlabel@cons{\@@tmp@car\@@tmp@cdr}}
   \end{qstest}
   \LogClose{lgout}
 \end{document}

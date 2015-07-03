@@ -31,8 +31,6 @@
      (\lispif (\= () \l) 
               /f
               (\lispif (\car \l) /t (\apply \or (\cdr \l))))))
-%% list
-(\define \list (\lambda \x \x))
 %% let bindings
 (\defmacro \let
   (\lambda (\binds \body)

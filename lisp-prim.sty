@@ -144,3 +144,33 @@
   \def\@lisp@read@stdin@callback##1##2{%
     \gdef#1{##1{##2}}}%
   \expandafter\@lispread\expandafter\@lisp@read@stdin@callback#1}
+
+% create a list
+\@lisp@env@add@global\list{\@tlabel@func{\@lisp@func@check@args{*}{\@lisp@prim@list@pre}}}
+\def\@lisp@prim@list@pre#1{\gdef#1{}\@lisp@prim@list#1}
+\def\@lisp@prim@list#1#2#3{%
+  \ifx#2\relax
+    \let\@@next\@lisp@prim@list@fin
+  \else
+    \let\@@next\@lisp@prim@list@add
+  \fi\@@next#1#2{#3}}
+\def\@lisp@prim@list@add#1#2#3{%
+  \begingroup
+    \toks0\expandafter{#1}%
+    \toks1{#2{#3}}%
+    \xdef#1{\the\toks1 \the\toks0}%reverse arguments
+  \endgroup
+  \@lisp@prim@list#1}
+\def\@lisp@prim@list@fin#1#2#3{\expandafter\@lisp@prim@list@fin@\expandafter#1#1\relax\relax}
+\def\@lisp@prim@list@fin@#1{%
+  \gdef#1{\@tlabel@nil{}}%
+  \@lisp@prim@list@fin@@#1}
+\def\@lisp@prim@list@fin@@#1#2#3{%
+  \ifx#2\relax
+    \def\@@next##1##2##3{}%
+  \else
+    \let\@@next\@lisp@prim@list@fin@@@
+  \fi
+  \@@next#1#2{#3}}
+\def\@lisp@prim@list@fin@@@#1#2#3{\expandafter\@lisp@prim@list@fin@@@@#1#2{#3}#1}
+\def\@lisp@prim@list@fin@@@@#1#2#3#4#5{\@lisp@perform@cons#5#3{#4}#1{#2}\@lisp@prim@list@fin@@#5}
