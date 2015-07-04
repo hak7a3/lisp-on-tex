@@ -51,7 +51,7 @@
    \begingroup
      \def\message#1{\gdef\@message@result{#1}}
    \testEvalWithSExp{(\message 'foo')}{\@tlabel@nil{}}
-   \Expect*{\@message@result}{^^Jfoo^^J}
+   \Expect*{\@message@result}{foo}
    \testEvalWithSExp{(\message)}
     {\@tlabel@exception{{-1}{\@tlabel@string{too few arguments}}}}
    \testEvalWithSExp{(\message 'foo' 'bar')}
