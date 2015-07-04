@@ -13,14 +13,14 @@
     (\lispif (\= \i :0) ()
       (\begin
         (\lispif (\= (\length (\divII \l)) :100)
-            (\message 'OK') (\message 'Hmm'))
+            () (\texprint 'Hmm'))
         (\lispif (\= (\length (\divII \l)) :100)
-            (\message 'OK') (\message 'Hmm'))
+            () (\message 'Hmm'))
         (\lispif (\= (\length (\divII \l)) :100)
-            (\message 'OK') (\message 'Hmm'))
+            () (\message 'Hmm'))
         (\lispif (\= (\length (\divII \l)) :100)
-            (\message 'OK') (\message 'Hmm'))
-        (\message (\intTOstring \i))
+            () (\message 'Hmm'))
+        (\texprint \i)
         (\testAcc \l (\- \i :1)))))
 }
 
