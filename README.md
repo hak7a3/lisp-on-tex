@@ -556,22 +556,32 @@ of l3regex. Load it by `\usepackage`:
 * Add functions and special forms
 
 ## CHANGELOG ##
-* Oct. 24, 2015 : 2.0
-    * Add GC
-    * Refine some special forms like \define
-    * Add checking #args for some functions.
-    * Add thin wrapper of l3regex
-* Jul. 12, 2014 : 1.3
-    * Add one shot continuations.
-    * Add some arithmetical functions.
-    * Debug environment.
-* Jan. 03, 2014 : 1.2
-    * Added TUG2013's examples.
-    * Improved the performance.
-* Aug. 10, 2013 : 1.1
-    * Added \letrec and \expand.
-    * debug
-* Mar. 04, 2013 : 1.0
+
+Oct. 24, 2015 : 2.0
+--------------------------
+* Add GC
+* Refine some special forms like \define
+* Add checking #args for some functions.
+* Add thin wrapper of l3regex
+
+Jul. 12, 2014 : 1.3
+--------------------------
+* Add one shot continuations.
+* Add some arithmetical functions.
+* Debug environment.
+
+Jan. 03, 2014 : 1.2
+--------------------------
+* Added TUG2013's examples.
+* Improved the performance.
+
+Aug. 10, 2013 : 1.1
+--------------------------
+* Added \letrec and \expand.
+* debug
+
+Mar. 04, 2013 : 1.0
+-------------------------
 
 ## Licence ##
 
