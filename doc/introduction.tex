@@ -1,0 +1,54 @@
+\section{Introduction}
+LISP on \TeX{} is a \LaTeX{} class to run 
+LISP programs in a document.
+All of it is written with \TeX{} macros, so
+we do not need a special \TeX{} engine,
+\texttt{\string\write18}, and external language systems.
+LISP on \TeX{} works if you put its all style files
+to your \texttt{texmf} tree. 
+
+\subsection{Getting Started}
+In order to use LISP on \TeX{}, you should load
+\texttt{lisp-on-tex} package: write
+\begin{quote}
+\begin{verbatim}
+\usepackage{lisp-on-tex}
+\end{verbatim}
+\end{quote}
+on your document's preamble.
+Then, you can execute LISP codes by
+\texttt{\string\lispinterp}. For example, the code
+\begin{quote}
+\begin{verbatim}
+\lispinterp {
+  % define \succ function.
+  (\define (\succ \n) (\+ \n :1))
+  % call \succ and print the result.
+  (\texprint (\succ :42))
+}
+\end{verbatim}
+\end{quote}
+outputs ``%
+\lispinterp {
+  (\define (\succ \n) (\+ \n :1))
+  (\texprint (\succ :42))
+}%
+''.
+As you can see in the example, you can use \texttt{\%} as
+starting comment.  
+The \texttt{\string\lispinterp} is not \texttt{\string\long}ed, so
+you CANNOT include empty lines into a LISP on \TeX's program.
+
+\subsection{Class Options}
+LISP on \TeX{} has options for garbage collection (GC).
+If you want to use GC, use \texttt{markGC} option.
+You can also assign heap size by
+\texttt{GCopt=\{heapsize=\textrm{$n$}\}} where $n$
+is an integer. The default heap size is 32768.
+For example, the code
+\begin{quote}
+\begin{verbatim}
+\usepackage[markGC, GCopt={heapsize=40000}]{lisp-on-tex}
+\end{verbatim}
+\end{quote}
+means LISP on \TeX{} uses GC and the heap size is 40000.

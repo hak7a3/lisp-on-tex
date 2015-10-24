@@ -1,0 +1,53 @@
+\section{Objects}
+We define LISP on \TeX's objects by using a grammatical notation
+like the \TeX book. In this section, \nonterm{foo} is a non terminal symbol,
+\term{bar} is a terminal symbol, $\define$ means ``is defined to be,''
+and $\bnfor$ means ``or''. The operator $*$ is Kleene star, and $+$
+is Kleene plus.
+
+\subsection{Integers}
+An integer is \nonterm{integer}:
+\[
+ \nonterm{integer} \define \term{:}\nonterm{\TeX's number}
+\]
+where \nonterm{\TeX's number} is \nonterm{number} in the \TeX book.
+For example, \term{:-42} means $\lispinterp{(\texprint :-42)}$, 
+\term{:"BEEF} means $\lispinterp{(\texprint :"BEEF)}$, and
+\term{:`\string\@} means $\lispinterp{(\texprint :`\@)}$.
+
+\subsection{Strings}
+An string is an \TeX's \nonterm{balanced tokens} surrounded by \term{'}:
+\[
+ \nonterm{string} \define \term{'}\nonterm{balanced tokens}\term{'}
+\]
+If you want to include \term{'}, you should use brace; the code
+\term{'\{`{}`\}quoted \string\TeX\{\} tokens\{'{}'\}'} means 
+\lispinterp{(\texprint '{``}quoted \TeX{} tokens{''}')}.
+In ordinary Lisp interpretation, \term{'} is used for abbreviation
+of \term{quote}. In contrast, LISP on \TeX{} does not support it.
+
+\subsection{CONS cells and nil}
+A CONS cell is \nonterm{cons cell} and the value nil is \nonterm{nil}:
+
+\begin{eqnarray*}
+  \nonterm{cons cell} &\define& \nonterm{proper list} \bnfor
+   \nonterm{improper list} \\
+  \nonterm{proper list} &\define& \term{(} \nonterm{object}\mathop{+} \term{)} \\
+  \nonterm{improper list} &\define& \term{(} \nonterm{object}\mathop{+}
+   \ \term{.}\ \nonterm{object}\mathop{+} \term{)}\\
+  \nonterm{nil} &\define& \term{()}
+\end{eqnarray*}
+where \nonterm{object} is a LISP on \TeX's object.
+
+\subsection{Symbols}
+In LISP on \TeX, a symbol is a control sequence.
+For example, \term{\string\somecs} is a symbol.
+
+\subsection{Booleans}
+A boolean is \nonterm{bool};
+\[
+ \nonterm{bool} \define \term{/t} \bnfor \term{/f}
+\]
+The term \term{/t} means true, and \term{/f} means false.
+
+\subsection{{\manual \char127}Reserved Forms}

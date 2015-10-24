@@ -1,0 +1,116 @@
+\documentclass{article}
+% Packages
+\usepackage[pdftex, margin={20mm, 15mm}]{geometry}
+\usepackage{tikz}
+\usepackage{url}
+\usepackage[markGC]{lisp-on-tex}
+\usepackage{doc-macros}
+
+%Font Info
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{manfnt}
+
+% Document Info
+\title{LISP on \TeX\\
+       {\large Version 2.0 User's Guide}\\
+       {\normalsize \url{https://bitbucket.org/hak7a3/lisp-on-tex}}}
+\author{Hakuta Shizuya <\url{hak7a3@live.jp}>}
+\date{July xx, 2015}
+\pagestyle{plain}
+
+\begin{document}
+\thispagestyle{empty}
+\newgeometry{margin=0pt} 
+\sffamily
+\noindent\hfil\hfil \tikz{\node[white, fill=red]{\large A \LaTeX{} Package\hspace{3em}}} \hfil\hfil\hfil
+\vfil
+\vfil
+\noindent
+\hfil
+\begin{tikzpicture}
+ \node {\bfseries\fontsize{64pt}{0pt}\selectfont LISP on \TeX};
+ \node[red, anchor=west] at (-6.5, 1.5) {\huge\bfseries Version 2.0};
+ \node[red, anchor=east] at (7, -1.5) {\Huge\bfseries User's Guide};
+\end{tikzpicture}
+\hfil
+\vfil
+\vfil
+\vfil
+\noindent
+\hfil
+\begin{minipage}[t]{0.8\linewidth}
+\Large\ttfamily
+\begin{verbatim}
+\lispinterp {
+   (\print 
+     ((\lambda (\x)
+        (\list \x (\list (\quote \quote) \x)))
+      (\quote 
+        (\lambda (\x) 
+                 (\list \x (\list (\quote \quote) \x))))))
+}
+\end{verbatim}
+\end{minipage}
+\hfil
+\vfil
+\noindent
+\hfil
+\begin{minipage}[t]{0.8\linewidth}
+\large
+\lispinterp {
+  (\print 
+    ((\lambda (\x)
+       (\list \x (\list (\quote \quote) \x)))
+     (\quote 
+       (\lambda (\x) (\list \x (\list (\quote \quote) \x))))))
+}
+\end{minipage}
+\hfil
+\vfil
+\vfil
+\newpage
+\pagenumbering{arabic}
+\normalfont
+\restoregeometry
+
+\input{license}
+\newpage
+% nanika hitokoto
+% BSD license
+
+\maketitle
+\tableofcontents
+\newpage
+
+\input{introduction}
+%% how to use LISP on TeX
+%% class options including GC
+%% comment and empty lines
+
+\input{types}
+%% all types of LoT
+
+% \include{binding-and-definition}
+% %% let and define, also mutableness
+
+% \include{functions-and-special-forms}
+% %% usage of functions
+
+% \include{fpnum}
+% %% usage of fpnum module
+
+% \include{regex}
+% %% usage of l3regex
+
+% \appendix
+% \include{files}
+% %% explain style files...
+% %% also examples
+
+% \include{syntax}
+% %% syntax of LoT
+
+% \include{changelog}
+
+\end{document}
