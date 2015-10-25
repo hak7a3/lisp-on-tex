@@ -67,8 +67,8 @@ shows that LISP on TeX uses Mark-Sweep GC and the heap size is 5000.
 
 #### Definition ####
 
-\define : Define a symbol.
------------------------------------
+`\define` : Define a symbol.
+************************************
 
 ```
 % symbol form
@@ -79,10 +79,10 @@ shows that LISP on TeX uses Mark-Sweep GC and the heap size is 5000.
 (\foo :3) % :6
 ```
 
-\defineM : Define a mutable symbol.
------------------------------------
-\setB : Rewrite a mutable symbol.
------------------------------------
+`\defineM` : Define a mutable symbol.
+*************************************
+`\setB` : Rewrite a mutable symbol.
+*************************************
 
 ```
 % symbol form
@@ -92,10 +92,10 @@ shows that LISP on TeX uses Mark-Sweep GC and the heap size is 5000.
 \foo % 'bar'
 ```
 
-\defmacro : Define a macro.
-----------------------------------
-\macroexpand : Expand a macro
-----------------------------------
+`\defmacro` : Define a macro.
+*************************************
+`\macroexpand` : Expand a macro
+*************************************
 
 ```
 (\defmacro (\foo \x) (\list (\quote \bar) \x \x \x)) % ()
@@ -103,8 +103,8 @@ shows that LISP on TeX uses Mark-Sweep GC and the heap size is 5000.
 ```
 
 
-\lambda : Create a function.
-----------------------------------
+`\lambda` : Create a function.
+**************************************
 
 ```
 % normal form
@@ -115,8 +115,8 @@ shows that LISP on TeX uses Mark-Sweep GC and the heap size is 5000.
 ((\lambda (\x . \y) \y) :1 :2 :3) % (:2 :3)
 ```
 
-\let : Define local symbols.
-----------------------------------
+`\let` : Define local symbols.
+*****************************************
 
 ```
 (\define \x 'foo')
@@ -124,16 +124,16 @@ shows that LISP on TeX uses Mark-Sweep GC and the heap size is 5000.
 \x % 'foo'
 ```
 
-\letM : Define mutable local symbols.
---------------------------------------
+`\letM` : Define mutable local symbols.
+******************************************
 
 ```
 (\letM ((\x 'foo'))
   (\begin (\setB \x 'bar') \x)) % 'bar'
 ```
 
-\letrec : Define local symbols recursively.
---------------------------------------------
+`\letrec` : Define local symbols recursively.
+********************************************
 
 ```
 (\letrec
@@ -146,24 +146,24 @@ shows that LISP on TeX uses Mark-Sweep GC and the heap size is 5000.
 
 #### Control Flow ####
 
-\lispif : Branch.
-----------------------------------
+`\lispif` : Branch.
+********************************************
 
 ```
 (\lispif /t 'true' 'false') % 'true'
 (\lispif /f 'true' 'false') % 'false'
 ```
 
-\begin : Execute expressions.
-----------------------------------
+`\begin` : Execute expressions.
+********************************************
 
 ```
 (\letM ((\x :1)) (\begin (\setB \s 'foo') \x))
 % 'foo'
 ```
 
-\callOCC : One-shot continuation.
----------------------------------
+`\callOCC` : One-shot continuation.
+*******************************************
 
 ```
 (\defineM \x 'unchanged')
@@ -176,36 +176,36 @@ shows that LISP on TeX uses Mark-Sweep GC and the heap size is 5000.
 
 #### String Manipulations ####
 
-\concat : Concatenate tokens.
---------------------------------
+`\concat` : Concatenate tokens.
+************************************
 
 ```
 (\concat '$' '\foo ' '{bar}' '$') % '$\foo {bar}$'
 ```
 
-\intTOstring : Convert a integer to TeX's tokens.
---------------------------------------------------
+`\intTOstring` : Convert a integer to TeX's tokens.
+******************************************************
 
 ```
 (\intTOstring :42) % '42'
 ```
 
-\group : Grouping.
--------------------------------
+`\group` : Grouping.
+*******************************
 
 ```
 (\group '\some {tokens}') % '{\some {tokens}}'
 ```
 
-\ungroup : Ungrouping.
---------------------------------
+`\ungroup` : Ungrouping.
+************************
 
 ```
 (\ungroup '{\some {tokens}}') % '\some {tokens}' 
 ```
 
-\expand : Expand tokens.
---------------------------------
+`\expand` : Expand tokens.
+******************************
 
 ```
 \newcommand\foo[1]{I got #1!}
@@ -216,8 +216,8 @@ shows that LISP on TeX uses Mark-Sweep GC and the heap size is 5000.
 
 #### Arithmetical Functions ####
 
-\+ : Addition.
---------------------------------
+`\+` : Addition.
+***************************
 
 ```
 (\+) % :0
@@ -225,8 +225,8 @@ shows that LISP on TeX uses Mark-Sweep GC and the heap size is 5000.
 (\+ :3 :4 :5) % :12
 ```
 
-\- : Subtraction.
---------------------------------
+`\-` : Subtraction.
+************************
 
 ```
 (\- :1) % :-1
@@ -234,8 +234,8 @@ shows that LISP on TeX uses Mark-Sweep GC and the heap size is 5000.
 (\- :3 :2 :1) % :0
 ```
 
-\* : Multiplication.
----------------------------------
+`\*` : Multiplication.
+**********************
 
 ```
 (\*) % :1
@@ -243,16 +243,16 @@ shows that LISP on TeX uses Mark-Sweep GC and the heap size is 5000.
 (\* :3 :4 :5) % :60
 ```
 
-\/ : Division.
----------------------------------
+`\/` : Division.
+*************************
 
 ```
 (\/ 2) % :0 (1/2 -> 0)
 (\/ 7 2) % :3
 ```
 
-\mod : Modulo.
----------------------------------
+`\mod` : Modulo.
+*************************
 
 ```
 (\mod :42 :23)  % :19
@@ -262,8 +262,8 @@ shows that LISP on TeX uses Mark-Sweep GC and the heap size is 5000.
 (\mod :-3 :-2)  % :-1
 ```
 
-\>, \<, \geq, \leq : Comparison.
----------------------------------
+`\>`, `\<`, `\geq`, `\leq` : Comparison.
+*******************************************
 
 ```
 (\> :3 :2)   % /t
@@ -275,7 +275,7 @@ shows that LISP on TeX uses Mark-Sweep GC and the heap size is 5000.
 ```
 
 Some predicates.
----------------------------------
+************************
 
 ```
 (\isZeroQ :0)    % /t
@@ -283,15 +283,15 @@ Some predicates.
 (\negativeQ :-2) % /t
 ```
 
-\max : Maximum.
----------------------------------
+`\max` : Maximum.
+***************************
 
 ```
 (\max :-10 :-5 :0 :5 :10) % :10
 ```
 
-\max : Maximum.
----------------------------------
+`\min` : Minimum.
+*****************************
 
 ```
 (\min :-10 :-5 :0 :5 :10) % :-10
@@ -299,8 +299,8 @@ Some predicates.
 
 #### Logical functions ####
 
-\and, \or, \not : Logical and, or, not
----------------------------------------
+`\and`, `\or`, `\not` : Logical and, or, not
+*********************************************
 
 ```
 (\and /t /t) % /t
@@ -313,16 +313,16 @@ Some predicates.
 
 #### Traditional LISP Functions and Special Forms ####
 
-\quote : Quote.
----------------------------------
+`\quote` : Quote.
+*******************
 
 ```
 (\quote :42) % :42
 (\quote (\+ :1 :2)) % (\+ :1 :2)
 ```
 
-\cons, \car, \cdr : CONS, CAR, CDR
-------------------------------------
+`\cons`, `\car`, `\cdr` : CONS, CAR, CDR
+*************************************
 
 ```
 (\cons :42 'foo') % (:42 . 'foo')
@@ -330,23 +330,23 @@ Some predicates.
 (\cdr (\quote (:1 :2))) % (:2)
 ```
 
-\list : Create a list
-------------------------------------
+`\list` : Create a list
+***************************
 
 ```
 (\list :1 :2 (\+ :3 :4)) % (:1 :2 :7)
 ```
 
-\length : Get the length of a list.
--------------------------------------
+`\length` : Get the length of a list.
+*****************************************
 
 ```
 (\length ()) % :0
 (\length (\list :1 :2 'three')) % :3
 ```
 
-\map : Map function.
--------------------------------------
+`\map` : Map function.
+**************************
 
 ```
 (\define (\f \x \y \z) (\+ \x \y \z))
@@ -355,16 +355,16 @@ Some predicates.
          (\list :7 :8 :9)) % (:12 :15 :18)
 ```
 
-\nth : Get the n-th value of a list (starting with 0).
-------------------------------------------------------
+`\nth` : Get the n-th value of a list (starting with 0).
+***********************************************************
 
 ```
 (\nth (\list 'foo' 'bar' 'baz') :1) % 'bar'
 ```
 
 
-\= : Equality.
--------------------------------------
+`\=` : Equality.
+*******************
 
 ```
 (\= '42' :42) % /f
@@ -372,16 +372,16 @@ Some predicates.
 (\= (\cons :1 'foo') (\cons :1 'foo')) % /f
 (\= 'foo' 'foo') % /t
 ```
-\texprint : Convert a object to TeX's tokens and output it to the document
----------------------------------------------
+`\texprint` : Convert a object to TeX's tokens and output it to the document
+******************************************************************************
 
 ```
 (\texprint (\concat '\foo' (\group '42'))) % return () andoutput \foo{42}
 (\texprint :42) % output 42
 ```
 
-\print : (For test) output a object as TeX's tokens
------------------------------------------------------
+`\print` : (For test) output a object as TeX's tokens
+*******************************************************
 
 ```
 (\print ()) % output ()
@@ -391,7 +391,7 @@ Some predicates.
 ```
 
 Type predicates
------------------------------------
+*********************
 
 ```
 (\symbolQ (\quote \cs))
@@ -416,8 +416,8 @@ Type predicates
 
 #### LaTeX Utils ####
 
-\readLaTeXCounter : Read an integer from LaTeX
-----------------------------------------------------
+`\readLaTeXCounter` : Read an integer from LaTeX
+***************************************************
 
 ```
 \setcounter{foo}{42}
@@ -426,8 +426,8 @@ Type predicates
 }
 ```
 
-\message : Wrapper of LaTeX's \message
------------------------------------------
+`\message` : Wrapper of LaTeX's \message
+*******************************************
 
 ```
 (\message 'output') % output "message" to console and return ()
@@ -435,15 +435,15 @@ Type predicates
 
 #### Others ####
 
-\read : Read a LISP expression from stdin
-------------------------------------------
+`\read` : Read a LISP expression from stdin
+*********************************************
 
 ```
 (\read) % input :42 and return it
 ```
 
-\fgets : Read a string from stdin.
-------------------------------------
+`\fgets` : Read a string from stdin.
+***************************************
 
 ```
 (\fgets) % input \some {tokens} and return '\some {tokens}'
@@ -470,36 +470,36 @@ to LISP on TeX. Load it by `\usepackage`:
 
 #### Functions ####
 
-\fpnumTOstring : Convert a fixed point number to a string.
------------------------------------------------------------
+`\fpnumTOstring` : Convert a fixed point number to a string.
+************************************************************
 
 ```
 (\fpnumTOstring +{fpnum::1.23}) % '1.23'
 ```
 
-\fpplus : Addition.
-----------------------
+`\fpplus` : Addition.
+*********************
 
 ```
 (\fpplus +{fpnum::1.2} +{fpnum::1.4}) % 2.59999 (arithmetical error)
 ```
 
-\fpminus : Subtraction.
--------------------------
+`\fpminus` : Subtraction.
+************************
 
 ```
 (\fpminus +{fpnum::4.2} +{fpnum::2.3}) % 1.9
 ```
 
-\fpmul : Multiplication.
---------------------------
+`\fpmul` : Multiplication.
+*****************************
 
 ```
 (\fpmul +{fpnum::1.2} +{fpnum::1.4}) % 1.67998
 ```
 
-\fplt : Comparison.
---------------------------
+`\fplt` : Comparison.
+**************************
 
 ```
 (\fplt +{fpnum::1.2} +{fpnum::2.3}) % /t
@@ -518,8 +518,8 @@ of l3regex. Load it by `\usepackage`:
 
 #### Functions ####
 
-\regMatch \regMatchResult : Match.
----------------------
+`\regMatch`, `\regMatchResult` : Match.
+*************************************
 
 ```
 (\regMatch 'hoge+' 'hogeeeeeee') % /t
@@ -527,23 +527,23 @@ of l3regex. Load it by `\usepackage`:
 % ('He is crazy.' 'He' 'crazy')
 ```
 
-\regExtract : Extraction.
--------------------------
+`\regExtract` : Extraction.
+****************************
 
 ```
 (\regExtract '\w+' 'hello regex world') % ('hello' 'regex' 'world')
 ```
 
-\regReplaceAll, \regReplaceOnce : Replace.
--------------------------------------------
+`\regReplaceAll`, `\regReplaceOnce` : Replace.
+**********************************************
 
 ```
 (\regReplaceAll '(\w+?)to(\w+?)' '$\1\c{to}\2$' 'AtoB BtoC') % '$A\to B$ $B\to C$'
 (\regReplaceOnce 'foo+' '[\0]' 'foooofooooooo') % '[foooo]fooooooo'
 ```
 
-\regSplit : Split.
------------------
+`\regSplit` : Split.
+***********************
 
 ```
 (\regSplit '/' '/path/to/hogehoge') % ('' 'path' 'to' 'hogehoge')
@@ -557,36 +557,41 @@ of l3regex. Load it by `\usepackage`:
 
 ## CHANGELOG ##
 
-Oct. 24, 2015 : 2.0
---------------------------
+Oct. 25, 2015 : 2.0
+*************************
+
 * Add GC
 * Refine some special forms like \define
 * Add checking #args for some functions.
 * Add thin wrapper of l3regex
 
 Jul. 12, 2014 : 1.3
---------------------------
+*************************
+
 * Add one shot continuations.
 * Add some arithmetical functions.
 * Debug environment.
 
 Jan. 03, 2014 : 1.2
---------------------------
+**************************
+
 * Added TUG2013's examples.
 * Improved the performance.
 
 Aug. 10, 2013 : 1.1
---------------------------
+**************************
+
 * Added \letrec and \expand.
 * debug
 
 Mar. 04, 2013 : 1.0
--------------------------
+**************************
 
 ## Licence ##
 
 Modified BSD (see LICENCE)
 
-----------------------------------------------------------
+************************************************
 HAKUTA Shizuya <hak7a3@live.jp>
+
 https://bitbucket.org/hak7a3/lisp-on-tex/
