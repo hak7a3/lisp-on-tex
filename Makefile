@@ -6,7 +6,7 @@ EXAMPLE_SOURCE=$(wildcard examples/*.tex)
 OUTER_EXAMPLE_SOURCE=$(wildcard outer-examples/*.tex)
 EXAMPLE= $(subst examples/repl.pdf,,$(EXAMPLE_SOURCE:.tex=.pdf))
 TUG2013= ./tug2013/slide.pdf
-TARGETS= LICENSE README $(STYLEFILES) $(EXAMPLE) $(EXAMPLE_SOURCE) $(TUG2013)
+TARGETS= LICENSE README.md $(STYLEFILES) $(EXAMPLE) $(EXAMPLE_SOURCE) $(TUG2013)
 
 lisp-on-tex.zip: $(TARGETS) 
 	if [ -d $(TMPDIR)/lisp-on-tex ]; then rm -rf $(TMPDIR)/lisp-on-tex; fi
