@@ -190,6 +190,13 @@ shows that LISP on TeX uses Mark-Sweep GC and the heap size is 5000.
 (\intTOstring :42) % '42'
 ```
 
+`\stringTOint` : Convert a string to integer
+******************************************************
+
+```
+(\stringTOint '42') % :42
+```
+
 `\group` : Grouping.
 *******************************
 
