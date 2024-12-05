@@ -23,6 +23,12 @@
 \@lisp@env@add@global\intTOstring{\@tlabel@func{\@lisp@func@check@args{1}{\@conv@intTOstr}}}
 \def\@conv@intTOstr#1\@tlabel@int#2{\gdef#1{\@tlabel@string{#2}}}
 
+%% STRING2INT : string -> int
+%% (\stringTOint 'i') -> i
+
+\@lisp@env@add@global\stringTOint{\@tlabel@func{\@lisp@func@check@args{1}{\@conv@strTOint}}}
+\def\@conv@strTOint#1\@tlabel@string#2{\gdef#1{\@tlabel@int{#2}}}
+
 %% IMMEDIATEWRITE : () -> ()
 %% It outputs the output buffer immediately.
 %% It cause error if the buffer is incomplete.
