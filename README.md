@@ -564,6 +564,11 @@ of l3regex. Load it by `\usepackage`:
 
 ## CHANGELOG ##
 
+Dec. 18, 2024 : 2.1
+*************************
+
+* Add \stringTOint function, thanks for @homologic
+
 Oct. 25, 2015 : 2.0
 *************************
 
@@ -601,4 +606,4 @@ Modified BSD (see LICENCE)
 ************************************************
 HAKUTA Shizuya <hak7a3@live.jp>
 
-https://bitbucket.org/hak7a3/lisp-on-tex/
+https://github.com/hak7a3/lisp-on-tex
