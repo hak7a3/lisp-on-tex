@@ -42,6 +42,8 @@
    \testEvalWithSExp{(\concat '\foo' '{aaa}' '  ' '\end')}{\@tlabel@string{\foo{aaa}  \end}}
    % intTOstring
    \testEvalWithSExp{(\intTOstring :42)}{\@tlabel@string{42}}
+   %stringTOint
+   \testEvalWithSExp{(\stringTOint '42')}{\@tlabel@int{42}}
    % we omit immediate write...
    % grouping
    \testEvalWithSExp{(\group '{foo}')}{\@tlabel@string{{{foo}}}}
