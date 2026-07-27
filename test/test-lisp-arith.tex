@@ -67,7 +67,8 @@
    \testEvalWithSExp{(\mod :3 :-2)}{\@tlabel@int{1}}
    \testEvalWithSExp{(\mod :-3 :2)}{\@tlabel@int{-1}}
    \testEvalWithSExp{(\mod :-3 :-2)}{\@tlabel@int{-1}}
-   %\testEvalWithSExp{(\mod 'hoge' :2)}{\@tlabel@exception{{-1}{\@tlabel@string{arithmetical functions takes integer only.}}}}
+   \testEvalWithSExp{(\mod 'hoge' :2)}{\@tlabel@exception{{-1}{\@tlabel@string{invalid type of the argument 1 (expected int)}}}}
+   \testEvalWithSExp{(\mod :2 'hoge')}{\@tlabel@exception{{-1}{\@tlabel@string{invalid type of the argument 2 (expected int)}}}}
    \testEvalWithSExp{(\mod)}{\@tlabel@exception{{-1}{\@tlabel@string{too few arguments}}}}
    \testEvalWithSExp{(\mod :3 :2 :1)}{\@tlabel@exception{{-1}{\@tlabel@string{too many arguments}}}}
    % comparition

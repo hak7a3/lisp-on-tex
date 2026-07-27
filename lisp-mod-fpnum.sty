@@ -18,7 +18,7 @@
 \newdimen\@tempdimeni
 \newdimen\@tempdimenii
 
-\@lisp@env@add@global\fpnumTOstring{\@tlabel@func{\@lisp@func@check@args{1}{\@mod@fpnum@tostring}}}
+\@lisp@env@add@global\fpnumTOstring{\@tlabel@func{\@lisp@func@check@types{fpnum}{\@mod@fpnum@tostring}}}
 %TODO: error handling
 \def\@mod@fpnum@tostring#1\@tlabel@fpnum#2{\gdef#1{\@tlabel@string{#2}}}
 
@@ -83,7 +83,7 @@
 	\fi\fi
 	\@next@fpnum@minus#1}
 
-\@lisp@env@add@global\fplt{\@tlabel@func{\@lisp@func@check@args{2}{\@mod@fpnum@lt}}}
+\@lisp@env@add@global\fplt{\@tlabel@func{\@lisp@func@check@types{fpnum,fpnum}{\@mod@fpnum@lt}}}
 \def\@mod@fpnum@lt#1\@tlabel@fpnum#2\@tlabel@fpnum#3{%
 	\ifdim#2pt<#3pt
 		\gdef#1{\@tlabel@bool{t}}%

@@ -214,6 +214,17 @@
     \lispinterp{(\defmacro \defmacroTarget (\lambda (\c) \c))}
     \testEval{\@tlabel@symbol{\defmacroTarget}}
       {\@tlabel@macro{{\c:\@@unused}{}\@tlabel@symbol{\c}}}
+    % type errors of the special forms (they do NOT go through
+    % \@lisp@func@check@types, so each has its own guard)
+    \testEvalWithSExp{(\defmacro \defmacroTarget :42)}
+      {\@tlabel@exception{{-1}%
+        {\@tlabel@string{The 2nd argument of \defmacro must be a lambda.}}}}
+    \testEvalWithSExp{(\@let :1 :2 :3)}
+      {\@tlabel@exception{{-1}%
+        {\@tlabel@string{The 1st argument of \let or \letM must be a symbol.}}}}
+    \testEvalWithSExp{(\@mlet :1 :2 :3)}
+      {\@tlabel@exception{{-1}%
+        {\@tlabel@string{The 1st argument of \let or \letM must be a symbol.}}}}
    \end{qstest}
    \begin{qstest}{one-shot continuation}{\@lispeval}
     \testEvalWithSExp{(\callOCC (\lambda (\c) :42))}{\@tlabel@int{42}} % normal end

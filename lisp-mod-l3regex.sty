@@ -2,7 +2,7 @@
 \RequirePackage{expl3}
 
 % \regex_match:nnTF
-\@lisp@env@add@global\regMatch{\@tlabel@func{\@lisp@func@check@args{2}{\@lisp@regex@match}}}
+\@lisp@env@add@global\regMatch{\@tlabel@func{\@lisp@func@check@types{string,string}{\@lisp@regex@match}}}
 \ExplSyntaxOn
 \cs_new:Npn \lot_regex_match:Nnn #1#2#3 {
   \regex_match:nnTF{#2}{#3}{\gdef#1{\@tlabel@bool{t}}}{\gdef#1{\@tlabel@bool{f}}}
@@ -13,7 +13,7 @@
 \def\@lisp@regex@match#1\@tlabel@string#2\@tlabel@string#3{\@lisp@regex@match@#1{#2}{#3}}
 
 % \regex_extract_all
-\@lisp@env@add@global\regExtract{\@tlabel@func{\@lisp@func@check@args{2}{\@lisp@regex@extract}}}
+\@lisp@env@add@global\regExtract{\@tlabel@func{\@lisp@func@check@types{string,string}{\@lisp@regex@extract}}}
 \ExplSyntaxOn
 \seq_new:N \lot_regex_extract_seq
 \cs_new:Npn \lot_regex_extract:nnN #1#2#3{
@@ -40,7 +40,7 @@
 
 
 % \regex_extract_once
-\@lisp@env@add@global\regMatchResult{\@tlabel@func{\@lisp@func@check@args{2}{\@lisp@regex@extract@once}}}
+\@lisp@env@add@global\regMatchResult{\@tlabel@func{\@lisp@func@check@types{string,string}{\@lisp@regex@extract@once}}}
 \ExplSyntaxOn
 \seq_new:N \lot_regex_extract_once_seq
 \cs_new:Npn \lot_regex_extract_once:nnN #1#2#3{
@@ -56,7 +56,7 @@
   \expandafter\@lisp@prim@list@pre\expandafter#1#1\relax\relax}
 
 % \regex_split
-\@lisp@env@add@global\regSplit{\@tlabel@func{\@lisp@func@check@args{2}{\@lisp@regex@split}}}
+\@lisp@env@add@global\regSplit{\@tlabel@func{\@lisp@func@check@types{string,string}{\@lisp@regex@split}}}
 \ExplSyntaxOn
 \seq_new:N \lot_regex_split_seq
 \cs_new:Npn \lot_regex_split:nnN #1#2#3{
@@ -75,7 +75,7 @@
 
 
 % \regex_replace_once
-\@lisp@env@add@global\regReplaceOnce{\@tlabel@func{\@lisp@func@check@args{3}{\@lisp@regex@replace@once}}}
+\@lisp@env@add@global\regReplaceOnce{\@tlabel@func{\@lisp@func@check@types{string,string,string}{\@lisp@regex@replace@once}}}
 \ExplSyntaxOn
 \cs_new_eq:NN \@lisp@regex@replace@once@  \regex_replace_once:nnN
 \ExplSyntaxOff
@@ -87,7 +87,7 @@
     \expandafter\@tlabel@string\expandafter{#1}}}
 
 % \regex_replace_all
-\@lisp@env@add@global\regReplaceAll{\@tlabel@func{\@lisp@func@check@args{3}{\@lisp@regex@replace@all}}}
+\@lisp@env@add@global\regReplaceAll{\@tlabel@func{\@lisp@func@check@types{string,string,string}{\@lisp@regex@replace@all}}}
 \ExplSyntaxOn
 \cs_new_eq:NN \@lisp@regex@replace@all@  \regex_replace_all:nnN
 \ExplSyntaxOff

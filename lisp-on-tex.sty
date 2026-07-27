@@ -331,11 +331,15 @@
   \@lisp@env@add@global#2{\@tlabel@mutable{#1}}}
 % \defmacro's normal form
 \def\@apply@defmacro@normal#1#2{%
-  \expandafter\@apply@defmacro@next\expandafter#1#2%
-  \gdef#2{\@tlabel@nil{}}}
-%TODO: error handling
-\def\@apply@defmacro@next#1\@tlabel@closure#2{%
-  \@lisp@env@add@global#1{\@tlabel@macro{#2}}}
+  \expandafter\@apply@defmacro@next\expandafter#1#2#2}
+\def\@apply@defmacro@next#1#2#3#4{%
+  \ifx#2\@tlabel@closure
+    \@lisp@env@add@global#1{\@tlabel@macro{#3}}%
+    \gdef#4{\@tlabel@nil{}}%
+  \else
+    \gdef#4{\@tlabel@exception{{-1}%
+      {\@tlabel@string{The 2nd argument of \defmacro must be a lambda.}}}}%
+  \fi}
 % normal form
 \def\@apply@define@@#1\@tlabel@symbol#2#3#4\@#5#6{%
   \@eval#3{#4}{#5}#6% define does NOT use local environment
@@ -415,8 +419,27 @@
     {\@tlabel@string{The symbol #1 is not defined as a 'mutable'. %
      Use \defineM, \letM, or \letrec.}}}}}
 
-%TODO: error handling
-\def\@apply@@let#1\@tlabel@symbol#2#3#4#5#6\@#7#8{%
+% the 1st argument of \@let / \@mlet must be a symbol, otherwise
+% the delimited match below scans to the end of the file.
+\def\@apply@@let#1#2#3#4#5#6#7\@#8#9{%
+  \ifx#2\@tlabel@symbol
+    \let\@@next\@apply@@let@
+  \else
+    \let\@@next\@apply@let@type@error
+  \fi
+  \@@next{#1}#2{#3}#4{#5}#6{#7}\@{#8}#9}
+\def\@apply@@mlet#1#2#3#4#5#6#7\@#8#9{%
+  \ifx#2\@tlabel@symbol
+    \let\@@next\@apply@@mlet@
+  \else
+    \let\@@next\@apply@let@type@error
+  \fi
+  \@@next{#1}#2{#3}#4{#5}#6{#7}\@{#8}#9}
+\def\@apply@let@type@error#1#2#3#4#5#6#7\@#8#9{%
+  \gdef#9{\@tlabel@exception{{-1}%
+    {\@tlabel@string{The 1st argument of \let or \letM must be a symbol.}}}}}
+
+\def\@apply@@let@#1\@tlabel@symbol#2#3#4#5#6\@#7#8{%
   \@eval#3{#4}{#7}#8%
   \expandafter\expandafter\expandafter\ifx
     \expandafter\@@eval@get@typelabel#8\@tlabel@exception
@@ -439,8 +462,7 @@
   \aftergroup\@@tco}
 \def\@apply@@let@exception#1#2#3#4#5{} % #5 is already set the value of exception
 
-%TODO: error handling
-\def\@apply@@mlet#1\@tlabel@symbol#2#3#4#5#6\@#7#8{%
+\def\@apply@@mlet@#1\@tlabel@symbol#2#3#4#5#6\@#7#8{%
   \@eval#3{#4}{#7}#8%
   \expandafter\expandafter\expandafter\ifx
     \expandafter\@@eval@get@typelabel#8\@tlabel@exception
@@ -892,6 +914,71 @@
     \let\@@next\@lisp@func@check@args@
   \fi
   \@@next}
+
+% check #function's argument types. Use it instead of
+% \@lisp@func@check@args when the arity is fixed: the arity is
+% the length of the type spec, so it also checks #args.
+% Without this check, a function whose body matches its arguments
+% with delimited parameters (e.g. \@arith@lt) makes TeX scan to
+% the end of the file on a type error.
+%#1 comma separated type names (e.g. int,int), #2 function body
+%#3 reg, #4 args
+\def\@lisp@func@check@types#1#2#3#4\relax{%
+  \@lisp@func@heck@args@count0
+  \def\@lisp@check@types@rest{#1,}%
+  \let\@lisp@check@types@err\@empty
+  \@lisp@check@types@loop#4\relax\relax
+  \ifx\@lisp@check@types@err\@empty
+    \def\@@next{#2#3#4\relax}%
+  \else
+    \def\@@next{\@lisp@check@types@raise#3}%
+  \fi
+  \@@next}
+\def\@lisp@check@types@raise#1{%
+  \expandafter\@lisp@check@types@raise@\expandafter#1%
+    \expandafter{\@lisp@check@types@err}}
+\def\@lisp@check@types@raise@#1#2{%
+  \gdef#1{\@tlabel@exception{{-1}{\@tlabel@string{#2}}}}}
+\def\@lisp@check@types@loop#1#2{%
+  \ifx#1\relax
+    \let\@lisp@check@types@next\@lisp@check@types@fin
+  \else
+    \let\@lisp@check@types@next\@lisp@check@types@one
+  \fi
+  \@lisp@check@types@next#1{#2}}
+% no more arguments, so the type spec must be exhausted too
+\def\@lisp@check@types@fin#1#2{%
+  \ifx\@lisp@check@types@rest\@empty\else
+    \def\@lisp@check@types@err{too few arguments}%
+  \fi}
+\def\@lisp@check@types@one#1#2{%
+  \advance\@lisp@func@heck@args@count1
+  \ifx\@lisp@check@types@rest\@empty
+    \def\@lisp@check@types@err{too many arguments}%
+    \let\@lisp@check@types@next\@lisp@check@types@gobble
+  \else
+    \@lisp@check@types@pop
+    \expandafter\let\expandafter\@lisp@check@types@want
+      \csname @tlabel@\@lisp@check@types@head\endcsname
+    \ifx#1\@lisp@check@types@want
+      \let\@lisp@check@types@next\@lisp@check@types@loop
+    \else
+      \edef\@lisp@check@types@err{invalid type of the argument
+        \the\@lisp@func@heck@args@count\space(expected
+        \@lisp@check@types@head)}%
+      \let\@lisp@check@types@next\@lisp@check@types@gobble
+    \fi
+  \fi
+  \@lisp@check@types@next}
+% pop a type name from the spec
+\def\@lisp@check@types@pop{%
+  \expandafter\@lisp@check@types@pop@\@lisp@check@types@rest\@@end}
+\def\@lisp@check@types@pop@#1,#2\@@end{%
+  \def\@lisp@check@types@head{#1}%
+  \def\@lisp@check@types@rest{#2}}
+% skip the remaining arguments after an error
+\def\@lisp@check@types@gobble#1#2{%
+  \ifx#1\relax\else\expandafter\@lisp@check@types@gobble\fi}
 
 % select GC engine
 \ifcase\@lisp@gc@style

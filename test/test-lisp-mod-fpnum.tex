@@ -79,6 +79,11 @@
    \testEvalWithSExp{(\fplt +{fpnum::1.2} +{fpnum::2.3})}{\@tlabel@bool{t}}
    \testEvalWithSExp{(\fplt +{fpnum::2.3} +{fpnum::1.2})}{\@tlabel@bool{f}}
    \testEvalWithSExp{(\fplt +{fpnum::1.2} +{fpnum::1.2})}{\@tlabel@bool{f}}
+   % the type check must resolve a type registered by a module, not only
+   % the built-in ones
+   \testEvalWithSExp{(\fplt +{fpnum::1.2} :2)}
+     {\@tlabel@exception{{-1}%
+       {\@tlabel@string{invalid type of the argument 2 (expected fpnum)}}}}
   \end{qstest}
   \LogClose{lgout}
 \end{document}
