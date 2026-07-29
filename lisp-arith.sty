@@ -81,7 +81,7 @@
     \let\@next@div\@arith@type@error
   \fi\fi\@next@div#1}
 
-\@lisp@env@add@global\mod{\@tlabel@func{\@lisp@func@check@args{2}{\@arith@mod}}}
+\@lisp@env@add@global\mod{\@tlabel@func{\@lisp@func@check@types{int,int}{\@arith@mod}}}
 %TODO: error handling
 \def\@arith@mod#1\@tlabel@int#2\@tlabel@int#3{%
   \@temp@intii#2\relax
@@ -91,39 +91,39 @@
   \advance\@temp@inti-\@temp@intii
   \@@arith@pm@fin#1}
 
-\@lisp@env@add@global\<{\@tlabel@func{\@lisp@func@check@args{2}{\@arith@lt}}}
+\@lisp@env@add@global\<{\@tlabel@func{\@lisp@func@check@types{int,int}{\@arith@lt}}}
 %TODO: error handling
 \def\@arith@lt#1\@tlabel@int#2\@tlabel@int#3{%
   \ifnum#2<#3 \gdef#1{\@tlabel@bool{t}}\else\gdef#1{\@tlabel@bool{f}}\fi}
 
-\@lisp@env@add@global\>{\@tlabel@func{\@lisp@func@check@args{2}{\@arith@gt}}}
+\@lisp@env@add@global\>{\@tlabel@func{\@lisp@func@check@types{int,int}{\@arith@gt}}}
 %TODO: error handling
 \def\@arith@gt#1\@tlabel@int#2\@tlabel@int#3{%
   \ifnum#2>#3 \gdef#1{\@tlabel@bool{t}}\else\gdef#1{\@tlabel@bool{f}}\fi}
 
-\@lisp@env@add@global\leq{\@tlabel@func{\@lisp@func@check@args{2}{\@arith@leq}}}
+\@lisp@env@add@global\leq{\@tlabel@func{\@lisp@func@check@types{int,int}{\@arith@leq}}}
 %TODO: error handling
 \def\@arith@leq#1\@tlabel@int#2\@tlabel@int#3{%
   \ifnum#2<#3 \gdef#1{\@tlabel@bool{t}}\else\gdef#1{\@tlabel@bool{f}}\fi
   \ifnum#2=#3 \gdef#1{\@tlabel@bool{t}}\fi}
 
-\@lisp@env@add@global\geq{\@tlabel@func{\@lisp@func@check@args{2}{\@arith@geq}}}
+\@lisp@env@add@global\geq{\@tlabel@func{\@lisp@func@check@types{int,int}{\@arith@geq}}}
 %TODO: error handling
 \def\@arith@geq#1\@tlabel@int#2\@tlabel@int#3{%
   \ifnum#2>#3 \gdef#1{\@tlabel@bool{t}}\else\gdef#1{\@tlabel@bool{f}}\fi
   \ifnum#2=#3 \gdef#1{\@tlabel@bool{t}}\fi}
 
-\@lisp@env@add@global\isZeroQ{\@tlabel@func{\@lisp@func@check@args{1}{\@arith@is@zero}}}
+\@lisp@env@add@global\isZeroQ{\@tlabel@func{\@lisp@func@check@types{int}{\@arith@is@zero}}}
 %TODO: error handling
 \def\@arith@is@zero#1\@tlabel@int#2{%
   \ifnum#2=0 \gdef#1{\@tlabel@bool{t}}\else\gdef#1{\@tlabel@bool{f}}\fi}
 
-\@lisp@env@add@global\positiveQ{\@tlabel@func{\@lisp@func@check@args{1}{\@arith@is@positive}}}
+\@lisp@env@add@global\positiveQ{\@tlabel@func{\@lisp@func@check@types{int}{\@arith@is@positive}}}
 %TODO: error handling
 \def\@arith@is@positive#1\@tlabel@int#2{%
   \ifnum#2>0 \gdef#1{\@tlabel@bool{t}}\else\gdef#1{\@tlabel@bool{f}}\fi}
 
-\@lisp@env@add@global\negativeQ{\@tlabel@func{\@lisp@func@check@args{1}{\@arith@is@negative}}}
+\@lisp@env@add@global\negativeQ{\@tlabel@func{\@lisp@func@check@types{int}{\@arith@is@negative}}}
 %TODO: error handling
 \def\@arith@is@negative#1\@tlabel@int#2{%
   \ifnum#2<0 \gdef#1{\@tlabel@bool{t}}\else\gdef#1{\@tlabel@bool{f}}\fi}
