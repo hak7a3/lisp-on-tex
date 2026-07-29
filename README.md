@@ -564,6 +564,11 @@ of l3regex. Load it by `\usepackage`:
 
 ## CHANGELOG ##
 
+Jul. 29, 2026 : 2.2
+*************************
+
+* Raise catchable exceptions on type errors instead of aborting the TeX run, thanks for @vssekorin
+
 Dec. 18, 2024 : 2.1
 *************************
 
